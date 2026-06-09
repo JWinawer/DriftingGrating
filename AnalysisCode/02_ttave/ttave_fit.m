@@ -13,19 +13,20 @@ bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 %bidsDir = '/Volumes/server/Projects/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
 fsDir = '/Applications/freesurfer/7.2.0';
-addpath(genpath(fullfile(githubDir, 'wpToolbox')));
+%addpath(genpath(fullfile(githubDir, 'wpToolbox')));
 addpath(genpath(fullfile(githubDir, 'atlasmgz')));
 setup_user('rania', bidsDir)
 
 projectSettings = loadConfig(githubDir);
+colors_data = projectSettings.colors_data; % need this to overwrite saved colors
 
 hRF_setting = 'glmsingle'; %
-subj = 'sub-0250'; %'sub-0426';
+subj = 'sub-0255'; %'sub-0426';
 %ses = 'ses-03'; %'ses-01'; %'ses-nyu3t02'; %'ses-01';
 
 projects = {'dg','da'};
 comparisonName = 'motion_minus_baseline'; % technically will read in the same raw data as 'motion_minus_orientation'
-asymmetries = {'mainCardinalVsMainOblique', 'derivedCardinalVsDerivedOblique', 'radialVsTangential'};
+asymmetries = {'mainCardinalVsMainOblique', 'derivedCardinalVsDerivedOblique', 'verticalVsHorizontal', 'radialVsTangential'};
 
 plonOn=0;
 
@@ -68,6 +69,9 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
             filename = sprintf('ttaveSignal_%s_%s_%s_%s.mat', subj, roiName, asymmetryName, comparisonName);
             load(fullfile(subjectDir, sesNames{1}, 'ttaveData', comparisonName, filename))
 
+            % fix colors
+            projectSettings.colors_data = colors_data;
+
             % recompute the values of interest
             base = ttaveOutput{1};
             blank = ttaveOutput{2};
@@ -86,10 +90,10 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
             % motion - orientation (will probably not use b/c hRFs are
             % flatter) and the whole point is to summarize wach with beta
             % weight anyway
-            if ~projectSettings.radialvstang
+            if ~projectSettings.secondary
                 advMotionVals_minus_orientation = advMotionVals - (nanmean(advStatic)-shift);
                 disadvMotionVals_minus_orientation = disadvMotionVals - (nanmean(disadvStatic)-shift);
-            elseif projectSettings.radialvstang  % different b/c orthogonal
+            elseif projectSettings.secondary  % different b/c orthogonal
                 advMotionVals_minus_orientation = advMotionVals - (nanmean(disadvStatic)-shift);
                 disadvMotionVals_minus_orientation = disadvMotionVals - (nanmean(advStatic)-shift);
             end
@@ -101,10 +105,10 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
 
             if plonOn == 1
                 figure
-                plot(advMotionVals, 'b-', 'Linewidth',3, 'Color', colors{1})
-                hold on
-                plot(disadvMotionVals, '-', 'Linewidth',3, 'Color', colors{2})
-                hold on
+                %plot(advMotionVals, 'b-', 'Linewidth',3, 'Color', colors{1})
+                %hold on
+                %plot(disadvMotionVals, '-', 'Linewidth',3, 'Color', colors{2})
+                %hold on
                 plot(advStaticVals, 'b--', 'Linewidth',3, 'Color', colors{1})
                 hold on
                 plot(disadvStaticVals, '--', 'Linewidth',3, 'Color', colors{2})
@@ -117,7 +121,7 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
             elseif (strcmp(asymmetryName, 'derivedCardinalVsDerivedOblique') && strcmp(projectName, 'dg')) || ...
                 (strcmp(asymmetryName, 'mainCardinalVsMainOblique') && strcmp(projectName, 'da'))
                 renamedAsymmetry = 'polarCardinalvsPolarOblique';
-            elseif (strcmp(asymmetryName, 'radialVsTangential'))
+            else   %if (strcmp(asymmetryName, 'radialVsTangential'))
                 renamedAsymmetry = asymmetryName;
             end
 
@@ -126,7 +130,7 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
          end
     end
 
-    renamedAsymmetries = {'cartesianCardinalvsCartesianOblique', 'polarCardinalvsPolarOblique', 'radialVsTangential'};
+    renamedAsymmetries = {'cartesianCardinalvsCartesianOblique', 'polarCardinalvsPolarOblique', 'verticalVsHorizontal', 'radialVsTangential'};
     
     iter=0;
 
@@ -143,6 +147,10 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
             colors = {projectSettings.colors_data.conditions.('dg').('derivedCardinalVsDerivedOblique').color_pro', ...
                     projectSettings.colors_data.conditions.('dg').('derivedCardinalVsDerivedOblique').color_con'};
              legendLabels = {'polCard Motion', 'polObl Motion', 'polCard Orientation', 'polObl Orientation'};
+        elseif strcmp(renamedAsymmetry, 'verticalVsHorizontal')
+            colors = {projectSettings.colors_data.conditions.('dg').('verticalVsHorizontal').color_pro', ...
+                    projectSettings.colors_data.conditions.('dg').('verticalVsHorizontal').color_con'};
+            legendLabels = {'horizontal Motion', 'vertical Motion', 'horizontal Orientation', 'vertical Orientation'};
         elseif strcmp(renamedAsymmetry, 'radialVsTangential')
             colors = {projectSettings.colors_data.conditions.('dg').('radialVsTangential').color_pro', ...
                     projectSettings.colors_data.conditions.('dg').('radialVsTangential').color_con'};
@@ -160,7 +168,7 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
             projectName = projects{pi};
         
             iter=iter+1;
-            subplot(3,2,iter)
+            subplot(4,2,iter)
 
             grandMean = ttave_arrays.(roiName).(renamedAsymmetry).grandMean;
             
@@ -169,29 +177,44 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
             advStaticVals = ttave_arrays.(roiName).(renamedAsymmetry).(projectName)(3,:);
             disadvStaticVals = ttave_arrays.(roiName).(renamedAsymmetry).(projectName)(4,:);
     
-            fitted_advMotionVals = findScalar(grandMean, advMotionVals);
-            fitted_disadvMotionVals = findScalar(grandMean, disadvMotionVals);
-            fitted_advStaticVals = findScalar(grandMean, advStaticVals);
-            fitted_disadvStaticVals = findScalar(grandMean, disadvStaticVals);
+            [fitted_advMotionVals, intercept_advMotionVals, scalingFactor_advMotionVals] = findScalar(grandMean, advMotionVals);
+            [fitted_disadvMotionVals, intercept_disadvMotionVals, scalingFactor_disadvMotionVals] = findScalar(grandMean, disadvMotionVals);
+            [fitted_advStaticVals, intercept_advStaticVals, scalingFactor_advStaticVals] = findScalar(grandMean, advStaticVals);
+            [fitted_disadvStaticVals, intercept_disadvStaticVals, scalingFactor_disadvStaticVals] = findScalar(grandMean, disadvStaticVals);
     
             hold on
-            p1=plot(fitted_advMotionVals, 'b-', 'Linewidth',1, 'Color', colors{1});
-            p2=plot(fitted_disadvMotionVals, 'b-', 'Linewidth',1, 'Color', colors{2});
-            p3=plot(fitted_advStaticVals, 'b--', 'Linewidth',1, 'Color', colors{1});
-            p4=plot(fitted_disadvStaticVals, 'b--', 'Linewidth',1, 'Color', colors{2});
+            %p1=plot(fitted_advMotionVals, 'b-', 'Linewidth',1, 'Color', colors{1});
+            %p2=plot(fitted_disadvMotionVals, 'b-', 'Linewidth',1, 'Color', colors{2});
+            p3=plot(fitted_advStaticVals-intercept_advStaticVals, 'b-', 'Linewidth',1, 'Color', colors{1});
+            p4=plot(fitted_disadvStaticVals-intercept_disadvStaticVals, 'b-', 'Linewidth',1, 'Color', colors{2});
 
-            scatter(1:length(advMotionVals), advMotionVals, 25, 'filled', 'Marker', 'd', 'MarkerFaceColor', colors{1});
-            scatter(1:length(disadvMotionVals), disadvMotionVals, 25, 'filled', 'Marker', 'd', 'MarkerFaceColor', colors{2});
-            scatter(1:length(advStaticVals), advStaticVals, 25, 'Marker', 'd', 'MarkerEdgeColor', colors{1}, 'LineWidth',1);
-            scatter(1:length(disadvStaticVals), disadvStaticVals, 25, 'Marker', 'd', 'MarkerEdgeColor', colors{2}, 'LineWidth',1);
+            %scatter(1:length(advMotionVals), advMotionVals, 25, 'filled', 'Marker', 'd', 'MarkerFaceColor', colors{1});
+            %scatter(1:length(disadvMotionVals), disadvMotionVals, 25, 'filled', 'Marker', 'd', 'MarkerFaceColor', colors{2});
+            scatter(1:length(advStaticVals), advStaticVals-intercept_advStaticVals, 25, 'Marker', 'o', 'MarkerEdgeColor', 'w', 'MarkerFaceColor', colors{1}, 'MarkerFaceAlpha', 0.4, 'LineWidth',1);
+            scatter(1:length(disadvStaticVals), disadvStaticVals-intercept_disadvStaticVals, 25, 'Marker', 'o', 'MarkerEdgeColor', 'w', 'MarkerFaceColor', colors{2}, 'MarkerFaceAlpha', 0.4, 'LineWidth',1);
             hold off
 
             % prepare to save
-            fits = [fitted_advMotionVals; fitted_disadvMotionVals; fitted_advStaticVals; fitted_disadvStaticVals];
+%             fits = [fitted_advMotionVals; fitted_disadvMotionVals; fitted_advStaticVals; fitted_disadvStaticVals];
+%             ttave_arrays.(roiName).(renamedAsymmetry).(strcat(projectName, '_fits')) = fits;
+            fits = [fitted_advMotionVals - intercept_advMotionVals; fitted_disadvMotionVals - intercept_disadvMotionVals; ...
+                fitted_advStaticVals - intercept_advStaticVals; fitted_disadvStaticVals - intercept_disadvStaticVals];
             ttave_arrays.(roiName).(renamedAsymmetry).(strcat(projectName, '_fits')) = fits;
 
-            if ismember(iter, [1,3,5])
-                legend([p1,p2,p3,p4],legendLabels, 'Location', 'northeast', 'Fontsize', 6)
+            vals = [advMotionVals - intercept_advMotionVals; disadvStaticVals - intercept_disadvMotionVals; ...
+                advStaticVals - intercept_advStaticVals; disadvStaticVals - intercept_disadvStaticVals];
+            
+            % overwriting the saved scatter values above to account for
+            % intercept offset
+            ttave_arrays.(roiName).(renamedAsymmetry).(projectName) = vals;
+
+            ttave_metrics.(roiName).(renamedAsymmetry).(projectName) = ...
+                [intercept_advMotionVals, scalingFactor_advMotionVals; intercept_disadvMotionVals, scalingFactor_disadvMotionVals; ...
+                intercept_advStaticVals, scalingFactor_advStaticVals; intercept_disadvStaticVals, scalingFactor_disadvStaticVals];
+
+            if ismember(iter, [1,3,5,7])
+                %legend([p1,p2,p3,p4],legendLabels, 'Location', 'northeast', 'Fontsize', 6)
+                legend([p3,p4],legendLabels(3:4), 'Location', 'northeast', 'Fontsize', 6)
                 ylabel('BOLD (psc)')
             end
 
@@ -215,7 +238,13 @@ for ri=1:numel(projectSettings.rois)  % and specific to the ROI
             end
 
             %plot(grandMean, '-', 'Linewidth',3, 'Color', 'k')
-            ylim([-.5 2.5])
+            %ylim([-.5 2.5])
+            if strcmp(subj, 'sub-wlsubj124') || strcmp(subj, 'sub-0395')
+                maxLim = 2;
+            else
+                maxLim = 1.5;
+            end
+            ylim([-.5 maxLim])
             set(gca, 'FontName', 'Arial', 'FontSize', 12)
 
         end
@@ -234,7 +263,7 @@ end
 
 % save the variables
 save(fullfile(ttave_combinedPath,sprintf('ttaveCombined_%s',projectSettings.comparisonName)), ...
-    'ttave_arrays', 'projectSettings', 'subj'); %, 'legendLabels', 'roiName','renamedAsymmetry', 'colors');
+    'ttave_arrays', 'ttave_metrics', 'projectSettings', 'subj'); %, 'legendLabels', 'roiName','renamedAsymmetry', 'colors');
 
 
 

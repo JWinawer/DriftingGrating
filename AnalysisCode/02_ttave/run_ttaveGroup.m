@@ -89,11 +89,12 @@ for ci=1:numel(conditions)
 
         grandttaveOutput = {base, blank, advMotion, disadvMotion, advStatic, disadvStatic};
         % ttaveTime is constat across subjects
+        ttaveTime = 25;
         
         subj = 'allsubjects';
         filename = sprintf('ttaveSignal_%s_%s_%s_%s', subj, roiName, condName, comparisonName);
         ttaveSave = fullfile(ttaveSavePath,filename);
-        [legendLabels] = plot_ttave(grandttaveOutput, ttaveTime, subj, roiName, ttaveSave, condName, comparisonName);
+        %[legendLabels] = plot_ttave(grandttaveOutput, ttaveTime, subj, roiName, ttaveSave, condName, comparisonName);
 
         % save the variables
         save(ttaveSave, 'ttaveOutput', 'ttaveTime', 'legendLabels', 'roiName', 'subj');

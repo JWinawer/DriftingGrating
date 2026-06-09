@@ -13,9 +13,10 @@ fullfile(githubDir, 'DriftingGrating', 'AnalysisCode')
 glmResultsfolder = fullfile(bidsDir, 'derivatives', strcat(projectName, 'GLM'), strcat('hRF_', hRF_setting));
 
 % can be 'motion_minus_orientation' ; 'motion_minus_baseline' ; 'orientation_minus_baseline'
-comparisonName = 'motion_minus_orientation'; %'motion_minus_orientation';
+comparisonName = 'orientation_minus_baseline'; %'motion_minus_orientation';
 
 projectSettings = loadConfig(githubDir);
+projectSettings.glmResultsfolder = glmResultsfolder;
 
 rois = projectSettings.rois;
 axes_limits = projectSettings.axes_limits;
@@ -101,8 +102,8 @@ projectSettings.figureDir = figureDir;
 % e.g. condition indices 4 v 5: clearly shows MT as motion responsive
 % these do not depend on polar angle / retinotopy (just contrasts)
 
-condIdx1 = [20,21]; %[26,27]; %[9,11];   
-condIdx2 = [18,19]; %[28,29]; %[8, 10];
+condIdx1 = [27]; %[26,27]; %[9,11];   
+condIdx2 = [26]; %[28,29]; %[8, 10];
 
 plot0_experimentalCond(condIdx1, condIdx2, medianBOLD, projectSettings)
 

@@ -7,20 +7,20 @@ function plot_ttave(ttaveOutput, projectSettings, asymmetryName)
     eventTRs_after = projectSettings.eventTRs_after;
     projectName = projectSettings.projectName;
     colors_data = projectSettings.colors_data;
-    radialvstang = projectSettings.radialvstang;
+    secondary = projectSettings.secondary;
     legendOn=0;
 
     colors = {colors_data.conditions.(projectName).(asymmetryName).color_pro', ...
         colors_data.conditions.(projectName).(asymmetryName).color_con'};
 
     if strcmp(comparisonName, 'motion_minus_baseline') || strcmp(comparisonName, 'orientation_minus_baseline')
-        if ~radialvstang
+        if ~secondary
             legendLabels = {'Cardinal Motion', 'Oblique Motion', 'Cardinal Static', 'Oblique Static', 'Mean baseline (padding)'};
         else
             legendLabels = {'Radial Motion', 'Tangential Motion', 'Radial Static', 'Tangential Static', 'Mean baseline (padding)'};
         end
     elseif strcmp(comparisonName, 'motion_minus_orientation') 
-        if ~radialvstang
+        if ~secondary
             legendLabels = {'Cardinal Motion - Card Ori', 'Oblique Motion - Card Ori', 'Mean baseline (padding)'};
         else
             legendLabels = {'Radial Motion - Tang Ori', 'Tangential Motion - Rad Ori', 'Mean baseline (padding)'};
@@ -43,11 +43,11 @@ function plot_ttave(ttaveOutput, projectSettings, asymmetryName)
     advStaticVals = nanmean(advStatic)-shift;
     disadvStaticVals = nanmean(disadvStatic)-shift;
 
-    % recompute by subtracting orientation (opposite for radialtang)
-    if strcmp(comparisonName, 'motion_minus_orientation') && ~radialvstang
+    % recompute by subtracting orientation (opposite for radialtang or horzvert)
+    if strcmp(comparisonName, 'motion_minus_orientation') && ~secondary
         advMotionVals = advMotionVals - (nanmean(advStatic)-shift);
         disadvMotionVals = disadvMotionVals - (nanmean(disadvStatic)-shift);
-    elseif strcmp(comparisonName, 'motion_minus_orientation') && radialvstang  % different b/c orthogonal
+    elseif strcmp(comparisonName, 'motion_minus_orientation') && secondary  % different b/c orthogonal
         advMotionVals = advMotionVals - (nanmean(disadvStatic)-shift);
         disadvMotionVals = disadvMotionVals - (nanmean(advStatic)-shift);
     end
@@ -79,10 +79,10 @@ function plot_ttave(ttaveOutput, projectSettings, asymmetryName)
 
         % need to reccompute pairwise difference (per subject)
         if strcmp(comparisonName, 'motion_minus_orientation')
-            if ~radialvstang
+            if ~secondary
                 advMotionPairwise = advMotion - advStatic;
                 disadvMotionPairwise = disadvMotion - disadvStatic;
-            elseif radialvstang
+            elseif secondary
                 advMotionPairwise = advMotion - disadvStatic;
                 disadvMotionPairwise = disadvMotion - advStatic;
             end

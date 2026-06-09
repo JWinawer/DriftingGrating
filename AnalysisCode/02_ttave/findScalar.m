@@ -1,4 +1,4 @@
-function fitted_advMotionVals = findScalar(grandMean, advMotionVals)
+function [fitted_advMotionVals, intercept, scaling_factor] = findScalar(grandMean, advMotionVals)
 
 %         % Compute the scaling factor k
 %         k = (advMotionVals * grandMean') / (grandMean * grandMean');
@@ -13,4 +13,5 @@ function fitted_advMotionVals = findScalar(grandMean, advMotionVals)
         intercept = beta(1); scaling_factor = beta(2);
         % Scale array2 using GLM
         fitted_advMotionVals = intercept + scaling_factor * grandMean;
+        %fitted_advMotionVals =  scaling_factor * grandMean;
 end

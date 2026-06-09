@@ -2,7 +2,7 @@ clc; clear all; close all;
 
 % set up
 addpath(genpath(pwd));
-projectName = 'dots'; %'dg';
+projectName = 'dg'; %'dg';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 %bidsDir = '/Volumes/server/Projects/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
@@ -16,7 +16,7 @@ masksFolder = fullfile(bidsDir, 'derivatives', 'masks');
 retinotopyMode = 'moving'; % of 'flicker' to use for analysis
 
 % canonical only for dots condition
-hRF_setting = 'canonical'; %'glmsingle'; % can be: 'canonical', 'glmdenoise', 'glmsingle';
+hRF_setting = 'glmsingle'; %'canonical'; %; % can be: 'canonical', 'glmdenoise', 'glmsingle';
 
 hemis = {'lh'; 'rh'};
 

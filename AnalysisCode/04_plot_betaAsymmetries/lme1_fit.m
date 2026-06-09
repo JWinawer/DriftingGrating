@@ -2,7 +2,7 @@ clc; clear all; close all
 
 % set up
 addpath(genpath(pwd));
-projectName = 'dg';
+projectName = 'da';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 %bidsDir =  '/Volumes/server/Projects/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
@@ -11,7 +11,7 @@ fullfile(githubDir, 'DriftingGrating', 'AnalysisCode')
 glmResultsfolder = fullfile(bidsDir, 'derivatives', strcat(projectName, 'GLM'), strcat('hRF_', hRF_setting));
 
 % can be 'motion_minus_orientation' ; 'motion_minus_baseline' ; 'orientation_minus_baseline'
-comparisonName = 'motion_minus_baseline';
+comparisonName = 'orientation_minus_baseline';
 
 projectSettings = loadConfig(githubDir);
 
@@ -432,7 +432,7 @@ for ai=1:numel(asymmetryNames)
         yline(Gintercept, '--', 'Color', [0 0 0], 'LineWidth', 2)
         ylim([-0.05+Gintercept 0.05+Gintercept])
     end
-    xlim([0 8])
+    xlim([0 10])
     ylim([-0.03 0.03])
     set(gca,'XTick',[])
     box off
@@ -475,7 +475,7 @@ for ai=1:numel(asymmetryNames)
     f1.Position = [298 843 651 494];
     
     % Save the figure as a TIFF file with specific options
-    print(fullfile(figureDir, sprintf('LME_%s_%s_%s', comparisonName, projectName, asymmetryName)), '-dtiff', '-r300'); % '-r300' specifies a resolution of 300 DPI
+    print(fullfile(figureDir, sprintf('LME_%s_%s_%s', comparisonName, projectName, asymmetryName)), '-dpdf', '-bestfit');
 
 end
 
@@ -535,5 +535,7 @@ legend([h1 h2], {'pro','con'}, 'Location', 'best');
 f = gcf;
 f.Position = [298 843 651 494];
 
-print(fullfile(figureDir, sprintf('MASTER_ROI1_%s_%s', comparisonName, projectName)), ...
-    '-dtiff', '-r300');
+%print(fullfile(figureDir, sprintf('MASTER_ROI1_%s_%s', comparisonName, projectName)), ...
+%    '-dtiff', '-r300');
+
+print(fullfile(figureDir, sprintf('MASTER_ROI1_%s_%s', comparisonName, projectName)), '-dpdf', '-bestfit');

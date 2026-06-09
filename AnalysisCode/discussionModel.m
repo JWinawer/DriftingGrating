@@ -121,13 +121,13 @@ title('Channel Contributions to Subtracted Response')
 
 % If all else is equal (same temporal frequency, contrast, spatial frequency, etc.), 
 % then differences in BOLD across directions (e.g., higher response for cardinal than oblique) 
-% must reflect tuning to direction — not general motion or flicker sensitivity.
+% must reflect tuning to axial motion — not general motion or flicker sensitivity.
       % by subtracting orientation we first focus on high temporal
       % frequency channel.
       % then by comparing motion directions after this subtraction
 
 % The only variable is motion direction, so any systematic variation (e.g., cardinal > oblique) 
-% strongly suggests neuronal populations tuned to direction, and not just motion detection.
+% strongly suggests neuronal populations tuned to axial direction, and not just motion detection.
 
 
 % 1) Subtraction of stationary from drifting stimuli reduces the contribution of the 
@@ -170,23 +170,22 @@ mycolors = [
 0.6863, 0.5529, 0.7647
 ];
 
-% -------------------- Parameters --------------------
+% Parameters
 N = 10000;                          % neurons per population
 sigma_tune = 25;                  % tuning width (deg) for neuronal responses
 sigma_norm = 30;                  % width of tuned normalization weights (deg)
-sigma_const = 0.5;                % semi-saturation constant
+sigma_const = 0.01; %0.5;                % semi-saturation constant
 stimSet = [0 45 90 135];          % tested orientations
 prefCats = [0 45 90 135];         % possible preferred orientations
 
-% Proportions across the four orientations (0,45,90,135)
+% proportions across the four orientations (0,45,90,135)
 p_balanced = [0.25  0.25  0.25  0.25 ];    % 50/50 cardinal vs oblique
 p_biased   = [0.375 0.125 0.375 0.125];    % 75/25 cardinal vs oblique
 
-% -------------------- Helpers --------------------
 circDiff180 = @(a,b) abs(mod(a - b + 90, 180) - 90);     % minimal difference on 180° circle
 make_pop    = @(p) prefCats(randsample(numel(prefCats), N, true, p))'; % sample preferred orientations
 
-% Build populations
+% populations
 pref_bal = make_pop(p_balanced);
 pref_bia = make_pop(p_biased);
 
@@ -195,14 +194,14 @@ mkW = @(pref) exp(-( (abs(mod(pref - pref' + 90,180)-90)).^2 )/(2*sigma_norm^2))
 W_bal = mkW(pref_bal);
 W_bia = mkW(pref_bia);
 
-% -------------------- Compute mean responses --------------------
+% compute mean responses
 mean_noNorm_bal = zeros(1,numel(stimSet));
 mean_noNorm_bia = zeros(1,numel(stimSet));
 mean_tuned_bal  = zeros(1,numel(stimSet));
 mean_tuned_bia  = zeros(1,numel(stimSet));
 
 for s = 1:numel(stimSet)
-    % --- Balanced population ---
+    % balanced
     d_bal = circDiff180(stimSet(s), pref_bal);
     f_bal = exp(-(d_bal.^2)/(2*sigma_tune^2));           % raw (0..1)
     mean_noNorm_bal(s) = mean(f_bal);
@@ -210,7 +209,7 @@ for s = 1:numel(stimSet)
     R_bal   = f_bal ./ den_bal;                          % normalized
     mean_tuned_bal(s) = mean(R_bal);
 
-    % --- Biased population ---
+    % imbalanced
     d_bia = circDiff180(stimSet(s), pref_bia);
     f_bia = exp(-(d_bia.^2)/(2*sigma_tune^2));           % raw (0..1)
     mean_noNorm_bia(s) = mean(f_bia);
@@ -219,7 +218,7 @@ for s = 1:numel(stimSet)
     mean_tuned_bia(s) = mean(R_bia);
 end
 
-% -------------------- Plots --------------------
+%
 figure('Color','w','Position',[100 100 1050 420]);
 
 % (A) NO normalization: Balanced vs Biased (mean response)
@@ -325,3 +324,34 @@ function [relX_sorted, agg_sorted] = pop_response_relative(stimOri, pref_bia, W_
     relX_sorted(end+1) = 90;
     agg_sorted(end+1)  = agg_sorted(1);
 end
+
+
+%% %%%%%%%%%%%%%%%%%% IMAGE COMPUTABLE MODEL %%%%%%%%%%%%%%%%%%%%%%%%%
+
+% change the above to start with an image rather than a tuning value
+
+% % % use the steerable pyramid code from Jon:
+
+    % need image of pinwheel, spiral, annulus, grating.
+
+    % need a gabor bank -- use 8 orientations, SFs
+        % these could be weighted based on number of neurons
+
+    % Numerator: get energy for a given stimulus, for each orientation channel:
+
+    % Denominator (sigma (fit this) and energy normalizer Z)
+        % Z has a fixed larger sigma for match and pixel width for mismatch
+        % OR based on similarity calculation
+
+        % (this energy normalizer width) might be adjusted based on
+        % top-down for redundancy suppression for cardinal 
+        % lateral connections for radial)-- cannot be just lateral
+        % connections b/c does not predict horizontal meridian..
+
+    % Numerator / Denominator
+
+    % sum over space and orientation (s)
+
+    % nonlinearity g * s^a
+
+

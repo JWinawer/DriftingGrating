@@ -1,11 +1,19 @@
 function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, varargin)
 
-    rng(0)
+    %rng(0)
+    rng('default')
+
     % this function will (polar plot) the averages of experimental conditions that
     % do not need to be derived from polar angle.
     % For dg experiment, this will include cardinal v oblique
     % For da experiment, this will include polar cardinal v polar oblique
     %                                   and radial v tangential
+
+    plotModelToo = 1;
+    if plotModelToo
+        % just for internal purposes (if I want to plot model fits ad hoc)
+        modelfolder = fullfile(projectSettings.glmResultsfolder, 'LME_results', projectSettings.comparisonName);
+    end
 
     % for now, ensure a third argument is always provided
     if nargin < 3 || isempty(varargin{1})
@@ -72,18 +80,19 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     end
 
     figure
-    gap = [.04 .01]; % spacing between the subplots vertical gap - horizontal gap
-    marg_h = [.015 .13]; % margins of bottom - top of the figure
-    marg_w = [.01 .01]; % margina - left, right
-%    [ha, pos] = tight_subplot(2, 1, gap, marg_h, marg_w);
-     [ha, pos] = tight_subplot(2, 5, gap, marg_h, marg_w);
-    % Hide the 8th subplot
-%         emptyPlots = 10 - numel(rois);
-%     for ep=1:emptyPlots
-%         empty_idx = 10+1-ep;
-%         set(ha(empty_idx), 'Visible', 'off');
-%     end
+%     gap = [.04 .01]; % spacing between the subplots vertical gap - horizontal gap
+%     marg_h = [.015 .13]; % margins of bottom - top of the figure
+%     marg_w = [.01 .01]; % margina - left, right
+% %    [ha, pos] = tight_subplot(2, 1, gap, marg_h, marg_w);
+%      [ha, pos] = tight_subplot(2, 5, gap, marg_h, marg_w);
+%     % Hide the 8th subplot
+% %         emptyPlots = 10 - numel(rois);
+% %     for ep=1:emptyPlots
+% %         empty_idx = 10+1-ep;
+% %         set(ha(empty_idx), 'Visible', 'off');
+% %     end
     for ri=1:length(rois)
+
         % Specify the region index
         regionIndex = projectSettings.roi_idx{ri};
         
@@ -148,7 +157,7 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
         % using this method instead of subplot for TIGHT AXES
-        axes(ha(ri)); 
+%         axes(ha(ri)); 
         
         
         % plot average (connecting the last line)
@@ -219,6 +228,44 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             ax.RLim = [0 0.5];
         end
 
+        if plotModelToo
+            load(fullfile(modelfolder, rois{ri}, 'modelPlotVals.mat')) % all already in absolute dir (dg and da)
+            load(fullfile(modelfolder, 'modelPlotValsTags.mat')) % all already in absolute dir (dg and da)
+            
+            
+            if strcmp(asymmetryName, 'verticalVsHorizontal')
+                tagshow = tags(:,:,1);
+                flipProCon = 1; % I need this until I reprocess the model with the correct Pro/Con order
+            % cardinal vs oblique model fits
+            elseif (strcmp(asymmetryName, 'mainCardinalVsMainOblique') && strcmp(projectSettings.projectName, 'dg')) || ...
+                (strcmp(asymmetryName, 'derivedCardinalVsDerivedOblique') && strcmp(projectSettings.projectName, 'da'))
+                tagshow = tags(:,:,2);
+                flipProCon=0;
+            elseif strcmp(asymmetryName, 'radialVsTangential')
+                tagshow = tags(:,:,3);
+                flipProCon=0;
+            % polar cardinal vs polar oblique model fits
+            elseif (strcmp(asymmetryName, 'mainCardinalVsMainOblique') && strcmp(projectSettings.projectName, 'da')) || ...
+                (strcmp(asymmetryName, 'derivedCardinalVsDerivedOblique') && strcmp(projectSettings.projectName, 'dg'))
+                tagshow = tags(:,:,4);
+                flipProCon=0;
+            end
+
+            a = sum(modelPlotVals .* (tagshow == 1), 2) ./ sum(tagshow == 1, 2);
+            b = sum(modelPlotVals .* (tagshow == -1), 2) ./ sum(tagshow == -1, 2);
+            if flipProCon
+                conMeans = a; proMeans=b;
+            else
+                proMeans=a; conMeans=b;
+            end
+
+            % plot pro and con for each location afer averaging:
+            hold on
+            polarplot(deg2rad(0:45:315),proMeans, 'o', 'Color', colors{1},  'MarkerSize', 6, 'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', 'k','LineWidth',1.75)
+            hold on
+            polarplot(deg2rad(0:45:315),conMeans, 'o', 'Color', colors{2},  'MarkerSize', 6, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', 'k','LineWidth',1.75)
+        end
+
         ax = gca;
         ax.LineWidth = 3;  % Set the line width (adjust as needed)
         ax.GridColor = [0.25 0.25 0.25];
@@ -234,7 +281,11 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     fig1.Color = 'w';
     hold off;
     
-    filename = fullfile(figureDir,sprintf('polarangle_%s_%s_%s', comparisonName, projectName, asymmetryName));
+    if plotModelToo==1
+        filename = fullfile(figureDir,sprintf('polarangle_%s_%s_%s', comparisonName, projectName, asymmetryName,'wModel'));
+    else
+        filename = fullfile(figureDir,sprintf('polarangle_%s_%s_%s', comparisonName, projectName, asymmetryName));
+    end
  
     gcf_edit = fitFig2Page(gcf);
     

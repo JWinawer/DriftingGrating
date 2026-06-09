@@ -7,6 +7,7 @@ projectName = 'da'; % 'dg', or 'dgl' or 'da'
 subj = 'sub-0250'; %'sub-0426';
 ses = 'ses-03'; %'ses-01'; %'ses-nyu3t02'; %'ses-01'; <-- can I make this not manual?
 space = 'fsnative';
+bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 
 % checks/sets working directory and adds dependencies
 setup_user('rania', bidsDir)
@@ -112,7 +113,8 @@ elseif strcmp(hRF_setting, 'glmsingle')
     results.(char('allevents')) = modelOut{1,4};
 end
 
-% save results  % default says PSC is the result
+% % save results  % default says PSC is the result (commented out on May
+% 26, 2026 for quick testing)
 sprintf('SAVING VARIABLES..')
 save(fullfile(derivativesFolder,'rawInfo.mat'), 'matrices_onset', 'matrices', ...
     'matrices_nuis', 'datafiles', 'tr_s', 'stimdur_s', '-v7.3');
@@ -150,6 +152,11 @@ if normalize
     % new: convert to z-score (across betas)
     betamaps_condOnly = betamaps(:,1:13);
     betamaps = zscore(betamaps_condOnly, 0, 2);
+
+    % save out non-normalized in case needed later
+    save(fullfile(derivativesFolder, 'nonNormalized13betas.mat'), ...
+    'betamaps_condOnly')
+
 end
 
 mgzFolder = fullfile(bidsDir, 'derivatives', sprintf('%sGLM',projectName), ...

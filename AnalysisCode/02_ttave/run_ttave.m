@@ -6,7 +6,7 @@ clear all; close all; clc;
 
 % setup path
 addpath(genpath(pwd));
-projectName = 'dg'; % 'dg', or 'dgl' or 'da'
+projectName = 'da'; % 'dg', or 'dgl' or 'da'
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 %bidsDir = '/Volumes/server/Projects/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
@@ -21,7 +21,7 @@ setup_user('rania', bidsDir)
 projectSettings = loadConfig(githubDir);
 
 hRF_setting = 'glmsingle'; %
-subjects = {'sub-wlsubj124'};
+subjects = {'sub-0250'};
 %{'sub-0250'}; %{'sub-0037', 'sub-0201', 'sub-wlsubj123', 'sub-wlsubj124' , ...
     %'sub-0255' , 'sub-0395', 'sub-0426', 'sub-0250'};
 %{'sub-0201', 'sub-wlsubj123', 'sub-wlsubj124', 'sub-0255', ...
@@ -113,43 +113,44 @@ for ss=1:numel(subjects)
             % get VF indices binned into 8 categories (after filtering for: ecc, r^2)
             projectSettings.filteredPrfBins = retriveRetData(projectSettings);
         
-            % do MAIN CONDITION first (for dg, would only be card-v-oblique; for da, polCard-v-obl and radial-v-tang)
+            % do non-derived CONDITION first (for dg, would only be card-v-oblique; for da, polCard-v-obl and radial-v-tang)
         
             % this will plot the derived conditions for:
             if strcmp(projectName, 'da') % experiment 2: da (polar cardinal vs oblique; and radial vs tangential)
-                isradial = [0, 1]; 
-            elseif strcmp(projectName, 'dg') % experiment 1: dg (cartesian cardinal vs oblique)
-                isradial = 0; 
+                isSecondary = [0, 1]; 
+            elseif strcmp(projectName, 'dg') % experiment 1: dg (cartesian cardinal vs oblique; and horizontal vs vertical)
+                isSecondary = [0, 1]; 
             end
             
-            for ci=1:numel(isradial)
+            for ci=1:numel(isSecondary)
         
-                radialvstang = isradial(ci);
+                secondary = isSecondary(ci);
         
                 % compute and plot ttave main dir
-                ttave_compute(matrices_onset,datafiles, 'mainCardinalVsMainOblique', surfaceROI, projectSettings, radialvstang);
+                ttave_compute(matrices_onset,datafiles, 'mainCardinalVsMainOblique', surfaceROI, projectSettings, secondary);
                 %ttave_computeGLMsingle(matrices_onset,datafiles, 'mainCardinalVsMainOblique', surfaceROI, projectSettings, radialvstang);
         
             end
         
             % now do DERIVED CONDITION (for dg, would be polCard-v-oblique and
-            % radial-v-tang; for da would only be cartCardinal-v-oblique
+            % radial-v-tang; for da would be cartCardinal-v-oblique;
+            % horizontal-v-vertical
         
             % this will plot the derived conditions for:
             if strcmp(projectName, 'da') % experiment 2: da (cartesian cardinal vs oblique)
                 %n_derivedConditions = {{1:2, 3}};
-                isradial = 0; 
+                isSecondary = [0, 1]; 
             elseif strcmp(projectName, 'dg') % experiment 1: dg (polar cardinal vs oblique; and radial vs tangential)
                 %n_derivedConditions = {{1:2, 3}, {1, 2}};
-                isradial = [0, 1]; 
+                isSecondary = [0, 1]; 
             end
         
-            for ci=1:numel(isradial)
+            for ci=1:numel(isSecondary)
         
-                radialvstang = isradial(ci);
+                secondary = isSecondary(ci);
         
                 % compute and plot ttave main dir
-                ttave_compute(matrices_onset, datafiles, 'derivedCardinalVsDerivedOblique', surfaceROI, projectSettings, radialvstang);
+                ttave_compute(matrices_onset, datafiles, 'derivedCardinalVsDerivedOblique', surfaceROI, projectSettings, secondary);
                 %ttave_computeGLMsingle(matrices_onset, datafiles, 'derivedCardinalVsDerivedOblique', surfaceROI, projectSettings, radialvstang);
             end
         

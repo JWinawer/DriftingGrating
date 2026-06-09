@@ -1,6 +1,7 @@
 function plot2_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, varargin)
 
-    rng(0)
+    rng('default')
+    %rng(0)
     % Plot mean across polar angles
     % keep in mind that this equally weighs each PA, whereas there could be
     % differential # of voxels representing the PAs

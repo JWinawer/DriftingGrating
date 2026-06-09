@@ -15,9 +15,9 @@
             },
             "verticalVsHorizontal": {
                 "description": "Contrasting vertical and horizontal motion patterns.",
-                "color_pro": [1, 0.5, 0],
-                "color_con": [0, 0, 0.5],
-                "plot_title": "Vertical vs horizontal"
+                "color_pro": [0, 0, 0.5],
+                "color_con": [1, 0.5, 0],
+                "plot_title": "Horizontal vs vertical"
             },
             "radialVsTangential": {
                 "description": "Contrasting radial and tangential motion patterns.",
@@ -84,9 +84,9 @@
             },
             "verticalVsHorizontal": {
                 "description": "Contrasting vertical and horizontal motion patterns.",
-                "color_pro": [1, 0.5, 0],
-                "color_con": [0, 0, 0.5],
-                "plot_title": "Vertical vs horizontal"
+                "color_pro": [0, 0, 0.5],
+                "color_con": [1, 0.5, 0],
+                "plot_title": "Horizontal vs vertical"
             },
             "radialVsTangential": {
                 "description": "Contrasting radial and tangential motion patterns.",

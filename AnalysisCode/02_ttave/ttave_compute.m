@@ -14,29 +14,35 @@ if strcmp(projectSettings.projectName, 'da')
         if nargin < 6 || isempty(varargin{1})
             error(sprintf('A sixth input is required when projectName is "%s" and asymmetryName is "%s".', projectSettings.projectName, asymmetryName));
         else
-            radialvstang = varargin{1};
-            if radialvstang == 1
+            secondary = varargin{1};
+            if secondary == 1
                 asymmetryName = 'radialVsTangential';
             end
         end
     elseif strcmp(asymmetryName, 'derivedCardinalVsDerivedOblique')
          % Third argument is ignored
          derivedVals = 1;
-         radialvstang = 0;
+         secondary = varargin{1};
+        if secondary == 1
+            asymmetryName = 'verticalVsHorizontal';
+        end
     end
 elseif strcmp(projectSettings.projectName, 'dg')
     if strcmp(asymmetryName, 'mainCardinalVsMainOblique')
         % Sixth argument is ignored
         derivedVals = 0; 
-        radialvstang = 0;
+        secondary = varargin{1};
+        if secondary == 1
+            asymmetryName = 'verticalVsHorizontal';
+        end
     elseif strcmp(asymmetryName, 'derivedCardinalVsDerivedOblique')
         derivedVals = 1;
         % Ensure a sixth argument is provided
         if nargin < 6 || isempty(varargin{1})
             error(sprintf('A sixth input is required when projectName is "%s" and asymmetryName is "%s".', projectSettings.projectName, asymmetryName));
         else
-            radialvstang = varargin{1};
-            if radialvstang == 1
+            secondary = varargin{1};
+            if secondary == 1
                 asymmetryName = 'radialVsTangential';
             end
         end
@@ -60,8 +66,10 @@ end
 stimulusOrder = {0, 90, 180, 270, 45, 135, 225, 315, 0, 90, 45, 135, nan};
 
 if derivedVals
-    if radialvstang
+    if secondary && strcmp(projectSettings.projectName, 'dg')
         derivedProOffsets = [0, 180]; derivedConOffsets = [90, 270]; % for radial vs tangential
+    elseif secondary && strcmp(projectSettings.projectName, 'da')
+        derivedProOffsets = []; derivedConOffsets = []; % for horizontal vs vertical
     else
         derivedProOffsets = [0, 180, 90, 270]; derivedConOffsets = [45, 135, 225, 315]; % for other
     end
@@ -102,7 +110,8 @@ for mi=1:length(matrices)
             error('ensure polar angle values are provided')
         end
 
-        df_roi = nanmean(timeseries_psc.*surfaceSelection);
+        %df_roi = nanmean(timeseries_psc.*surfaceSelection);
+        df_roi = nanmedian(timeseries_psc.*surfaceSelection);
         %baseline = mean([df_roi(1:padding), df_roi(end-padding+1:end)]);
         
         pad = [df_roi(1:padding) ; df_roi(end-padding+1:end)];
@@ -157,6 +166,16 @@ for mi=1:length(matrices)
                         elseif (ci == 9)
                             disadvStatic = [disadvStatic ; trial];
                         end
+                    elseif strcmp(asymmetryName, 'verticalVsHorizontal') && strcmp(projectName, 'dg')
+                        if (ci == 1) || (ci == 3)
+                            advMotion = [advMotion ; trial];
+                        elseif (ci == 2) || (ci == 4)
+                            disadvMotion = [disadvMotion ; trial];
+                        elseif (ci == 9)
+                            advStatic = [advStatic ; trial];
+                        elseif (ci == 10)
+                            disadvStatic = [disadvStatic ; trial];
+                        end
                     end
                     % ^^ if NOT derived
 
@@ -186,30 +205,67 @@ for mi=1:length(matrices)
                                     end
                                 end
                             end
-                        % this is da: cartesian cardinal vs oblique
+                        % this is da: cartesian cardinal vs oblique;
+                        % horizontal vs vertical
                         elseif strcmp(projectName, 'da')
                             if ci <= 8 % motion
-                                if (all(ismember(angleVals, [0,90,180,270])) && (ci <= 4)) || ... % if on the meridians and in/out/c/cc
-                                        (all(ismember(angleVals, [45,135,225,315])) && ((ci <=8) && (ci > 4))) % if on the diagonals and spiral
-                                    advMotion = [advMotion ; trial];
-                                elseif (all(ismember(angleVals, [0,90,180,270])) && ((ci <=8) && (ci > 4))) || ... % if on the meridians and spiral
-                                        (all(ismember(angleVals, [45,135,225,315])) && (ci <= 4)) % if on the diagonals and in/out/c/cc
-                                    disadvMotion = [disadvMotion ; trial];
-                                else
-                                    if ci ~= 13
-                                        warning('Is this supposed to not meet a condition?')
+                                if ~secondary
+                                    if (all(ismember(angleVals, [0,90,180,270])) && (ci <= 4)) || ... % if on the meridians and in/out/c/cc
+                                            (all(ismember(angleVals, [45,135,225,315])) && ((ci <=8) && (ci > 4))) % if on the diagonals and spiral
+                                        advMotion = [advMotion ; trial];
+                                    elseif (all(ismember(angleVals, [0,90,180,270])) && ((ci <=8) && (ci > 4))) || ... % if on the meridians and spiral
+                                            (all(ismember(angleVals, [45,135,225,315])) && (ci <= 4)) % if on the diagonals and in/out/c/cc
+                                        disadvMotion = [disadvMotion ; trial];
+                                    else
+                                        if ci ~= 13
+                                            warning('Is this supposed to not meet a condition?')
+                                        end
+                                    end
+                                elseif secondary
+                                    if (all(ismember(angleVals, [0,180])) && (ci == 2 || ci == 4)) || ... # horizontal
+                                        (all(ismember(angleVals, [90,270])) && (ci == 1 || ci == 3)) || ...
+                                        (all(ismember(angleVals, [45,225])) && (ci == 5 || ci == 7)) || ...
+                                        (all(ismember(angleVals, [135,315])) && (ci == 6 || ci == 8))
+                                        advMotion = [advMotion ; trial];
+                                    elseif (all(ismember(angleVals, [0,180])) && (ci == 1 || ci == 3)) || ... # vertical
+                                        (all(ismember(angleVals, [90,270])) && (ci == 2 || ci == 4)) || ...
+                                        (all(ismember(angleVals, [45,225])) && (ci == 6 || ci == 8)) || ...
+                                        (all(ismember(angleVals, [135,315])) && (ci == 5 || ci == 7))
+                                        disadvMotion = [disadvMotion ; trial];
                                     end
                                 end
                             elseif ci > 8 && ci <= 13 % static
-                                if (all(ismember(angleVals, [0,90,180,270])) && ((ci ==9) || (ci == 10))) || ... % if on the meridians and annulus/pinwheel
-                                        (all(ismember(angleVals, [45,135,225,315])) && ((ci ==11) || (ci ==12))) % if on the diagonals and spiral
-                                    advStatic = [advStatic ; trial];
-                                elseif (all(ismember(angleVals, [0,90,180,270])) && ((ci ==11) || (ci == 12))) || ... % if on the meridians and spiral
-                                        (all(ismember(angleVals, [45,135,225,315])) && ((ci ==9) || (ci ==10))) % if on the diagonals and annulus/pinwheel
-                                    disadvStatic = [disadvStatic ; trial];
-                                else
-                                    if ci ~= 13
-                                        warning('Is this supposed to not meet a condition?')
+                                if ~secondary
+                                    if (all(ismember(angleVals, [0,90,180,270])) && ((ci ==9) || (ci == 10))) || ... % if on the meridians and annulus/pinwheel
+                                            (all(ismember(angleVals, [45,135,225,315])) && ((ci ==11) || (ci ==12))) % if on the diagonals and spiral
+                                        advStatic = [advStatic ; trial];
+                                    elseif (all(ismember(angleVals, [0,90,180,270])) && ((ci ==11) || (ci == 12))) || ... % if on the meridians and spiral
+                                            (all(ismember(angleVals, [45,135,225,315])) && ((ci ==9) || (ci ==10))) % if on the diagonals and annulus/pinwheel
+                                        disadvStatic = [disadvStatic ; trial];
+                                    else
+                                        if ci ~= 13
+                                            warning('Is this supposed to not meet a condition?')
+                                            angleVals
+                                            ci
+                                        end
+                                    end
+                                elseif secondary
+                                    if (all(ismember(angleVals, [0,180])) && (ci == 10)) || ... # horizontal
+                                        (all(ismember(angleVals, [90,270])) && (ci == 9)) || ...
+                                        (all(ismember(angleVals, [45,225])) && (ci == 11)) || ...
+                                        (all(ismember(angleVals, [135,315])) && (ci == 12))
+                                        advStatic = [advStatic ; trial];
+                                    elseif (all(ismember(angleVals, [0,180])) && (ci == 9)) || ... # vertical
+                                        (all(ismember(angleVals, [90,270])) && (ci == 10)) || ...
+                                        (all(ismember(angleVals, [45,225])) && (ci == 12)) || ...
+                                        (all(ismember(angleVals, [135,315])) && (ci == 11))
+                                        disadvStatic = [disadvStatic ; trial];
+                                    else
+                                        if ci ~= 13
+                                            warning('Is this supposed to not meet a condition?')
+                                            angleVals
+                                            ci
+                                        end
                                     end
                                 end
                             end
@@ -226,7 +282,7 @@ end % end of run
 ttaveOutput = {base, blank, advMotion, disadvMotion, advStatic, disadvStatic};
 %ttaveTime = {eventTRs_prior, eventTRs_after};
 
-projectSettings.radialvstang = radialvstang;
+projectSettings.secondary = secondary;
 
 plot_ttave(ttaveOutput, projectSettings, asymmetryName);
 
