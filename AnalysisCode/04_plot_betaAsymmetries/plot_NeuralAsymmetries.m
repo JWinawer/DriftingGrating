@@ -4,9 +4,10 @@ clc; clear all; close all;
 
 % set up
 addpath(genpath(pwd));
-projectName = 'dg'; %'dots'; %'da';
+projectName = 'da'; %'dots'; %'da';
 %bidsDir =  '/Volumes/server/Projects/Project_dg/data_bids/';
-bidsDir =  '/Volumes/EXTERNAL_US/Project_dg/data_bids/';
+%bidsDir =  '/Volumes/EXTERNAL_US/Project_dg/data_bids/';
+bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
 hRF_setting = 'glmsingle'; %'canonical' %'glmsingle';
 fullfile(githubDir, 'DriftingGrating', 'AnalysisCode')

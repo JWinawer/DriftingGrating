@@ -2,7 +2,7 @@ clc; clear all; close all
 
 % set up
 addpath(genpath(pwd));
-projectName = 'da';
+projectName = 'dg';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 %bidsDir =  '/Volumes/server/Projects/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
@@ -135,6 +135,10 @@ for roi=1:length(rois)  % just 1 ROI at a time (makes interprettability easier)
 
     finalMat = [reshaped_mat, dirCol, paCol, subCol];
 
+    if strcmp(comparisonName, 'orientation_minus_baseline')
+        finalMat = finalMat(1:2:end, :);
+    end
+
     % initialize value for each asymmetry
     mainCardinal = zeros(length(finalMat),1);
     derivedCardinal = zeros(length(finalMat),1);
@@ -155,19 +159,26 @@ for roi=1:length(rois)  % just 1 ROI at a time (makes interprettability easier)
     derivedCardinal(~derivedCardinal_idx) = -1;
 
     if strcmp(projectName, 'dg')
-        derived_subset_pro_idx = (abs(finalMat(:,2)-finalMat(:,3)) == 0 | abs(finalMat(:,2)-finalMat(:,3)) == 180);
-        derived_subset_con_idx = abs(finalMat(:,2)-finalMat(:,3)) == 90 | abs(finalMat(:,2)-finalMat(:,3)) == 270;
+        derived_subset_pro_idx = (abs(finalMat(:,2)-finalMat(:,3)) == 0 | abs(finalMat(:,2)-finalMat(:,3)) == 180); % in/out, radial
+        derived_subset_con_idx = abs(finalMat(:,2)-finalMat(:,3)) == 90 | abs(finalMat(:,2)-finalMat(:,3)) == 270; % c/cc, tangential
 
         % added
-        main_subset_pro_idx = ismember(finalMat(:,2), [90, 270]); % for dg, this is up/down
-        main_subset_con_idx = ismember(finalMat(:,2), [0, 180]); % for da, this is right/left
+        main_subset_pro_idx = ismember(finalMat(:,2), [0, 180]); % for dg, this is right/left, horizontal
+        main_subset_con_idx = ismember(finalMat(:,2), [90, 270]); % for dg, this is up/down, vertical
     elseif strcmp(projectName, 'da')
-        main_subset_pro_idx = ismember(finalMat(:,2), [90, 270]); % for da, this is in/out
-        main_subset_con_idx = ismember(finalMat(:,2), [0, 180]); % for da, this is c/cc
+        main_subset_pro_idx = ismember(finalMat(:,2), [90, 270]); % for da, this is in/out, radial
+        main_subset_con_idx = ismember(finalMat(:,2), [0, 180]); % for da, this is c/cc, tangential
 
         % added
-        derived_subset_pro_idx = (abs(finalMat(:,2)-finalMat(:,3)) == 0 | abs(finalMat(:,2)-finalMat(:,3)) == 180); % vertical
-        derived_subset_con_idx = abs(finalMat(:,2)-finalMat(:,3)) == 90 | abs(finalMat(:,2)-finalMat(:,3)) == 270; % horizontal
+%         derived_subset_pro_idx = abs(finalMat(:,2)-finalMat(:,3)) == 90 | abs(finalMat(:,2)-finalMat(:,3)) == 270; % horizontal
+%         derived_subset_con_idx = (abs(finalMat(:,2)-finalMat(:,3)) == 0 | abs(finalMat(:,2)-finalMat(:,3)) == 180); % vertical
+        
+        derived_subset_pro_idx = (ismember(finalMat(:,2), [0, 90]) & (abs(finalMat(:,2)-finalMat(:,3)) == 90 | abs(finalMat(:,2)-finalMat(:,3)) == 270)) | ...
+            (ismember(finalMat(:,2), [45, 135]) & (abs(finalMat(:,2)-finalMat(:,3)) == 0 | abs(finalMat(:,2)-finalMat(:,3)) == 180)); % horizontal
+        
+        derived_subset_con_idx = (ismember(finalMat(:,2), [0, 90]) & (abs(finalMat(:,2)-finalMat(:,3)) == 0 | abs(finalMat(:,2)-finalMat(:,3)) == 180)) | ...
+            (ismember(finalMat(:,2), [45, 135]) & (abs(finalMat(:,2)-finalMat(:,3)) == 90 | abs(finalMat(:,2)-finalMat(:,3)) == 270)); % vertical
+
     end
 
     mainSubset(main_subset_pro_idx) = 1;
@@ -294,7 +305,7 @@ asymLabel = strings(nA,1);
 
 %all_labels = {{'Main Cardinal', 'Main Oblique'}, {'Derived Cardinal', 'Derived Oblique'}, {'Radial', 'Tangential'}};
 
-ci_level = 68; %68;
+ci_level = 84; %68; %68;
 meanRelative=1;
 %colors = [[127 191 123]/255; [166 97 26]/255; [146 197 222]/255];
 %colors2 = [[175 141 195]/255; [64 176 166]/255; [202 0 32]/255];
@@ -352,24 +363,42 @@ for ai=1:numel(asymmetryNames)
         main_subset_est = Gintercept + estimates(4);
         derived_subset_est = Gintercept + estimates(5);
     
-        CIFcn = @(x,p)prctile(x, [100-p, p]); p = ci_level;
-    
-        % coefficient order is: intercept, abs_cardinality, rel_cardinality, radiality
+        CIFcn = @(x,p)prctile(x, [100-p, p]); 
+        
+        p = ci_level;
+        % coefficient order is: intercept, betas
         CI_maincardinality = CIFcn(coeffs(2,:)+Gintercept,p);
         CI_derivedcardinality = CIFcn(coeffs(3,:)+Gintercept,p);
         CI_mainsubset = CIFcn(coeffs(4,:)+Gintercept,p);
         CI_derivedsubset = CIFcn(coeffs(5,:)+Gintercept,p);
-    
+
+        % this is for the 95% CI of the DIFFERENCE (stats, not the plot)
+        % requires multiplying the beta by 2 (.*2) to compute the difference
+        % (they have identical magnitude)
+        % do not need the mean
+        % coefficient order is: intercept, betas
+        CI_maincardinality_stats = CIFcn(coeffs(2,:).*2,97.5);
+        CI_derivedcardinality_stats = CIFcn(coeffs(3,:).*2,97.5);
+        CI_mainsubset_stats = CIFcn(coeffs(4,:).*2,97.5);
+        CI_derivedsubset_stats = CIFcn(coeffs(5,:).*2,97.5);
+
+        disp('stats:')
+        beta_estimate_difference = [estimates(2) estimates(3) estimates(4) estimates(5)].*2
+        CI_maincardinality_stats
+        CI_derivedcardinality_stats
+        CI_mainsubset_stats
+        CI_derivedsubset_stats
     
         y = [estimates(2) estimates(3) estimates(4) estimates(5)]; %[0.11446, 0.033442, 0.015738];
-        %errlow = [0.0053434, 0.0053434, 0.0075567]; % output from model
-        %errhigh = [0.0053434, 0.0053434, 0.0075567];
     
         errlow = [CI_maincardinality(1) CI_derivedcardinality(1) CI_mainsubset(1) CI_derivedsubset(1)];
         errhigh = [CI_maincardinality(2) CI_derivedcardinality(2) CI_mainsubset(2) CI_derivedsubset(2)];
     
         y1 = Gintercept + y;
         y2 = Gintercept - y;
+
+        disp('estimates:')
+        y1-y2
     
         errlow1 = y1-errlow;
         errhigh1 = errhigh -y1;
@@ -485,7 +514,7 @@ end
 figure; hold on
 
 x = 1:nA;
-dx = 0.18;
+dx = 0; %0.18;
 
 for ai = 1:nA
     % Pro
@@ -525,17 +554,17 @@ xticks(x)
 xticklabels(asymLabel)
 xtickangle(25)
 
-ylabel('\Delta standardized BOLD response', 'FontSize', 20);
+ylabel('zscored BOLD psc', 'FontSize', 20);
 
 % Legend (dummy handles, same as you do)
 h1 = plot(nan, nan, 'Color', color_pro(1,:), 'LineWidth', 3);
 h2 = plot(nan, nan, 'Color', color_con(1,:), 'LineWidth', 3);
-legend([h1 h2], {'pro','con'}, 'Location', 'best');
+%legend([h1 h2], {'pro','con'}, 'Location', 'best');
 
 f = gcf;
 f.Position = [298 843 651 494];
 
 %print(fullfile(figureDir, sprintf('MASTER_ROI1_%s_%s', comparisonName, projectName)), ...
 %    '-dtiff', '-r300');
-
+%ylim([-0.4 0.4]) % for non zscore
 print(fullfile(figureDir, sprintf('MASTER_ROI1_%s_%s', comparisonName, projectName)), '-dpdf', '-bestfit');

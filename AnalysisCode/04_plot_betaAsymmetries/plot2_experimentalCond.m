@@ -106,30 +106,36 @@ function plot2_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         %sem2 = nanstd(avgConditions2,0,2)' ./ sqrt(sum(~isnan(avgConditions2),2)');
         
         % Plot the data on a polar plot
-        subplot(2,5,ii)
+        if length(rois) == 1
+            subplot(1,1,ii)
+        else
+            subplot(2,5,ii)
+        end
         
         for subjectIndex = 1:size(medianBOLDpa, 4)
             %scatter(1, vals_1(subjectIndex),  30, 'MarkerFaceColor', colors_rgb(subjectIndex,:), 'MarkerEdgeColor', 'none'); % [127/255, 191/255, 123/255]
-            scatter(1, vals_1(subjectIndex),  30, 'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', 'none'); % 
-            hold on
-            %scatter(2, vals_2(subjectIndex), 30, 'MarkerFaceColor', colors_rgb(subjectIndex,:), 'MarkerEdgeColor', 'none'); %  [175/255, 141/255, 195/255]
-            scatter(2, vals_2(subjectIndex), 30, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', 'none'); 
-            plot([1 2], [vals_1(subjectIndex) vals_2(subjectIndex)], 'Color', 'k'); %colors_rgb(subjectIndex,:))
+%             scatter(1, vals_1(subjectIndex),  30, 'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', 'none'); % 
+%             hold on
+%             %scatter(2, vals_2(subjectIndex), 30, 'MarkerFaceColor', colors_rgb(subjectIndex,:), 'MarkerEdgeColor', 'none'); %  [175/255, 141/255, 195/255]
+%             scatter(2, vals_2(subjectIndex), 30, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', 'none'); 
+            plot([1 2], [vals_1(subjectIndex) vals_2(subjectIndex)], 'Color', [.5 .5 .5]); %colors_rgb(subjectIndex,:))
             xlim([0 3])
     %         ylim([-0.15 0.25])
+        hold on
         end
         
         % if i need to plot asymmetry itself
 
         
-        differences = vals_1-vals_2;
-        for subjectIndex = 1:size(medianBOLDpa, 4)
-            scatter(1.5, differences(subjectIndex), 30, 'MarkerFaceColor', [.85 .85 .85], 'MarkerEdgeColor', 'none');
-        end
+%         differences = vals_1-vals_2;
+%         for subjectIndex = 1:size(medianBOLDpa, 4)
+%             scatter(1.5, differences(subjectIndex), 30, 'MarkerFaceColor', [.85 .85 .85], 'MarkerEdgeColor', 'none');
+%         end
+        hold on
 
-        errDiff = std(vals_1-vals_2)/(sqrt((size(medianBOLDpa, 4))));
-        errorbar(1.5, mean(vals_1-vals_2), errDiff, 'k', 'LineWidth', 3);
-        [h, p] = ttest(vals_1-vals_2, 0)
+%         errDiff = std(vals_1-vals_2)/(sqrt((size(medianBOLDpa, 4))));
+%         errorbar(1.5, mean(vals_1-vals_2), errDiff, 'k', 'LineWidth', 3);
+%         [h, p] = ttest(vals_1-vals_2, 0)
 
         fprintf('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         % Assume: vals_1 and vals_2 are column vectors [nSubjects x 1]
@@ -143,37 +149,51 @@ function plot2_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             resample = datasample(differences, nSubs);
             bootMeans(i) = mean(resample);
         end
+        % Observed mean difference
         meanDiff = mean(differences);
-        ci_mean = prctile(bootMeans, [2.5 97.5]);
-        errLower_mean = meanDiff - ci_mean(1);
-        errUpper_mean = ci_mean(2) - meanDiff;
         
-        %% Bootstrap Median
-        bootMedians = zeros(nBoot, 1);
-        for i = 1:nBoot
-            resample = datasample(differences, nSubs);
-            bootMedians(i) = median(resample);
-        end
-        medianDiff = median(differences);
-        ci_median = prctile(bootMedians, [2.5 97.5]);
-        errLower_median = medianDiff - ci_median(1);
-        errUpper_median = ci_median(2) - medianDiff;
+        % Bootstrap SED (standard error of the difference)
+        SED = std(bootMeans);
+
+        % 95% bootstrap confidence interval
+        ci_mean = prctile(bootMeans, [2.5 97.5]);
+
+%         errLower_mean = meanDiff - ci_mean(1);
+%         errUpper_mean = ci_mean(2) - meanDiff;
+        
+%         %% Bootstrap Median
+%         bootMedians = zeros(nBoot, 1);
+%         for i = 1:nBoot
+%             resample = datasample(differences, nSubs);
+%             bootMedians(i) = median(resample);
+%         end
+%         medianDiff = median(differences);
+%         ci_median = prctile(bootMedians, [2.5 97.5]);
+%         errLower_median = medianDiff - ci_median(1);
+%         errUpper_median = ci_median(2) - medianDiff;
+
+
         
         %% Print to console
         fprintf('Mean difference: %.4f, 95%% CI: [%.4f, %.4f]\n', meanDiff, ci_mean(1), ci_mean(2));
-        fprintf('Median difference: %.4f, 95%% CI: [%.4f, %.4f]\n', medianDiff, ci_median(1), ci_median(2));
+%         fprintf('Median difference: %.4f, 95%% CI: [%.4f, %.4f]\n', medianDiff, ci_median(1), ci_median(2));
         differences
         fprintf('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         
 
-        plot([1 2], [vals_1_overall vals_2_overall], 'k', 'LineWidth', 3)
+        %plot([1 2], [vals_1_overall vals_2_overall], 'k', 'LineWidth', 3)
+        %hold on
+        scatter(1, vals_1_overall, 200, 'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', markerC, 'LineWidth',1.75); %, 'MarkerFaceAlpha', 0.5);
         hold on
-        scatter(1, vals_1_overall, 70, 'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', markerC, 'LineWidth',1.75); %, 'MarkerFaceAlpha', 0.5);
-        hold on
-        scatter(2, vals_2_overall,  70, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', markerC, 'LineWidth',1.75); %, 'MarkerFaceAlpha', 0.5);
+        scatter(2, vals_2_overall,  200, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', markerC, 'LineWidth',1.75); %, 'MarkerFaceAlpha', 0.5);
         
+        hold on
+        errorbar(1, mean(vals_1), SED, 'k', 'LineWidth', 3, 'CapSize', 0);
+        hold on
+        errorbar(2, mean(vals_2), SED, 'k', 'LineWidth', 3, 'CapSize', 0);
+
         title(rois{ii});
-        ylabel('zscored PSC')
+        %ylabel('zscored PSC')
         set(gca, 'XTick', []);
 
         if ismember(rois{ii}, {'pMT', 'pMST', 'hMTcomplex'})
@@ -189,7 +209,7 @@ function plot2_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             if strcmp(asymmetryName, 'radialVsTangential')
                 lg1 = legend('Radial', 'Tangential', 'Location', 'northeast');
             elseif strcmp(asymmetryName, 'verticalVsHorizontal')
-                lg1 = legend('Vertical', 'Horizontal', 'Location', 'northeast');
+                lg1 = legend('Horizontal', 'Vertical', 'Location', 'northeast');
             else
                 lg1 = legend('Card', 'Obl', 'Location', 'northeast');
             end

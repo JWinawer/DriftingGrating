@@ -9,7 +9,7 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     % For da experiment, this will include polar cardinal v polar oblique
     %                                   and radial v tangential
 
-    plotModelToo = 1;
+    plotModelToo = 0; %1;
     if plotModelToo
         % just for internal purposes (if I want to plot model fits ad hoc)
         modelfolder = fullfile(projectSettings.glmResultsfolder, 'LME_results', projectSettings.comparisonName);
@@ -120,10 +120,13 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         %anglevals = [90, 135, 180, 225, 270, 315, 0, 45];
         anglevals = [90, 45, 0, 315, 270, 225, 180, 135]; % <-- these were manually converted based on the order of polarAngles above (Noah's convention)
         
+        nBoot = 1000;
+        nLoc  = size(avgConditions1,1);
+
         vals_1 = nanmean(avgConditions1,2)';
-        sem1 = nanstd(avgConditions1,0,2)' ./ sqrt(sum(~isnan(avgConditions1),2)');
+        %sem1 = nanstd(avgConditions1,0,2)' ./ sqrt(sum(~isnan(avgConditions1),2)');
         vals_2 = nanmean(avgConditions2,2)';
-        sem2 = nanstd(avgConditions2,0,2)' ./ sqrt(sum(~isnan(avgConditions2),2)');
+        %sem2 = nanstd(avgConditions2,0,2)' ./ sqrt(sum(~isnan(avgConditions2),2)');
  
         disp('Testing consistency with permutation')
         D_obs = vals_1 - vals_2;
@@ -131,34 +134,82 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         D_obs>0
         observed_stat = mean(D_obs)
 
-        n_perms = 10000;
-        null_stats = zeros(n_perms, 1);
-        for i = 1:n_perms
-            flip = randi([0, 1], 1, 8) * 2 - 1;  % randomly flip sign
-            permuted_diff = flip .* (D_obs);
-            %null_stats(i) = sum(permuted_diff > 0); % for 1 tailed
-            null_stats(i) = mean(permuted_diff); % for two-tailed
+        % added to plot bootstrapped SED
+        SED = nan(1,nLoc);
+        CI_lower = nan(1,nLoc);
+        CI_upper = nan(1,nLoc);
+
+        for loc = 1:nLoc
+        
+            % Data for this location
+            x1 = avgConditions1(loc,:);
+            x2 = avgConditions2(loc,:);
+        
+            % Keep only subjects with data in BOTH conditions
+            valid = ~isnan(x1) & ~isnan(x2);
+            x1 = x1(valid);
+            x2 = x2(valid);
+        
+            nSub = numel(x1);
+        
+            bootDiff = zeros(nBoot,1);
+        
+            for b = 1:nBoot
+        
+                % Bootstrap subjects WITH replacement
+                idx = randi(nSub,nSub,1);
+        
+                % Difference of means for this bootstrap sample
+                bootDiff(b) = mean(x1(idx)) - mean(x2(idx));
+        
+            end
+        
+            % Bootstrap estimate of the standard error of the paired difference
+            SED(loc) = std(bootDiff);
+
+            % 95% percentile confidence interval
+            CI = prctile(bootDiff,[2.5 97.5]);
+        
+            CI_lower(loc) = CI(1);
+            CI_upper(loc) = CI(2);
+        
         end
 
-        %p = mean(null_stats >= observed_stat) % for 1 tailed
-        p = mean(abs(null_stats) >= abs(observed_stat));  % two-tailed
+        CI_lower
+        CI_upper
 
-        if p==0
-            p = 1 / n_perms
-        else
-            p
-        end
+        %
+
+%         n_perms = 10000;
+%         null_stats = zeros(n_perms, 1);
+%         for i = 1:n_perms
+%             flip = randi([0, 1], 1, 8) * 2 - 1;  % randomly flip sign
+%             permuted_diff = flip .* (D_obs);
+%             %null_stats(i) = sum(permuted_diff > 0); % for 1 tailed
+%             null_stats(i) = mean(permuted_diff); % for two-tailed
+%         end
+% 
+%         %p = mean(null_stats >= observed_stat) % for 1 tailed
+%         p = mean(abs(null_stats) >= abs(observed_stat));  % two-tailed
+% 
+%         if p==0
+%             p = 1 / n_perms
+%         else
+%             p
+%         end
 
         mean_diff = mean(D_obs)
 
-        std_effect = std(D_obs)
-
-        cohens_d = mean_diff/std_effect
-        disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+%         std_effect = std(D_obs)
+% 
+%         cohens_d = mean_diff/std_effect
+%         disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
         % using this method instead of subplot for TIGHT AXES
 %         axes(ha(ri)); 
         
+        sem1 = SED;
+        sem2 = SED;
         
         % plot average (connecting the last line)
         polarplot([deg2rad(anglevals(end)), deg2rad(anglevals(1))],[vals_1(end), vals_1(1)], 'o-', 'Color', colors{1}, 'MarkerSize', 12, 'LineWidth',1.75,  'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', markerC)
@@ -178,18 +229,18 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         p2 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_2 - sem2; vals_2 + sem2], '-', 'Color', colors{2}, 'LineWidth',1.75);
         hold on
 
-       for subjectIndex = 1:size(medianBOLDpa, 4)
-            %p3  = polarplot(deg2rad(anglevals), avgConditions1(:, subjectIndex)', 'o', 'Color', [127/255, 191/255, 123/255]);
-            %hold on;
-            %p4 = polarplot(deg2rad(anglevals), avgConditions2(:, subjectIndex)', 'o', 'Color', [175/255, 141/255, 195/255]);
-            %hold on
-        %     hold on
-            asymm = avgConditions1(:, subjectIndex) - avgConditions2(:, subjectIndex);
-            if (sum(asymm<0)) ~= 0
-                sprintf('WaRNING: %s points are below 0', num2str(sum(asymm<0)))
-            end
-            
-        end
+%        for subjectIndex = 1:size(medianBOLDpa, 4)
+%             %p3  = polarplot(deg2rad(anglevals), avgConditions1(:, subjectIndex)', 'o', 'Color', [127/255, 191/255, 123/255]);
+%             %hold on;
+%             %p4 = polarplot(deg2rad(anglevals), avgConditions2(:, subjectIndex)', 'o', 'Color', [175/255, 141/255, 195/255]);
+%             %hold on
+%         %     hold on
+% %             asymm = avgConditions1(:, subjectIndex) - avgConditions2(:, subjectIndex);
+% %             if (sum(asymm<0)) ~= 0
+% %                 sprintf('WaRNING: %s points are below 0', num2str(sum(asymm<0)))
+% %             end
+%             
+%         end
         
         thetaticks(0:45:315);
     
@@ -198,7 +249,7 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             if strcmp(asymmetryName, 'radialVsTangential')
                 hLegend = legend('Radial', 'Tangential', 'Location', 'northwest', 'Box', 'off', 'FontSize', 18);
             elseif strcmp(asymmetryName, 'verticalVsHorizontal')
-                hLegend = legend('Vertical', 'Horizontal', 'Location', 'northwest', 'Box', 'off', 'FontSize', 18);
+                hLegend = legend('Horizontal', 'Vertical', 'Location', 'northwest', 'Box', 'off', 'FontSize', 18);
             else
                 hLegend = legend('Cardinal', 'Oblique', 'Location', 'northwest', 'Box', 'off', 'FontSize', 18);
             end
@@ -291,7 +342,7 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     
     % Save as PDF
     set(gcf_edit,'Renderer','painters'); % new
-    print(gcf_edit, filename, '-dpdf', '-painters');
+    print(gcf_edit, filename, '-dpdf', '-vector'); %'-painters');
     close all;
 
 end

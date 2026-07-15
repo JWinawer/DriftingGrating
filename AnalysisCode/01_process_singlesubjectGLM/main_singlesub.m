@@ -4,8 +4,8 @@ clear all; close all; clc;
 
 % set fundamental vars to run a single subject / protocol
 projectName = 'da'; % 'dg', or 'dgl' or 'da'
-subj = 'sub-0250'; %'sub-0426';
-ses = 'ses-03'; %'ses-01'; %'ses-nyu3t02'; %'ses-01'; <-- can I make this not manual?
+subj = 'sub-wlsubj124'; %'sub-0426';
+ses = 'ses-05'; %'ses-01'; %'ses-nyu3t02'; %'ses-01'; <-- can I make this not manual?
 space = 'fsnative';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 
@@ -128,7 +128,7 @@ save(fullfile(derivativesFolder,'modelOutput.mat'), 'modelOut', 'designSINGLE', 
 % average betas for cardinal motion - average betas for cardinal static
 % average betas for oblique motion - average betas for oblique static
 
-normalize = 1;
+normalize = 0; % changed to 0 on 7-14-2026
 
 % average betas across trials if I ran glmSingle
 if ~strcmp(hRF_setting, 'glmsingle')

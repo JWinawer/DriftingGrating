@@ -96,10 +96,10 @@ function newMatrix = compute_derivativeDirections(medianBOLDpa, projectSettings,
                         localMotionDirs = deriveLocalMotionfromUVM(UVM_dir, polarAngles);
                         currentlocalMotionDir = localMotionDirs(polarIndex);
     
-                        if ismember(currentlocalMotionDir, [90, 270])
-                            provals = [provals, currentVal]; % this is actually up/down
-                        elseif ismember(currentlocalMotionDir, [0, 180])
-                            convals = [convals, currentVal]; % this is actually right/left
+                        if ismember(currentlocalMotionDir, [0, 180])
+                            provals = [provals, currentVal]; % this is actually right/left
+                        elseif ismember(currentlocalMotionDir, [90, 270])
+                            convals = [convals, currentVal]; % this is actually up/down
                         else
                             neutvals = [neutvals, currentVal];
                         end
