@@ -1,6 +1,8 @@
 Data/**
 Support/
 Manuscript draft/
+Reproduction/figures/
+Reproduction/**/_cache/
 *.pdf
 *.png
 *.bmp
