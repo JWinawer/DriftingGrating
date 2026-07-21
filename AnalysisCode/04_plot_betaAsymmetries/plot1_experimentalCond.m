@@ -311,7 +311,7 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             end
 
             % plot pro and con for each location afer averaging:
-            hold on
+            hold on % marker size was 6
             polarplot(deg2rad(0:45:315),proMeans, 'o', 'Color', colors{1},  'MarkerSize', 6, 'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', 'k','LineWidth',1.75)
             hold on
             polarplot(deg2rad(0:45:315),conMeans, 'o', 'Color', colors{2},  'MarkerSize', 6, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', 'k','LineWidth',1.75)
