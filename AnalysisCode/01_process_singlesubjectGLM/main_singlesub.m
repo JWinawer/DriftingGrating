@@ -148,14 +148,18 @@ else
     end
 end
 
+% save out non-normalized in case needed later
+save(fullfile(derivativesFolder, 'betas_nonzscored.mat'), ...
+'betamaps')
+
 if normalize
     % new: convert to z-score (across betas)
     betamaps_condOnly = betamaps(:,1:13);
     betamaps = zscore(betamaps_condOnly, 0, 2);
 
-    % save out non-normalized in case needed later
-    save(fullfile(derivativesFolder, 'nonNormalized13betas.mat'), ...
-    'betamaps_condOnly')
+    % save out normalized betas in case needed later
+    save(fullfile(derivativesFolder, 'betas_zscored.mat'), ...
+    'betamaps')
 
 end
 

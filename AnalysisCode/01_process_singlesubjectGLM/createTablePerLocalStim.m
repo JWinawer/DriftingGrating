@@ -1,0 +1,501 @@
+clc; clear all; close all
+
+%% create new table with columns per local direction / orientation
+bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
+savedir = fullfile(bidsDir, 'derivatives', 'summaryTables');
+load(fullfile(savedir, 'allsubjectsTable.mat'));
+
+% new table, reorganized
+% lookup
+
+[stimNames, stimMap] = createStimMap;
+
+% print out mapping
+
+angleBins = 0:45:315;
+
+for iStim = 1:numel(stimNames)
+
+    stim = stimNames{iStim};
+    info = stimMap.(stim);
+
+    fprintf('\n%s\n', stim);
+    fprintf('-----------------------------\n');
+
+    for angle = angleBins
+
+        if isfield(info,'blank') && info.blank
+
+            fprintf('pRF %3d -> blank\n', angle);
+
+        elseif isfield(info,'motdir') && isempty(info.motdir)
+
+            % stationary
+            if strcmp(info.type,'cart')
+                ori = info.ori;
+            else
+                ori = mod(angle + info.oriOffset,180);
+            end
+
+            fprintf('pRF %3d -> ori %3d, mot none\n', ...
+                angle, ori);
+
+        else
+
+            % moving
+            if strcmp(info.type,'cart')
+
+                ori = info.ori;
+                mot = info.motdir;
+
+            else
+
+                ori = mod(angle + info.oriOffset,180);
+                mot = mod(angle + info.motOffset,360);
+
+            end
+
+            fprintf('pRF %3d -> ori %3d, mot %3d\n', ...
+                angle, ori, mot);
+
+        end
+    end
+end
+
+
+%% Create all possible output condition names
+
+oriBins = [0 45 90 135];
+
+conditions = {};
+
+% Define orthogonal motion directions for each orientation
+orthogonalMotions = struct();
+orthogonalMotions.ori0   = [90 270];
+orthogonalMotions.ori45  = [135 315];
+orthogonalMotions.ori90  = [0 180];
+orthogonalMotions.ori135 = [45 225];
+
+% Moving
+for ori = oriBins
+
+    motBins = orthogonalMotions.(sprintf('ori%d',ori));
+
+    for mot = motBins
+
+        conditions{end+1} = sprintf(...
+            'cart_localori_%d_localmotdir_%d', ori, mot);
+
+        conditions{end+1} = sprintf(...
+            'pol_localori_%d_localmotdir_%d', ori, mot);
+
+    end
+end
+
+% Stationary
+for ori = oriBins
+
+    conditions{end+1} = sprintf(...
+        'cart_localori_%d_localmotdir_none', ori);
+
+    conditions{end+1} = sprintf(...
+        'pol_localori_%d_localmotdir_none', ori);
+
+end
+
+% Blank
+conditions{end+1} = 'cart_blank';
+conditions{end+1} = 'pol_blank';
+
+conditions = string(conditions);
+conditions = matlab.lang.makeValidName(conditions);
+
+T = allsubjectsTable;
+
+localData = nan(height(T), numel(conditions));
+
+betaData = T{:,stimNames};   % rows = voxels, cols = stimuli
+angles = T.pRF_angle_bin;
+
+%% Unique pRF angle bins
+
+angleBins = 0:45:315;
+
+angleLookup = struct();
+
+for iAngle = 1:numel(angleBins)
+
+    angle = angleBins(iAngle);
+
+    angleLookup(iAngle).angle = angle;
+
+    for iStim = 1:numel(stimNames)
+
+        stim = stimNames{iStim};
+        info = stimMap.(stim);
+
+        if isfield(info,'blank')
+
+            colName = sprintf('%s_blank',info.type);
+
+        elseif isfield(info,'motdir') && isempty(info.motdir)
+
+            % stationary
+
+            if strcmp(info.type,'cart')
+                ori = info.ori;
+            else
+                ori = mod(angle + info.oriOffset,180);
+            end
+
+            colName = sprintf('%s_localori_%d_localmotdir_none',...
+                info.type,ori);
+
+        else
+
+            % moving
+
+            if strcmp(info.type,'cart')
+
+                ori = info.ori;
+                mot = info.motdir;
+
+            else
+
+                ori = mod(angle + info.oriOffset,180);
+                mot = mod(angle + info.motOffset,360);
+
+            end
+
+            colName = sprintf('%s_localori_%d_localmotdir_%d',...
+                info.type,ori,mot);
+
+        end
+
+        angleLookup(iAngle).stim(iStim).column = ...
+            find(strcmp(conditions,matlab.lang.makeValidName(colName)));
+
+    end
+end
+
+%% Apply mapping
+
+for iAngle = 1:numel(angleBins)
+
+    rows = angles == angleBins(iAngle);
+
+    for iStim = 1:numel(stimNames)
+
+        col = angleLookup(iAngle).stim(iStim).column;
+
+        localData(rows,col) = betaData(rows,iStim);
+
+    end
+end
+
+%% Make final table, organized by local absolute motiondir/orientation (instead of stimulus)
+
+localTable = array2table(localData,...
+    'VariableNames',conditions);
+
+finalTable = [T(:,1:8), T(:,{'dg_beta_mean','dg_beta_std','da_beta_mean','da_beta_std'}), localTable];
+
+
+%%
+
+% compute each asymmetry:
+
+finalTable.cart_oriasym_HvV = finalTable.cart_localori_0_localmotdir_none - finalTable.cart_localori_90_localmotdir_none;
+finalTable.pol_oriasym_HvV  = finalTable.pol_localori_0_localmotdir_none  - finalTable.pol_localori_90_localmotdir_none;
+
+finalTable.cart_oriasym_CvO = mean([finalTable.cart_localori_0_localmotdir_none finalTable.cart_localori_90_localmotdir_none],2) - ...
+                              mean([finalTable.cart_localori_45_localmotdir_none finalTable.cart_localori_135_localmotdir_none],2);
+
+finalTable.pol_oriasym_CvO  = mean([finalTable.pol_localori_0_localmotdir_none finalTable.pol_localori_90_localmotdir_none],2) - ...
+                              mean([finalTable.pol_localori_45_localmotdir_none finalTable.pol_localori_135_localmotdir_none],2);
+
+
+a = finalTable.pRF_angle_bin;
+
+% Map pRF angle bin -> radial orientation, tangential orientation
+radOri = nan(size(a));
+tanOri = nan(size(a));
+
+radOri(ismember(a,[0 180]))   = 0;
+tanOri(ismember(a,[0 180]))   = 90;
+
+radOri(ismember(a,[90 270]))  = 90;
+tanOri(ismember(a,[90 270]))  = 0;
+
+radOri(ismember(a,[45 225]))  = 45;
+tanOri(ismember(a,[45 225]))  = 135;
+
+radOri(ismember(a,[135 315])) = 135;
+tanOri(ismember(a,[135 315])) = 45;
+
+
+% Initialize output
+cartRad = nan(height(finalTable),1);
+cartTan = nan(height(finalTable),1);
+
+polRad = nan(height(finalTable),1);
+polTan = nan(height(finalTable),1);
+
+% Fill according to orientation
+for ori = [0 45 90 135]
+
+    idxRad = radOri == ori;
+    idxTan = tanOri == ori;
+
+    cartRad(idxRad) = finalTable.(sprintf('cart_localori_%d_localmotdir_none',ori))(idxRad);
+    cartTan(idxTan) = finalTable.(sprintf('cart_localori_%d_localmotdir_none',ori))(idxTan);
+
+    polRad(idxRad) = finalTable.(sprintf('pol_localori_%d_localmotdir_none',ori))(idxRad);
+    polTan(idxTan) = finalTable.(sprintf('pol_localori_%d_localmotdir_none',ori))(idxTan);
+
+end
+
+% Radial minus tangential
+finalTable.cart_oriasym_RvT = cartRad - cartTan;
+finalTable.pol_oriasym_RvT = polRad - polTan;
+
+
+isCardinal = ismember(finalTable.pRF_angle_bin,[0 90 180 270]);
+isOblique  = ismember(finalTable.pRF_angle_bin,[45 135 225 315]);
+
+cartPC = nan(height(finalTable),1);
+cartPO = nan(height(finalTable),1);
+polPC  = nan(height(finalTable),1);
+polPO  = nan(height(finalTable),1);
+
+% Cardinal pRF locations
+cartPC(isCardinal) = mean([ ...
+    finalTable.cart_localori_0_localmotdir_none(isCardinal), ...
+    finalTable.cart_localori_90_localmotdir_none(isCardinal)],2);
+
+cartPO(isCardinal) = mean([ ...
+    finalTable.cart_localori_45_localmotdir_none(isCardinal), ...
+    finalTable.cart_localori_135_localmotdir_none(isCardinal)],2);
+
+polPC(isCardinal) = mean([ ...
+    finalTable.pol_localori_0_localmotdir_none(isCardinal), ...
+    finalTable.pol_localori_90_localmotdir_none(isCardinal)],2);
+
+polPO(isCardinal) = mean([ ...
+    finalTable.pol_localori_45_localmotdir_none(isCardinal), ...
+    finalTable.pol_localori_135_localmotdir_none(isCardinal)],2);
+
+
+% Oblique pRF locations
+cartPC(isOblique) = mean([ ...
+    finalTable.cart_localori_45_localmotdir_none(isOblique), ...
+    finalTable.cart_localori_135_localmotdir_none(isOblique)],2);
+
+cartPO(isOblique) = mean([ ...
+    finalTable.cart_localori_0_localmotdir_none(isOblique), ...
+    finalTable.cart_localori_90_localmotdir_none(isOblique)],2);
+
+polPC(isOblique) = mean([ ...
+    finalTable.pol_localori_45_localmotdir_none(isOblique), ...
+    finalTable.pol_localori_135_localmotdir_none(isOblique)],2);
+
+polPO(isOblique) = mean([ ...
+    finalTable.pol_localori_0_localmotdir_none(isOblique), ...
+    finalTable.pol_localori_90_localmotdir_none(isOblique)],2);
+
+
+finalTable.cart_oriasym_PCvPO = cartPC - cartPO;
+finalTable.pol_oriasym_PCvPO = polPC - polPO;
+
+
+%%
+
+plotAsymmetry(finalTable,...
+    'cart_oriasym_HvV',...
+    'pol_oriasym_HvV',...
+    'H - V orientation asymmetry')
+
+
+plotAsymmetry(finalTable,...
+    'cart_oriasym_CvO',...
+    'pol_oriasym_CvO',...
+    'C - O orientation asymmetry')
+
+
+plotAsymmetry(finalTable,...
+    'cart_oriasym_RvT',...
+    'pol_oriasym_RvT',...
+    'R - T orientation asymmetry')
+
+
+plotAsymmetry(finalTable,...
+    'cart_oriasym_PCvPO',...
+    'pol_oriasym_PCvPO',...
+    'PC - PO orientation asymmetry')
+
+
+
+%% Plot by polar angle the mean and std
+
+% Select included V1 voxels
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included == 1;
+
+angleBins = 0:45:315;
+thetaMed = deg2rad(angleBins);
+
+figure
+
+% DG mean
+subplot(2,2,1)
+
+theta = deg2rad(finalTable.pRF_angle_bin(idx));
+rho = finalTable.dg_beta_mean(idx);
+
+% polarscatter(theta, rho, 10, 'filled', ...
+%     'MarkerFaceAlpha',0.3,...
+%     'MarkerEdgeAlpha',0.3)
+% rlim([-2 2])
+% hold on
+
+rhoMed = arrayfun(@(a) ...
+    median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
+    angleBins);
+
+polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
+rlim([-.5 .5])
+hold off
+title('Cartesian experiment: beta mean')
+
+
+% DA mean
+subplot(2,2,2)
+
+rho = finalTable.da_beta_mean(idx);
+
+% polarscatter(theta, rho, 10, 'filled', ...
+%     'MarkerFaceAlpha',0.3,...
+%     'MarkerEdgeAlpha',0.3)
+% rlim([-2 2])
+% hold on
+
+rhoMed = arrayfun(@(a) ...
+    median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
+    angleBins);
+
+polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
+rlim([-.5 .5])
+hold off
+title('Polar experiment: beta mean')
+
+
+% DG std
+subplot(2,2,3)
+
+rho = finalTable.dg_beta_std(idx);
+
+% polarscatter(theta, rho, 10, 'filled', ...
+%     'MarkerFaceAlpha',0.3,...
+%     'MarkerEdgeAlpha',0.3)
+% 
+% hold on
+
+rhoMed = arrayfun(@(a) ...
+    median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
+    angleBins);
+
+polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
+rlim([0 1])
+hold off
+title('Cartesian experiment: beta std')
+
+
+% DA std
+subplot(2,2,4)
+
+rho = finalTable.da_beta_std(idx);
+
+% polarscatter(theta, rho, 10, 'filled', ...
+%     'MarkerFaceAlpha',0.3,...
+%     'MarkerEdgeAlpha',0.3)
+% 
+% hold on
+
+rhoMed = arrayfun(@(a) ...
+    median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
+    angleBins);
+
+polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
+rlim([0 1])
+hold off
+title('Polar experiment: beta std')
+f1 = gcf;
+f1.Position = [1072 289 1207 941];
+
+%% Save table
+filename = fullfile(savedir, 'allsubjectsTable_local_AbsOriDir.mat');
+save(filename, 'finalTable');
+
+filename = fullfile(savedir, 'allsubjectsTable_local_AbsOriDir.csv');
+writetable(finalTable, filename);
+
+
+%% For V1, included voxels:
+% average each subjects' voxels per unique pRF_bin, for horizontal orientations only
+% then do vertical only
+
+
+%%
+
+function plotAsymmetry(finalTable, asymColCart, asymColPol, titleText)
+
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included == 1;
+
+figure;
+
+plots = {
+    finalTable.dg_beta_mean(idx), finalTable.(asymColCart)(idx), 'beta mean', 'Cartesian'
+    finalTable.da_beta_mean(idx), finalTable.(asymColPol)(idx),  'beta mean', 'Polar'
+    finalTable.dg_beta_std(idx),  finalTable.(asymColCart)(idx), 'beta std',  'Cartesian'
+    finalTable.da_beta_std(idx),  finalTable.(asymColPol)(idx),  'beta std',  'Polar'
+    };
+
+for i = 1:4
+
+    subplot(2,2,i)
+
+    x = plots{i,1};
+    y = plots{i,2};
+
+    yline(0,'r-','LineWidth',2)
+    hold on
+
+    h = scatter(x,y,10,'filled');
+    h.MarkerFaceAlpha = 0.3;
+    h.MarkerEdgeAlpha = 0.3;
+
+    plot(median(x,'omitnan'), median(y,'omitnan'), ...
+        'k+', 'MarkerSize',16,'LineWidth',2)
+
+    hold off
+
+    xlabel(plots{i,3})
+    ylabel(plots{i,4} + " " + titleText)
+
+    if i <= 2
+        xlim([-4 4])
+    else
+        xlim([0 3])
+    end
+
+    ylim([-4 3])
+
+end
+
+sgtitle(strcat(titleText, ' per V1 voxel (ecc 4-8, R^2>.1)'))
+
+end
+
+
+
+
+
