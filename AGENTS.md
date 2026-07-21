@@ -156,6 +156,9 @@ asymmetries and 2nd-harmonic derived ones are unaffected. See `Reproduction/FIND
 ## Related docs
 - `Reproduction/FINDINGS.md` — reproduction results and the derived-direction bug (read this
   before trusting any *derived* asymmetry: `da` H-V/card-obl, `dg` rad-tang/polar-card).
+- `Reproduction/NEXT_STEPS.md` — open follow-up: compare the z-scored vs non-z-scored analyses,
+  locate any large discrepancies, and judge which is more defensible (machinery for both variants
+  already exists in `Reproduction/cleanroom/`).
 - `README.md` — experiment (stimulus-presentation) overview.
 - `AnalysisCode/README.rtf` — detailed, near function-by-function description of the full
   analysis pipeline (includes stages upstream and downstream of Figs 5–8).

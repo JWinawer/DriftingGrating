@@ -62,3 +62,4 @@ Full write-up and evidence in [FINDINGS.md](FINDINGS.md).
 - [x] Path B: CSV bridged into the existing pipeline; cross-path arrays identical (0.0 diff)
 - [x] Path B: Figs 5/6 regenerated through the real `plot1/plot2`; da H-V artifact resolved
 - [x] Finding documented in [FINDINGS.md](FINDINGS.md)
+- [ ] **Next:** z-scored vs non-z-scored comparison — see [NEXT_STEPS.md](NEXT_STEPS.md)
