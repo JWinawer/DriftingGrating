@@ -144,7 +144,18 @@ across the Methods prose, and treat Fig 7 as the case where the choice actually 
 
 ---
 
+## Reproduction & a known bug
+`Reproduction/` reproduces Figs 5–8 from `Support/allsubjectsTable.csv` two ways (a clean-room
+MATLAB pipeline and a bridge into this repo's own code). It reproduces every direct asymmetry
+exactly, and surfaced a **polar-angle-ordering bug in `compute_derivativeDirections.m`**: it
+swaps the horizontal/vertical (and radial/tangential) labels at the four cardinal meridians,
+corrupting the two *first-harmonic derived* asymmetries — `da` horizontal-vertical (reported
+−0.45, correct ≈ 0) and `dg` radial-tangential (current code ≈ 0, correct 0.23). Direct
+asymmetries and 2nd-harmonic derived ones are unaffected. See `Reproduction/FINDINGS.md`.
+
 ## Related docs
+- `Reproduction/FINDINGS.md` — reproduction results and the derived-direction bug (read this
+  before trusting any *derived* asymmetry: `da` H-V/card-obl, `dg` rad-tang/polar-card).
 - `README.md` — experiment (stimulus-presentation) overview.
 - `AnalysisCode/README.rtf` — detailed, near function-by-function description of the full
   analysis pipeline (includes stages upstream and downstream of Figs 5–8).

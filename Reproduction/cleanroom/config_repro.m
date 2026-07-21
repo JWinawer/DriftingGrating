@@ -62,6 +62,7 @@ function cfg = config_repro()
                        'cartexp_rightleaning_grating_stationary', ...
                        'cartexp_leftleaning_grating_stationary'};
     cfg.dg.oriAngle = [0 90 45 135];        % horizontal=0, vertical=90, right-leaning=45, left-leaning=135
+    cfg.dg.oriIdx   = [26 27 28 29];        % CONTRASTS.json index per oriCols entry (s0/s90/s45/s135 _v_b)
     cfg.dg.blank    = 'cartexp_blank';
     cfg.dg.betaStd  = 'dg_beta_std';
     cfg.dg.betaMean = 'dg_beta_mean';
@@ -76,6 +77,7 @@ function cfg = config_repro()
                        'polexp_ccspiral_grating_stationary', ...
                        'polexp_cspiral_grating_stationary'};
     cfg.da.oriAngle = [90 0 45 135];        % UVM local orientation of each stimulus
+    cfg.da.oriIdx   = [27 26 28 29];        % CONTRASTS.json index: pinwheel=27, annulus=26, ccspiral=28, cspiral=29
     cfg.da.blank    = 'polexp_blank';
     cfg.da.betaStd  = 'da_beta_std';
     cfg.da.betaMean = 'da_beta_mean';

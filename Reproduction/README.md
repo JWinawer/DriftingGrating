@@ -33,15 +33,32 @@ column (it is a superset of this set).
 ## Subjects (fixed order, those who did both experiments)
 `sub-0037, sub-0201, sub-0255, sub-wlsubj123, sub-wlsubj124, sub-0395, sub-0426, sub-0250`
 
-## Path A (cleanroom) — how to run
-From `cleanroom/` in MATLAB: `run_all_repro` regenerates Figs 5–8 (both variants) and prints the
-validation table. Or run pieces: `run_fig5_6`, `run_fig7`, `run_fig8`,
-`validate_against_manuscript`. First call builds the V1 cache (`_cache/v1.mat`, ~10 s); later
-calls reuse it. Outputs land in `figures/cleanroom/`.
+## How to run
+
+**Path A (cleanroom)** — from `cleanroom/` in MATLAB: `run_all_repro` regenerates Figs 5–8
+(both variants) and prints the validation table. Or run pieces: `run_fig5_6`, `run_fig7`,
+`run_fig8`, `validate_against_manuscript`. First call builds the V1 cache (`_cache/v1.mat`,
+~10 s); later calls reuse it. Outputs → `figures/cleanroom/`.
+
+**Path B (bridge)** — from `bridge/` in MATLAB (needs `AnalysisCode/` on the path, added
+automatically):
+- `resolve_da_HV` — runs the real `compute_derivativeDirections.m`; prints the per-θ da H-V
+  comparison that pins the artifact.
+- `run_pathB_values` — computes all 8 asymmetries through the real repo functions; prints
+  existing-code vs clean-room vs manuscript.
+- `run_pathB_figures` — regenerates Figs 5/6 through the real `plot1/plot2` (→ `figures/bridge/`).
+
+## Key result
+
+The reproduction confirms the analysis **except** for the two first-harmonic *derived* (reference-
+frame-mismatched) asymmetries, which carry a polar-angle-ordering bug (a cardinal-meridian
+horizontal/vertical and radial/tangential swap) in `AnalysisCode/.../compute_derivativeDirections.m`.
+Corrected values: `da` horizontal-vertical ≈ 0 (not −0.45) and `dg` radial-tangential ≈ 0.23.
+Full write-up and evidence in [FINDINGS.md](FINDINGS.md).
 
 ## Status
-- [x] Path A: data path validated — 7/8 asymmetries reproduce the manuscript exactly
-- [x] Path A: Figs 5, 6, 7, 8 generated (z-scored + raw variants)
-- [x] Finding: `da` horizontal-vertical diverges (clean ~0 vs manuscript −0.45) — see
-      [FINDINGS.md](FINDINGS.md)
-- [ ] Path B: bridge CSV → existing code; resolve `da` H-V per-θ definitively
+- [x] Path A: data path validated — direct asymmetries + `dg` derived reproduce the manuscript
+- [x] Path A: Figs 5, 6, 7, 8 generated (z-scored + raw)
+- [x] Path B: CSV bridged into the existing pipeline; cross-path arrays identical (0.0 diff)
+- [x] Path B: Figs 5/6 regenerated through the real `plot1/plot2`; da H-V artifact resolved
+- [x] Finding documented in [FINDINGS.md](FINDINGS.md)
