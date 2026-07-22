@@ -541,6 +541,9 @@ rhoMed = arrayfun(@(a) ...
     median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
     angleBins);
 
+theta = linspace(0, 2*pi, 361);
+polarplot(theta, zeros(size(theta)), 'r-', 'LineWidth', 2)
+hold on
 polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
 rlim([-.5 .5])
 hold off
@@ -562,6 +565,9 @@ rhoMed = arrayfun(@(a) ...
     median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
     angleBins);
 
+
+polarplot(theta, zeros(size(theta)), 'r-', 'LineWidth', 2)
+hold on
 polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
 rlim([-.5 .5])
 hold off
@@ -646,28 +652,38 @@ for i = 1:4
     x = plots{i,1};
     y = plots{i,2};
 
-    yline(0,'r-','LineWidth',2)
+
+    if i <= 2
+        xlim([-3 3])
+        ylim([-3 3])
+        xline(0,'w-','LineWidth',1)
+        xedges = linspace(-3, 3, 81);
+        yedges = linspace(-3, 3, 81);
+        hold on
+    else
+        xlim([0 3])
+        ylim([-3 3])
+        xedges = linspace(-3, 3, 81);
+        yedges = linspace(-3, 3, 81);
+    end
+
+    yline(0,'w-','LineWidth',1)
     hold on
 
-    h = scatter(x,y,10,'filled');
-    h.MarkerFaceAlpha = 0.3;
-    h.MarkerEdgeAlpha = 0.3;
+    histogram2(x, y, xedges, yedges, 'DisplayStyle', 'tile', 'ShowEmptyBins','on'); 
+    clim([0 250])
+    %h=scatter(x,y,10,'filled');
+%     h.MarkerFaceAlpha = 0.3;
+%     h.MarkerEdgeAlpha = 0.3;
 
-    plot(median(x,'omitnan'), median(y,'omitnan'), ...
-        'k+', 'MarkerSize',16,'LineWidth',2)
+%     plot(median(x,'omitnan'), median(y,'omitnan'), ...
+%         'k+', 'MarkerSize',16,'LineWidth',2)
 
     hold off
 
     xlabel(plots{i,3})
     ylabel(plots{i,4} + " " + titleText)
 
-    if i <= 2
-        xlim([-4 4])
-    else
-        xlim([0 3])
-    end
-
-    ylim([-4 3])
 
 end
 
