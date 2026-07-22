@@ -25,18 +25,26 @@ Group-mean asymmetry differences, z-scored vs raw (σ-units vs raw % change):
 
 | asymmetry | dg z | dg raw | da z | da raw |
 |---|---|---|---|---|
-| horiz − vert   | −1.155 | −0.480 | ≈0     | ≈0     |
+| horiz − vert   | −1.155 | −0.480 | −0.446 | −0.211 |
 | card − obl     | −0.398 | −0.204 | −0.064 | −0.030 |
 | rad − tang     |  0.226 |  0.116 |  0.603 |  0.150 |
 | polc − polo    |  0.056 |  0.029 |  0.173 |  0.034 |
+
+(Regenerated 2026-07-22 after the two reproduction bugs were fixed; `run_pathB_values` now
+gives identical values through the repo's own functions. The `da horiz − vert` row previously
+read ≈0 in both variants — that was the spiral-swap artifact.)
 
 First-pass observations:
 - **Signs are preserved** everywhere; the qualitative story (which asymmetries are present/absent)
   looks the same in both variants at the group-mean level.
 - **Raw magnitudes are ~2–5× smaller** (z-scoring divides by `beta_std` ≈ 0.2).
-- **The z/raw ratio is not constant**: ~2× for the dg asymmetries but ~4–5× for the da polar-frame
-  ones (rad-tang, polar-card). So z-scoring differentially amplifies the *polar-experiment*
-  polar-frame asymmetries. Understanding this asymmetry-in-the-ratio is probably the crux.
+- **The z/raw ratio is ≈2 for six of the eight asymmetries, and 4–5 for exactly two.** Ratios:
+  dg horiz−vert 2.41, dg card−obl 1.95, dg rad−tang 1.95, dg polc−polo 1.93; da horiz−vert 2.11,
+  da card−obl 2.13; but **da rad−tang 4.02** and **da polc−polo 5.09**. The two outliers are the
+  polar-frame asymmetries *in the polar experiment* — i.e. precisely the asymmetries whose
+  reference frame matches the global stimulus, which are also the paper's positive findings.
+  So z-scoring selectively inflates the effects the paper rests on. Why it does so — whether
+  low-`beta_std` vertices are genuinely low-gain or just noisy — is the crux of the decision.
 
 ## Where to look for real discrepancies
 1. **Fig 7 significance** (the flagged case): compare the 68% CIs / asterisks between
@@ -63,9 +71,18 @@ First-pass observations:
   literature.
 - **Deliverable:** a short recommendation backed by the `beta_std` diagnostics above.
 
-## Caveat — do this on top of the derived-direction fix
-Before trusting the **derived** asymmetries (`da` H-V/card-obl, `dg` rad-tang/polar-card) in
-*either* variant, use the clean-room (correct-convention) values — the repo's
-`compute_derivativeDirections.m` has a cardinal-meridian label-swap bug (see
-[FINDINGS.md](FINDINGS.md)) that corrupts the two first-harmonic derived asymmetries independently
-of the z-scoring choice.
+## Caveat — resolved, no derived-direction fix needed
+An earlier version of this file warned that the repo's `compute_derivativeDirections.m` carried a
+cardinal-meridian label-swap bug. **That was wrong** — see [`../AUDIT.md`](../AUDIT.md). The repo
+function is correct and now reproduces the clean-room exactly (`bridge/resolve_da_HV` prints a
+per-polar-angle difference of 0.000e+00). The derived asymmetries above are trustworthy in both
+variants, and no change to `AnalysisCode` is required.
+
+Two things to keep in mind while doing the z-scoring work:
+- The saved `results.mat` files were produced with `normalize = 1` (verified for sub-0255: the
+  stored contrasts equal `(orientation − blank)/beta_std` to 8.9e-16), but
+  `main_singlesub.m:131` now reads `normalize = 0`. So the existing figures are z-scored while a
+  fresh stage-01 run would not be. Settle which variant the paper adopts *and* set that flag
+  explicitly before regenerating anything.
+- Any array handed to a repo stage-04 function must have its polar-angle dimension in
+  `cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135]`, not ascending conventional order.

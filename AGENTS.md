@@ -144,14 +144,22 @@ across the Methods prose, and treat Fig 7 as the case where the choice actually 
 
 ---
 
-## Reproduction & a known bug
+## Reproduction & the retracted "bug"
 `Reproduction/` reproduces Figs 5–8 from `Support/allsubjectsTable.csv` two ways (a clean-room
-MATLAB pipeline and a bridge into this repo's own code). It reproduces every direct asymmetry
-exactly, and surfaced a **polar-angle-ordering bug in `compute_derivativeDirections.m`**: it
-swaps the horizontal/vertical (and radial/tangential) labels at the four cardinal meridians,
-corrupting the two *first-harmonic derived* asymmetries — `da` horizontal-vertical (reported
-−0.45, correct ≈ 0) and `dg` radial-tangential (current code ≈ 0, correct 0.23). Direct
-asymmetries and 2nd-harmonic derived ones are unaffected. See `Reproduction/FINDINGS.md`.
+MATLAB pipeline and a bridge into this repo's own code). It once reported a
+polar-angle-ordering bug in `compute_derivativeDirections.m`. **That report is retracted** —
+see `AUDIT.md`, a full experiment-code→figure audit of the stimulus conventions.
+
+The original `AnalysisCode` pipeline is **correct**, and an independent recomputation from the
+CSV reproduces the manuscript on all eight asymmetries, including `da` horizontal−vertical
+= −0.446 (manuscript −0.45). The discrepancy was caused by two bugs inside `Reproduction/`:
+swapped c-/cc-spirals in `cleanroom/config_repro.m` (flipping the four oblique wedges) and a
+Benson-vs-conventional polar-angle frame mismatch in `bridge/` (flipping the four cardinals).
+
+**Key convention** (established in `AUDIT.md`): the shared condition index 26–29 is each
+stimulus's *local orientation at the upper vertical meridian* (0°/90°/45°/135°), and the wedge
+dimension of `medianBOLDpa` is in **Benson** order — conventional `[90 45 0 315 270 225 180 135]`.
+Do not "align" that array with `[0 45 90 …]`; that would introduce the bug into working code.
 
 ## Related docs
 - `Reproduction/FINDINGS.md` — reproduction results and the derived-direction bug (read this

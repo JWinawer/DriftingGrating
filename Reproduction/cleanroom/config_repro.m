@@ -26,9 +26,20 @@ function cfg = config_repro()
     cfg.subjects = {'sub-0037','sub-0201','sub-0255','sub-wlsubj123', ...
                     'sub-wlsubj124','sub-0395','sub-0426','sub-0250'};
 
-    % --- polar-angle wedges: order of the PA dimension in all aggregated arrays ---
-    % Matches the data order used by the original meanWithinLabel.m.
+    % --- polar-angle wedges --------------------------------------------------
+    % Order of the PA dimension in the CLEAN-ROOM arrays. The CSV's pRF_angle has
+    % already been through map_theta (createTables.m:75), so these are CONVENTIONAL
+    % angles: 0 = right horizontal meridian, counter-clockwise.
     cfg.paBins = [0 45 90 135 180 225 270 315];   % degrees (conventional, 0..360)
+
+    % The ORIGINAL pipeline uses a different order. meanWithinLabel.m bins the raw
+    % Benson angle_adj (it does NOT call map_theta) in ascending Benson order, so the
+    % PA dimension of its medianBOLDpa carries the conventional angles below.
+    % compute_derivativeDirections.m:48, plot1_experimentalCond.m:121 and lme1_fit.m:88
+    % all assume exactly this. ANY array handed to a repo stage-04 function must be in
+    % this order -- getting it wrong reflects the wedges about 45 deg, which swaps the
+    % four cardinal meridians. See ../../AUDIT.md sections 3 and 5.
+    cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135];
 
     % --- bootstrap ---
     cfg.nBoot   = 1000;
@@ -68,7 +79,12 @@ function cfg = config_repro()
     cfg.dg.betaMean = 'dg_beta_mean';
 
     % Polar experiment (da): at UVM, pinwheel(radial)=vertical=90, annulus(tangential)
-    % =horizontal=0, ccspiral=45, cspiral=135; these rotate with polar angle.
+    % =horizontal=0, cspiral=45, ccspiral=135; these rotate with polar angle.
+    % The spiral identities are fixed by CONTRASTS.json (idx 28 = scspiral_v_b = s45,
+    % idx 29 = sccspiral_v_b = s135) and by createTables.m:146-149, and were confirmed
+    % against sub-0255's raw betas to 5e-15 (AUDIT.md section 6). They were swapped here
+    % until 2026-07-22, which sign-flipped the four OBLIQUE wedges of every derived
+    % asymmetry and produced a spurious da horiz-vert of -0.041 instead of -0.446.
     cfg.da.name     = 'da';
     cfg.da.isPolar  = true;
     cfg.da.oriNames = {'pinwheel','annulus','ccspiral','cspiral'};
@@ -76,8 +92,8 @@ function cfg = config_repro()
                        'polexp_annulus_grating_stationary', ...
                        'polexp_ccspiral_grating_stationary', ...
                        'polexp_cspiral_grating_stationary'};
-    cfg.da.oriAngle = [90 0 45 135];        % UVM local orientation of each stimulus
-    cfg.da.oriIdx   = [27 26 28 29];        % CONTRASTS.json index: pinwheel=27, annulus=26, ccspiral=28, cspiral=29
+    cfg.da.oriAngle = [90 0 135 45];        % UVM local orientation: pinwheel/annulus/ccspiral/cspiral
+    cfg.da.oriIdx   = [27 26 29 28];        % CONTRASTS.json index: pinwheel=27, annulus=26, ccspiral=29, cspiral=28
     cfg.da.blank    = 'polexp_blank';
     cfg.da.betaStd  = 'da_beta_std';
     cfg.da.betaMean = 'da_beta_mean';

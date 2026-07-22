@@ -1,5 +1,20 @@
 # Reproduction findings
 
+> ## ⚠️ SUPERSEDED — 2026-07-22
+> **The central claim of this document is wrong.** The polar-angle-ordering "bug" in
+> `compute_derivativeDirections.m` does not exist; that code is correct, and so is the
+> manuscript, on all eight asymmetries (`da` horizontal−vertical really is −0.45).
+>
+> The discrepancy was caused by two errors *inside this reproduction*: the two spirals are
+> swapped in `cleanroom/config_repro.m` (flipping the four oblique wedges), and the bridge
+> hands a conventional-frame array to Benson-frame repo functions (flipping the four cardinal
+> wedges). Together they flip all eight — which is the unexplained sign flip noted in §2 below.
+>
+> See [`../AUDIT.md`](../AUDIT.md) for the full stimulus→figure audit and the numerical
+> demonstration. **Do not apply the fix suggested in the Status section** — it would introduce
+> the bug into working code. The sections below are retained as a record of the earlier
+> analysis.
+
 Running log of what the reproduction has surfaced. Numbers are group-mean differences
 (z-scored, sigma units), averaged over the 8 polar-angle wedges then over 8 subjects, from the
 clean-room (Path A) starting from `Support/allsubjectsTable.csv`.

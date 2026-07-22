@@ -30,5 +30,7 @@ for e = {'dg','da'}
                 names{j}, ind(j), man.(en).ind(j), res.delta(j), man.(en).lme(j), flag);
     end
 end
-fprintf('\nNote: da horiz-vert independent diverges (clean ~0 vs manuscript -0.45); the\n');
-fprintf('manuscript''s own Fig 7 LME reports ~0.02, agreeing with the clean-room. See FINDINGS.md.\n');
+fprintf('\nAll four independent asymmetries should reproduce the manuscript for both\n');
+fprintf('experiments. The one remaining open item is the manuscript''s Fig 7B LME entry for\n');
+fprintf('da horiz-vert (reported ~0.02 against an independent -0.45); that number is an\n');
+fprintf('unverified transcription from the PDF. See ../../AUDIT.md section 8.\n');

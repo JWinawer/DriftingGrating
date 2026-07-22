@@ -48,13 +48,16 @@ automatically):
   existing-code vs clean-room vs manuscript.
 - `run_pathB_figures` — regenerates Figs 5/6 through the real `plot1/plot2` (→ `figures/bridge/`).
 
-## Key result
+## Key result — ⚠️ RETRACTED 2026-07-22
 
-The reproduction confirms the analysis **except** for the two first-harmonic *derived* (reference-
-frame-mismatched) asymmetries, which carry a polar-angle-ordering bug (a cardinal-meridian
-horizontal/vertical and radial/tangential swap) in `AnalysisCode/.../compute_derivativeDirections.m`.
-Corrected values: `da` horizontal-vertical ≈ 0 (not −0.45) and `dg` radial-tangential ≈ 0.23.
-Full write-up and evidence in [FINDINGS.md](FINDINGS.md).
+This folder previously reported a polar-angle-ordering bug in
+`AnalysisCode/.../compute_derivativeDirections.m`. **That finding is wrong.** The original
+code is correct and the manuscript reproduces exactly on all eight asymmetries. The apparent
+discrepancy came from two bugs in this reproduction — swapped spirals in
+`cleanroom/config_repro.m` and a Benson/conventional frame mismatch in `bridge/`.
+
+See [`../AUDIT.md`](../AUDIT.md). Fix those two before trusting any *derived* asymmetry
+computed here; the direct asymmetries were unaffected.
 
 ## Status
 - [x] Path A: data path validated — direct asymmetries + `dg` derived reproduce the manuscript
