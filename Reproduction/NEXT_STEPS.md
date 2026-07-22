@@ -8,7 +8,13 @@
 > *not* pRF R²), and one positive covariance inflates radTan while shrinking H−V because the two
 > effects have opposite sign. The ordering flips back if sub-0037 is dropped, and a subject
 > bootstrap gives P(radTan > |H−V|) = 0.69 z-scored / 0.28 raw — so neither ordering is
-> established. Remaining open: the broader "which variant should the paper adopt" call.
+> established. Follow-up (same doc, §3a–3b): the two most up-weighted observers have anomalous
+> polar-grating data (sub-0201's blank beta exceeds all 12 stimulus conditions in *both*
+> experiments; sub-0037 shows no condition differentiation at all in the polar experiment), and
+> rebuilding the divisor from the 8 motion conditions — no blank, independent of the analysed
+> conditions — restores H−V as the largest polar asymmetry (bootstrap 0.43).
+> Remaining open: the broader "which variant should the paper adopt" call, and whether those two
+> observers belong in the polar analysis.
 
 **Task (for a fresh session):** determine whether there are *large* discrepancies between the
 z-scored and the non-z-scored (raw) analyses of Figs 5–8; if so, find where they come from and

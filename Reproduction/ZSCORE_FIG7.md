@@ -9,9 +9,13 @@ effect: z-scoring weights each subject by 1/`beta_std`, and in the polar experim
 is essentially the subject's overall response amplitude (r = +0.94). The subjects with the
 weakest polar-grating responses happen to be the ones with the largest radial−tangential and
 the least negative horizontal−vertical, so a **single positive covariance inflates radTan and
-shrinks H−V at the same time** — purely because the two effects have opposite sign.
+shrinks H−V at the same time** — purely because the two effects have opposite sign. The two most heavily up-weighted observers turn out to be the two
+whose polar-grating data are anomalous (§3a), and rebuilding the divisor from conditions that
+exclude the blank puts H−V back on top (§3b).
 
-Reproduce everything below with `cleanroom/diagnose_zscore_fig7.m`.
+Reproduce §1–2 and §4–5 with `cleanroom/diagnose_zscore_fig7.m`, and §3a–3b with
+`cleanroom/diagnose_response_signs.m` (which needs `cleanroom/load_allconditions.m`, a variant
+of `load_and_filter` that caches all 13 conditions per experiment).
 
 ---
 
@@ -63,7 +67,10 @@ covariance pushes its amplification below 3.29. One covariance, two opposite con
 | sub-0426 | 0.501 | +0.53 | 0.36 | +0.001 | −0.423 | 7.6% |
 | sub-0395 | **0.739** | **+1.35** | 0.62 | **−0.244** | −0.319 | **5.1%** |
 
-(uniform weighting would be 12.5% each)
+(uniform weighting would be 12.5% each. **"mean resp"** = median over vertices of
+`mean(4 stationary orientations) − blank`, i.e. the mean of the four quantities the figures are
+built from — the blank is already subtracted, and the 8 motion conditions do not enter it.
+See §3a for why two subjects are negative.)
 
 At the subject level `beta_std` is **overall responsiveness**, not data quality:
 
@@ -80,6 +87,76 @@ largest radTan (+0.354) and the only positive (wrong-signed) H−V; z-scoring ra
 to 20.4%. sub-0201's net response is actually negative (−0.28) and it gets 18.4%.
 So the effective ordering of subject weights runs roughly opposite to how well the polar
 stimuli drove V1.
+
+## 3a. The two negative subjects are real, and they are the two most up-weighted
+
+V1 showing *less* response to a grating in its receptive field than to blank is surprising
+enough to check. It is not an averaging artefact — the quantity is already a blank-subtracted
+contrast — and it survives pulling in all 13 GLMsingle conditions
+(`diagnose_response_signs.m`). First, a definition check: `beta_mean` and `beta_std` are exactly
+the mean and std of the 13 conditions (agreement to 6e-15), so the published divisor **includes
+the blank and the 4 analysed stationary conditions**.
+
+Median raw betas per subject, polar experiment:
+
+| subject | stat×4 | motion×8 | blank | stat−blank | motion−blank | blank's rank among the 13 |
+|---|---|---|---|---|---|---|
+| **sub-0037** | −0.104 | −0.102 | −0.091 | **−0.023** | **−0.030** | 8 of 13 (mid-pack) |
+| **sub-0201** | −0.393 | −0.525 | −0.122 | **−0.278** | **−0.402** | **13 of 13 (the largest)** |
+| sub-0255 | −0.025 | +0.345 | −0.279 | +0.201 | +0.631 | 2 |
+| sub-wlsubj123 | −0.069 | +0.057 | −0.544 | +0.391 | +0.645 | 1 |
+| sub-wlsubj124 | −0.089 | +0.253 | −0.726 | +0.590 | +0.960 | 1 |
+| sub-0395 | +0.179 | +1.009 | −1.103 | +1.352 | +2.196 | 1 |
+| sub-0426 | −0.172 | +0.607 | −0.735 | +0.527 | +1.288 | 1 |
+| sub-0250 | −0.019 | +0.174 | −0.344 | +0.270 | +0.544 | 2 |
+
+(A negative beta is not itself alarming: ~47% of all betas are negative and their median is
++0.04, so the beta zero-point sits near the middle of the conditions. Only stimulus-vs-blank
+is interpretable.)
+
+The two subjects fail in **different** ways, and neither is fixed by dropping the blank from an
+average:
+
+- **sub-0201** — the blank is the *largest* of all 13 betas. All 12 stimulus conditions,
+  motion included, fall below blank. The same holds in the Cartesian experiment
+  (blank rank 12 of 13; stat−blank −0.203, motion−blank −0.225), so this is a subject-level
+  problem present in both datasets, not a one-off blank estimate.
+- **sub-0037** — a flat profile: stat (−0.104), motion (−0.102) and blank (−0.091) are all
+  effectively equal and the blank sits mid-pack, i.e. V1 did not differentiate anything in the
+  polar experiment. Yet the *same subject* responds strongly to Cartesian gratings
+  (motion−blank = **+0.997**). So this is specific to the polar session.
+
+These are exactly the two subjects the published normalization weights most heavily (20.4% and
+18.4% against 12.5% uniform) — and necessarily so: their `beta_std` is small *because* they did
+not respond, and `beta_std` is the divisor.
+
+## 3b. Removing the blank from the divisor reverses the reversal
+
+Because `beta_std` spans all 13 conditions, the blank — usually the most extreme of the 13 — is
+a large part of what it measures. A divisor built from the **8 motion conditions only** drops
+the blank *and* is independent of the 4 stationary conditions being analysed, so it does
+per-vertex gain control without being contaminated by the effect or by the blank estimate:
+
+| divisor (polar experiment) | H−V | cardObl | radTan | polcard | ordering |
+|---|---|---|---|---|---|
+| none (raw) | −0.211 | −0.030 | 0.150 | 0.034 | H−V larger |
+| **`beta_std`, all 13 (published)** | −0.446 | −0.064 | **0.603** | 0.173 | **radTan larger** |
+| **std of the 8 motion conditions** | **−0.793** | −0.133 | 0.725 | 0.209 | **H−V larger** |
+
+Subject weights flatten markedly under the motion-only divisor (7.8–15.2%, versus 5.1–20.4%
+under `beta_std`); sub-0037 in particular drops from 20.4% to 13.0%, because its motion-only std
+(0.187) is no smaller than its all-13 std (0.186) — every other subject's ratio is 1.3–2.6.
+
+So **the published ordering is not reproduced by an equally principled but uncontaminated
+normalizer.** Under the motion-only divisor 6 of 8 leave-one-out subsets put H−V first and the
+subject bootstrap gives P(radTan > |H−V|) = **0.43**. Across all three divisors that
+probability is 0.28 (raw), 0.69 (published), 0.43 (motion-only) — all straddling chance, and the
+published choice is the only one of the three that puts radTan on top.
+
+The Cartesian experiment is unaffected: H−V is largest under all three divisors.
+
+(A fourth divisor, `mean(8 motion) − blank`, is *not* usable — it passes through zero for many
+vertices and flips signs; it is shown in the script only to document that.)
 
 ## 4. Why H−V is the natural loser: the two are harmonics of one pattern
 
@@ -137,10 +214,15 @@ sampling noise of n=8.
 4. **A per-vertex divisor is not what is doing the work here** — a per-subject scalar reproduces
    the entire effect. If the intent of z-scoring was vertex-level gain control, that intent is
    not what is changing Fig 7; the observer-level rescaling is.
-5. Worth considering as a more defensible alternative: normalize by a divisor estimated
-   **independently of the orientation conditions** (e.g. from the 8 motion conditions, which are
-   not analyzed here), so the denominator is not contaminated by the effect being measured and
-   does not collapse for observers whose mean response is near zero.
+5. **If a per-vertex divisor is wanted, use one built from the 8 motion conditions** rather than
+   all 13 (§3b). It excludes the blank, is independent of the conditions being analysed, and
+   yields far more uniform observer weights. Note that it does *not* rescue the z-scored
+   ordering — it restores H−V as the largest polar-grating asymmetry.
+6. **Consider whether sub-0201 and sub-0037 belong in the polar analysis at all** (§3a).
+   sub-0201's blank beta exceeds all 12 stimulus conditions in *both* experiments; sub-0037 shows
+   no differentiation whatsoever in the polar experiment despite a strong Cartesian response.
+   Whatever is decided, it should be decided on data-quality grounds and stated — not left to be
+   applied implicitly, and in reverse, by the choice of normalizer.
 
 ## Caveats
 
