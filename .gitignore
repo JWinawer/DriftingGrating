@@ -3,6 +3,7 @@ Support/
 Manuscript draft/
 Reproduction/figures/
 Reproduction/**/_cache/
+Reproduction/_glmqc/
 *.pdf
 *.png
 *.bmp

@@ -163,24 +163,52 @@ Fields in sub-0255's `results.allevents`:
 | `HRFindex`, `xvaltrend` | — | HRF selection and its cross-validation trend |
 | `meanvol` | 270291 × 1 | mean EPI intensity; flags dropout |
 
+## Do NOT copy the results.mat files
+
+Each is **~500 MB** (sub-0255: 528 MB `dg`, 481 MB `da`), so all 16 come to roughly **8 GB**.
+Almost all of that is `modelmd` (nVertices × 416 single), which this audit does not need. They
+are also **v7, not v7.3**, so nothing can be loaded selectively — each file is read whole.
+
+Instead, run the extraction **on the machine where the volume is mounted** and copy back only its
+output (~10 MB per subject × experiment for whole-surface metrics, well under 1 MB once
+restricted to the V1 patch). Doing the V1 restriction there also means the FreeSurfer labels and
+pRF maps never need copying.
+
+## Ready to run
+
+```matlab
+% On the machine with /Volumes/Vision mounted:
+cd Reproduction/cleanroom
+extract_glm_qc          % writes Reproduction/_glmqc/glmqc_<subj>_<proj>.mat + manifest.csv
+
+% Then, anywhere (copy the _glmqc folder across first):
+audit_glm_quality       % per-subject quality table, outlier flags, dg-vs-da comparison
+```
+
+`extract_glm_qc` discovers session IDs by globbing for `results.mat` (the way
+`meanWithinLabel.m:100` does), so the hand-set `ses` in `main_singlesub.m` is not a problem. It
+reports missing files and unexpected struct layouts rather than failing, and if the V1
+restriction cannot run it still writes the whole-surface metrics and warns.
+
+**Tested:** the `results.mat` extraction and the whole audit, against `Support/sub-0255`.
+**Untested:** the V1-restriction branch — it follows `meanWithinLabel.m:96-183`, but no labels or
+pRF maps were on the machine where it was written. Check the warning line on first run.
+
 ## Steps
-1. Mount `/Volumes/Vision` and collect the fields above for all 8 subjects × `dg`/`da`.
-2. Restrict to the analysed patch (V1, 4–8°, `pRF_r2 > 0.1`). **This needs the V1 label** to map
-   `results.mat` vertices onto CSV rows — the CSV has no vertex-index column, which is worth
-   fixing while you are in there.
+1. Run `extract_glm_qc`, and check `manifest.csv`: all 16 rows should read `ok`. A
+   `bad-structure` row means that subject was run under a different `hRF_setting` and has no
+   TYPED fields — it would need re-running before the rest of this is possible.
+2. Copy `Reproduction/_glmqc/` back and run `audit_glm_quality`.
 3. Test whether **sub-0201** and **sub-0037** are outliers in the polar experiment specifically.
-   Predictions worth checking: sub-0201 has a bad run or motion artefact (visible in `R2run`)
-   given that its blank beta exceeds all 12 stimulus betas in *both* experiments; sub-0037 has a
-   session-specific failure in `da` only, given it responds strongly in `dg`.
+   Predictions worth checking: sub-0201 has a bad run or motion artefact (which `R2run` and the
+   `worstRun`/`runSpread` columns should expose) given that its blank beta exceeds all 12 stimulus
+   betas in *both* experiments; sub-0037 has a session-specific failure in `da` only, given it
+   responds strongly in `dg` — look for a large negative `da − dg` in the within-subject table.
 4. Decide inclusion on those grounds and state it, rather than letting the normalizer apply an
    implicit and inverted version of the same judgement.
 5. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen it
    alongside `pRF_r2`. Note this is a real change of data source, not a one-line addition:
    `createTables.m:169` builds the table from `betas_nonzscored.mat` and never opens
-   `results.mat`, so the quality fields would have to be loaded alongside.
-
-## Step 0 (doable now, without the volume)
-Confirm the assumption above as soon as `/Volumes/Vision` is reachable: for each of the 8
-subjects × 2 experiments, check the file exists and list `fieldnames(results.allevents)`. If any
-subject was run under a different `hRF_setting`, its `results` struct will not have the TYPED
-fields and that subject needs re-running before any of the rest of this is possible.
+   `results.mat`, so the quality fields would have to be loaded alongside. A vertex-index column
+   would be worth adding at the same time — its absence is why the V1 mapping has to be done at
+   extraction rather than afterwards.
