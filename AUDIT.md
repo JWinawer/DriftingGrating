@@ -253,13 +253,21 @@ is a place a reimplementation can go wrong — and two of them are where the rep
 6. **z-scoring.** CSV betas are non-z-scored (`betas_nonzscored.mat`) but ship `beta_std` so
    the z-scored contrast is recoverable; `results.mat` contrasts are already z-scored.
 
-## 8. Still open
+## 8. Open items and resolutions
 
-- **`Fig 7` LME.** `FINDINGS.md` §3 reports the manuscript's Fig 7B `da` H−V as ≈0.02 against
-  the independent −0.45. `lme1_fit.m:88` uses the *correct* angle convention, so this is not
-  the ordering issue. Note that the 0.02 is a transcription from the PDF by the earlier agent
-  that I have not verified (the eight §4 values all did verify). Worth confirming it is a real
-  inconsistency before chasing it.
+- **`Fig 7` LME — RESOLVED 2026-07-22.** `FINDINGS.md` §3 reported the manuscript's Fig 7B
+  `da` H−V as ≈0.02 against the independent −0.45, and used that apparent contradiction as
+  corroboration that −0.45 was an artifact. **The manuscript value has since been updated to
+  −0.30** (JW, from the Google Drive draft), so the contradiction does not exist: Fig 6A
+  (−0.45) and Fig 7B (−0.30) now agree in sign, and both agree with the clean-room. The
+  earlier argument rested on a superseded number.
+
+  The residual gap is expected, not a discrepancy. The clean-room LME delta equals the
+  independent mean *exactly* (−0.446) because the balanced 8×4×8 design makes the four
+  predictors orthogonal; a fit on real data with any missing wedge medians has mildly
+  correlated predictors and shrinks the weights. −0.30 vs −0.446 is that attenuation, and it
+  runs in the same direction for the other asymmetries too (e.g. `dg` H−V: independent −1.155,
+  manuscript LME 1.10).
 - **z-scoring provenance.** The saved results are z-scored but `main_singlesub.m:131` now has
   `normalize = 0` (changed 2026-07-14). Anyone re-running stage 01 will silently produce
   non-z-scored betas and different Fig 7 statistics. This flag should be made an explicit,

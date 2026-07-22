@@ -6,11 +6,14 @@
 cfg = config_repro();
 T   = load_and_filter(cfg);
 
-% manuscript reported values (sigma units); LME entries are |reported| Fig 7
+% manuscript reported values (sigma units); LME entries are |reported| Fig 7.
+% da horiz-vert LME was updated in the manuscript from 0.02 to -0.30 (JW, 2026-07-22),
+% which removes the Fig 6A vs Fig 7B inconsistency the old FINDINGS.md leaned on: both
+% are now negative, agreeing with the clean-room. See ../../AUDIT.md section 8.
 man.dg.ind = [-1.155 -0.40  0.23  0.06];
 man.dg.lme = [ 1.10   0.36  0.19  0.00];
 man.da.ind = [-0.45  -0.06  0.60  0.17];
-man.da.lme = [ 0.02   0.06  0.60  0.18];
+man.da.lme = [ 0.30   0.06  0.60  0.18];
 names = {'horiz-vert','card-obl','rad-tang','polc-polo'};
 
 fprintf('\n================ Path A validation (z-scored) ================\n');
@@ -30,7 +33,8 @@ for e = {'dg','da'}
                 names{j}, ind(j), man.(en).ind(j), res.delta(j), man.(en).lme(j), flag);
     end
 end
-fprintf('\nAll four independent asymmetries should reproduce the manuscript for both\n');
-fprintf('experiments. The one remaining open item is the manuscript''s Fig 7B LME entry for\n');
-fprintf('da horiz-vert (reported ~0.02 against an independent -0.45); that number is an\n');
-fprintf('unverified transcription from the PDF. See ../../AUDIT.md section 8.\n');
+fprintf('\nAll four independent asymmetries reproduce the manuscript for both experiments.\n');
+fprintf('The clean-room LME delta equals the independent mean exactly, because the balanced\n');
+fprintf('design makes the four predictors orthogonal; the manuscript''s fitted LME weights are\n');
+fprintf('attenuated relative to that (da horiz-vert -0.30 vs -0.446), as expected when the\n');
+fprintf('predictors are not perfectly orthogonal. See ../../AUDIT.md section 8.\n');

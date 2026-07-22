@@ -10,6 +10,11 @@
 > hands a conventional-frame array to Benson-frame repo functions (flipping the four cardinal
 > wedges). Together they flip all eight — which is the unexplained sign flip noted in §2 below.
 >
+> **§3's supporting argument is also void.** It cites the manuscript's Fig 7B LME as 0.02 and
+> treats the clash with Fig 6A's −0.45 as corroboration. That number has since been updated in
+> the manuscript to **−0.30**, so the two figures agree in sign and there is no inconsistency
+> to explain.
+>
 > See [`../AUDIT.md`](../AUDIT.md) for the full stimulus→figure audit and the numerical
 > demonstration. **Do not apply the fix suggested in the Status section** — it would introduce
 > the bug into working code. The sections below are retained as a record of the earlier
