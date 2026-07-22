@@ -1,5 +1,15 @@
 # Next step: z-scored vs non-z-scored analysis
 
+> **Partly answered (2026-07-22).** The Fig 7B question — why z-scoring makes radial−tangential
+> rather than horizontal−vertical the largest polar-grating asymmetry — is resolved in
+> [`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) (diagnostics: `cleanroom/diagnose_zscore_fig7.m`).
+> Short version: it is a **between-subject reweighting** (a per-subject scalar reproduces the
+> whole effect), `beta_std` at the subject level is overall response amplitude (r = +0.94, and
+> *not* pRF R²), and one positive covariance inflates radTan while shrinking H−V because the two
+> effects have opposite sign. The ordering flips back if sub-0037 is dropped, and a subject
+> bootstrap gives P(radTan > |H−V|) = 0.69 z-scored / 0.28 raw — so neither ordering is
+> established. Remaining open: the broader "which variant should the paper adopt" call.
+
 **Task (for a fresh session):** determine whether there are *large* discrepancies between the
 z-scored and the non-z-scored (raw) analyses of Figs 5–8; if so, find where they come from and
 judge which analysis is more defensible.
