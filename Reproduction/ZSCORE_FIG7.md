@@ -13,15 +13,17 @@ shrinks H−V at the same time** — purely because the two effects have opposit
 whose polar-grating data are anomalous (§3a), and rebuilding the divisor from conditions that
 exclude the blank puts H−V back on top (§3b).
 
-Underneath, this is a question about **how observers should be weighted** (§6) — and it cannot
-be settled without first checking the GLM fits, which nothing in the pipeline currently does
-(§7).
+Underneath, this is a question about **what units make observers commensurable** (§6) — a real
+question, since percent BOLD is scanner-dependent, and one that is separate from data quality.
+It cannot be settled without first checking the GLM fits, which nothing in the pipeline currently
+does (§7).
 
 | section | script |
 |---|---|
 | §1–2, §4–5 | `cleanroom/diagnose_zscore_fig7.m` |
 | §3a–3b | `cleanroom/diagnose_response_signs.m` (via `cleanroom/load_allconditions.m`, a variant of `load_and_filter` caching all 13 conditions) |
-| §6 | `cleanroom/compare_subject_weighting.m` |
+| §6 precision | `cleanroom/compare_subject_weighting.m` |
+| §6 units / gain | `cleanroom/diagnose_gain_normalization.m` |
 
 ---
 
@@ -204,25 +206,49 @@ sampling noise of n=8.
 
 ---
 
-## 6. How should observers be weighted?
+## 6. Units and precision are two separate decisions
 
-Everything above is really an argument about observer weighting, so it is worth making the
-choice explicit rather than letting it fall out of a normalization. Three candidates
-(`compare_subject_weighting.m`):
+An earlier version of this section framed the choice as "how should observers be weighted" and
+concluded that down-weighting sub-0395 "discards signal, not noise." **That framing was wrong**,
+and the correction matters, so it is set out here rather than quietly edited away.
 
-| | weight | question it answers |
-|---|---|---|
-| **W1 equal** | 1/8 each | "what is the average observer's effect?" — what the raw analysis does |
-| **W2 precision** | ∝ 1/SE², SE from a within-subject bootstrap over vertices | "how well *measured* is this observer's effect?" — the standard inverse-variance / random-effects weight |
-| **W3 amplitude** | ∝ 1/`beta_std` | "how *big* is this observer's overall response?" — what per-vertex z-scoring produces |
+### Why the weighting framing is slippery
 
-**W2 and W3 are not variants of one idea; they are unrelated.** Across the 8 observers the two
-weight vectors correlate **+0.15** in the polar experiment (+0.65 in the Cartesian one).
+Percent BOLD is not a well-defined biological quantity. Observers differ in how large a response
+any stimulus produces — 1% versus 3% is ordinary — and changing the pulse sequence or field
+strength would change those numbers with no change in the underlying neural response. Averaging
+raw values therefore weights observers by an arbitrary gain, which is not obviously better than
+any other choice. Normalizing each observer before averaging is the standard response, and has a
+direct precedent in single-unit work, where each neuron's responses are scaled so its peak is 1
+before averaging across neurons.
 
-### The decisive number
+Crucially, **normalizing and reweighting are the same operation seen from two sides**. Averaging
+normalized per-observer values with *equal* weight is arithmetically identical, up to one global
+constant, to a 1/gain-weighted average of the raw values:
 
-Each observer's own effect is measured *very* precisely — within-subject bootstrap SEs are
-0.015–0.033 in raw units — while the observers disagree with each other by far more than that:
+```
+equal-weighted mean of normalised radTan = 0.6807
+1/gain-weighted mean of raw radTan       = 0.2072
+ratio 3.2859 = mean(1/gain) exactly
+```
+
+They rank the four asymmetries identically. So "z-scoring gives sub-0037 20.4% of the weight
+against a uniform 12.5%" is **not by itself an objection** — that is simply what any
+normalization looks like when viewed in un-normalized units. The objection has to be to the
+*divisor*, not to the reweighting. The §3 weight table should be read as a description of what
+the normalization does, not as evidence that it is unfair.
+
+There are really two orthogonal decisions:
+
+- **Units** — in what units are observers commensurable? (raw % change, or normalized by gain)
+- **Precision** — should better-measured observers count more? (equal vs inverse-variance)
+
+`beta_std` conflates them: it is a units choice that also happens to reweight, and it was never
+stated as either.
+
+### On precision, the answer is clear
+
+Within-observer bootstrap SEs are 0.015–0.033 in raw units, while observers disagree by far more:
 
 | | between-subject SD | mean within-subject SE | variance ratio |
 |---|---|---|---|
@@ -231,35 +257,80 @@ Each observer's own effect is measured *very* precisely — within-subject boots
 | dg H−V | 0.200 | 0.025 | 64× |
 | dg radTan | 0.085 | 0.023 | 14× |
 
-Between-observer variance exceeds within-observer measurement variance by **one to two orders of
-magnitude**. Two consequences follow directly:
+Between-observer variance exceeds within-observer measurement variance by one to two orders of
+magnitude, so inverse-variance weights are nearly uniform and precision weighting barely moves
+the answer (da radTan 0.154 vs 0.150 equal-weighted). **Precision is not what is in dispute** —
+no observer here is meaningfully noisier than the others at the level of the group estimate.
 
-1. **Inverse-variance weighting converges on equal weighting.** When between-subject variance
-   dominates, the optimal random-effects weights are nearly uniform. W2 indeed barely moves the
-   answer (da radTan 0.154 vs 0.150 equal-weighted; H−V −0.171 vs −0.211).
-2. **Down-weighting an observer here discards signal, not noise.** sub-0395's polar radTan of
-   **−0.244 ± 0.028** is a precisely measured effect in the *opposite* direction to the
-   hypothesis. It is not a noisy vertex average that normalization is cleaning up; it is a real
-   dissenting observation, and W3 reduces it to 5.1% of the group mean.
+### On units, the premise fails empirically
 
-### Group means under each weighting (polar experiment, raw units)
+Gain normalization requires that each observer *have* an estimable gain. Test it three ways
+(`diagnose_gain_normalization.m`):
 
-| weighting | H−V | cardObl | radTan | polcard | ordering |
-|---|---|---|---|---|---|
-| W1 equal | −0.211 | −0.030 | 0.150 | 0.034 | H−V larger |
-| W2 precision | −0.171 | −0.016 | 0.154 | 0.028 | H−V larger |
-| **W3 amplitude** | −0.173 | −0.025 | **0.207** | 0.064 | **radTan larger** |
+**1. Is gain a property of the observer, or of the session?** If it were a stable individual
+trait it should transfer between the two experiments. Correlations across the 8 observers:
 
-The two statistically motivated schemes agree; the amplitude scheme is the one that differs, and
-it is the one currently in the manuscript. The Cartesian experiment gives H−V largest under all
-three.
+| gain estimate | Pearson | Spearman |
+|---|---|---|
+| `beta_std` (all 13) | 0.55 | 0.17 |
+| std of 8 motion conditions | 0.45 | 0.38 |
+| mean motion drive over blank | 0.67 | 0.36 |
+| peak stimulus response (ephys-style) | 0.68 | 0.36 |
 
-**W3 is not indefensible in principle** — normalizing by response gain is reasonable when
-amplitude differences are pure nuisance (coil sensitivity, vein density, head size) and the
-question is about relative tuning. But it requires a trustworthy estimate of gain in the
-denominator, and §3a shows that is exactly what is missing for the two observers it up-weights
-most. Whichever is chosen, the paper should **state the weighting as a deliberate choice**, not
-inherit it silently from a normalization step.
+Weak, and at n=8 none is distinguishable from zero. Whatever these divisors measure is
+substantially **session-specific**, not a stable individual trait. That is the assumption the
+normalization rests on, and it is not supported here.
+
+**2. Is it estimable at all?** For the polar experiment, blank-referenced gain estimates for
+**sub-0037** (mean motion drive −0.03, peak +0.29) and **sub-0201** (−0.40 and −0.10) are zero or
+negative. Their V1 did not respond to the stimuli, so they have no measurable gain. Normalizing
+by a non-positive divisor sign-flips the observer, which is why both the mean-motion and
+ephys-style rows below are uninterpretable rather than merely different:
+
+| normalizer (polar, per-observer scalar) | H−V | radTan | ordering | |
+|---|---|---|---|---|
+| raw | −0.211 | 0.150 | H−V larger | |
+| `beta_std`, all 13 (published) | −0.568 | **0.681** | **radTan larger** | |
+| std of 8 motion conditions | −1.043 | 0.907 | H−V larger | |
+| mean motion drive | −0.262 | −1.368 | — | **invalid: divisor ≤ 0** |
+| peak response (ephys-style) | 0.093 | 0.071 | — | **invalid: divisor ≤ 0** |
+
+Note *which* divisors stay positive. Standard-deviation-based ones always do, because a standard
+deviation is positive by construction — including for an observer whose V1 did not respond, where
+it returns the **noise level** in place of a gain and then divides by it. `beta_std` does not
+avoid the failure that breaks the other two; it hides it.
+
+**3. Would normalization even reconcile the dissenting observer?** No, and this is where the
+original "signal, not noise" claim was closest to right for the wrong reason. Gain is positive, so
+no normalization can flip a sign:
+
+| normalizer | sub-0395 radTan | group mean | ratio |
+|---|---|---|---|
+| raw | −0.244 | 0.150 | −1.63 |
+| `beta_std` (published) | −0.331 | 0.681 | −0.49 |
+| std of 8 motion | −0.789 | 0.907 | −0.87 |
+
+sub-0395 dissents in *every* set of units, and proportionally no less after normalization.
+Normalization does not bring that observer into line with the group — it reduces the observer's
+leverage on the mean. Those are different things, and only the first would justify the change.
+
+### Where that leaves it
+
+The conceptual case for normalizing is sound: raw percent BOLD is scanner-dependent and averaging
+it weights observers arbitrarily. What fails is the **execution available in this dataset**. A
+defensible gain normalization needs a divisor that is (a) independent of the effect being
+measured, (b) positive and stably estimable for every observer, and (c) a property of the observer
+rather than the session. No divisor derivable from these 13 conditions satisfies all three, and
+`beta_std` satisfies none of them cleanly — it contains the four analyzed conditions and the
+blank, it substitutes noise for gain in two observers, and it transfers across experiments at
+r = 0.55/0.17.
+
+**The constructive route** is to estimate gain from something genuinely independent: the
+retinotopy scan is a separate session with its own stimulus, and `prfvista_mov` response
+amplitude could supply a per-observer gain that is not contaminated by the orientation conditions
+and does not collapse when V1 fails to respond to *these* stimuli. That is testable and is worth
+doing before the z-scoring question is settled either way. Failing that, report raw units and say
+that observers were weighted equally as a deliberate choice.
 
 ## 7. Open: nobody has checked the GLM fits
 
@@ -316,9 +387,10 @@ Recommended next step, in priority order:
    Cartesian-frame asymmetries weaken** relative to the Cartesian experiment. Compare each
    asymmetry *across experiments*, not against each other within a panel.
 3. **If z-scoring is retained** (the Methods currently commit to it), the manuscript should say
-   plainly that it weights observers by the inverse of their overall response amplitude, and the
-   per-subject weights should be reported. As it stands the normalization silently down-weights
-   the best-driven observer 4× relative to the least-driven one.
+   plainly that observers are normalized by their own overall response amplitude, and should
+   justify the divisor. Note this is a **units** claim, not a fairness one (§6): normalizing per
+   observer is a legitimate response to percent BOLD being scanner-dependent. What needs
+   defending is `beta_std` specifically.
 4. **A per-vertex divisor is not what is doing the work here** — a per-subject scalar reproduces
    the entire effect. If the intent of z-scoring was vertex-level gain control, that intent is
    not what is changing Fig 7; the observer-level rescaling is.
@@ -326,10 +398,18 @@ Recommended next step, in priority order:
    all 13 (§3b). It excludes the blank, is independent of the conditions being analysed, and
    yields far more uniform observer weights. Note that it does *not* rescue the z-scored
    ordering — it restores H−V as the largest polar-grating asymmetry.
-6. **Weight observers equally, and say so** (§6). Between-observer variance exceeds
-   within-observer measurement variance by 14–104×, so inverse-variance weighting converges on
-   equal weighting anyway and gives essentially the same answer. Amplitude weighting is the only
-   one of the three schemes that changes the Fig 7B ordering.
+6. **Separate the units question from the precision question, and settle precision first** (§6).
+   Precision is not in dispute: between-observer variance exceeds within-observer measurement
+   variance by 14–104×, so inverse-variance weighting converges on equal weighting and changes
+   nothing. Units are the live question, and the case for normalizing per observer is sound in
+   principle — percent BOLD is scanner-dependent. What fails is every divisor available in these
+   13 conditions: none is simultaneously effect-independent, positive for all 8 observers, and
+   stable across sessions.
+6a. **Try estimating observer gain from the retinotopy scan** (§6, "Where that leaves it"). It is
+   an independent session with its own stimulus, so `prfvista_mov` response amplitude would not be
+   contaminated by the orientation conditions and would not collapse when V1 fails to respond to
+   *these* stimuli. This is the one route that could make a principled normalization possible;
+   it is worth testing before the z-scoring question is settled either way.
 7. **Consider whether sub-0201 and sub-0037 belong in the polar analysis at all** (§3a).
    sub-0201's blank beta exceeds all 12 stimulus conditions in *both* experiments; sub-0037 shows
    no differentiation whatsoever in the polar experiment despite a strong Cartesian response.

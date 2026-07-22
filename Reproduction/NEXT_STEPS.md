@@ -13,13 +13,19 @@
 > experiments; sub-0037 shows no condition differentiation at all in the polar experiment), and
 > rebuilding the divisor from the 8 motion conditions — no blank, independent of the analysed
 > conditions — restores H−V as the largest polar asymmetry (bootstrap 0.43).
-> Weighting (§6): between-observer variance exceeds within-observer measurement variance by
-> 14–104×, so inverse-variance weighting converges on equal weighting and gives essentially the
-> same answer; amplitude weighting (what z-scoring does) is the only scheme that changes the
-> Fig 7B ordering, and the observation it suppresses (sub-0395's radTan = −0.244 ± 0.028) is
-> precisely measured, not noise.
+> Units vs precision (§6): these are separate decisions. **Precision** is settled — between-observer
+> variance exceeds within-observer measurement variance by 14–104×, so inverse-variance weighting
+> converges on equal weighting and changes nothing. **Units** are the live question, and
+> normalizing per observer is legitimate in principle since percent BOLD is scanner-dependent —
+> but no divisor available in these 13 conditions is simultaneously effect-independent, positive
+> for all 8 observers, and stable across sessions. Blank-referenced gain estimates are ≤ 0 for
+> sub-0037 and sub-0201 in the polar experiment; std-based ones stay positive only because a
+> standard deviation always is, substituting the noise level for a gain. Gain also transfers
+> across experiments at only r = 0.45–0.68 Pearson (0.17–0.38 Spearman), i.e. it is substantially
+> session-specific rather than an observer trait.
 > Remaining open: the broader "which variant should the paper adopt" call, whether those two
-> observers belong in the polar analysis, and **the GLM quality check below**.
+> observers belong in the polar analysis, **the GLM quality check below**, and the
+> retinotopy-derived gain estimate described next.
 
 **Task (for a fresh session):** determine whether there are *large* discrepancies between the
 z-scored and the non-z-scored (raw) analyses of Figs 5–8; if so, find where they come from and
@@ -107,6 +113,38 @@ Two things to keep in mind while doing the z-scoring work:
   explicitly before regenerating anything.
 - Any array handed to a repo stage-04 function must have its polar-angle dimension in
   `cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135]`, not ascending conventional order.
+
+---
+
+# Next step: an observer gain estimate from the retinotopy scan
+
+**Task:** test whether `prfvista_mov` can supply a per-observer BOLD gain that the 13 GLM
+conditions cannot. This is the one route that could make a principled normalization possible, and
+it should be tried before the z-scoring question is settled either way — see
+[`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §6.
+
+**Why it might work.** A defensible gain divisor has to be (a) independent of the effect being
+measured, (b) positive and stably estimable for every observer, and (c) a property of the observer
+rather than the session. Every divisor derivable from the 13 conditions fails at least one: they
+either contain the analysed conditions and the blank, or go non-positive for sub-0037 and
+sub-0201, or transfer across experiments at only r ≈ 0.5. The retinotopy scan is a **separate
+session with its own stimulus**, so a gain estimated from it is contaminated by none of the
+orientation conditions and does not collapse when V1 fails to respond to *these* stimuli.
+
+**Steps**
+1. Extract a per-observer response-amplitude measure from `prfvista_mov` within the same V1 4–8°
+   patch — pRF gain/beta if stored, otherwise the model's predicted response amplitude. The mgz
+   files are already being read by `meanWithinLabel.m:118-121` (`angle_adj`, `eccen`, `vexpl`,
+   `sigma`), so check what else that directory holds.
+2. Check criterion (b): is it positive for all 8 observers, including sub-0037 and sub-0201? If
+   those two are also flat in the retinotopy scan, that is strong independent evidence for
+   excluding them rather than normalizing them.
+3. Check criterion (c): does it correlate with the within-experiment gain estimates? A retinotopy
+   gain that predicts both `dg` and `da` amplitude would be the observer trait the normalization
+   assumes exists.
+4. If it survives, renormalize and recompute Fig 7 for both experiments; report the ordering and
+   a subject bootstrap alongside the three existing variants (0.28 raw, 0.69 published, 0.43
+   motion-only).
 
 ---
 
