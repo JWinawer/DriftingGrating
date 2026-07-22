@@ -154,9 +154,11 @@ uncontaminated divisor). Two consequences for anyone picking this up:
 - **Do not frame Fig 7 around which asymmetry is largest.** The cross-experiment comparison is
   what the data support.
 - **The GLM fits have never been quality-checked.** The only quality filter in the pipeline is on
-  the *pRF* fit (`pRF_r2 > 0.1`); no GLMsingle metric is used anywhere, though `R2`, `R2run`,
-  `FRACvalue` and `noisepool` are all sitting in each subject's `results.mat`. Settle this before
-  settling z-scoring — see `Reproduction/NEXT_STEPS.md`.
+  the *pRF* fit (`pRF_r2 > 0.1`); no GLMsingle metric is used anywhere, and neither
+  `allsubjectsTable.csv` variant carries one. `R2`, `R2run`, `FRACvalue` and `noisepool` are
+  available in `results.mat` — **verified only for sub-0255**, the one GLM output in this repo;
+  for the other seven this is inferred from `main_singlesub.m` and needs `/Volumes/Vision`
+  mounted to confirm. Settle this before settling z-scoring — see `Reproduction/NEXT_STEPS.md`.
 
 ---
 

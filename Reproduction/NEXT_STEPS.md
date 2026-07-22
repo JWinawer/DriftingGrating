@@ -123,9 +123,36 @@ observers whose polar-grating data look worst (see [`ZSCORE_FIG7.md`](ZSCORE_FIG
 fit-quality metric enters the pipeline at any stage**, so a vertex can pass the filter on a good
 pRF fit while its 13 condition betas are barely constrained.
 
-## What is available
-Each subject's `results.mat` (stage 01) preserves the full GLMsingle TYPED output. Verified on
-sub-0255, the only subject present on this machine; the others need `/Volumes/Vision` mounted:
+## What is available — and what is only assumed
+
+**Verified:** `Support/sub-0255/{dg,da}/results.mat` contain the full GLMsingle TYPED output.
+These are the **only** GLM outputs anywhere in the repository (a full `find` for `results.mat`
+returns just these two). Neither `Support/allsubjectsTable.csv` nor the second copy under
+`Support/summaryTables_wleftV2d/` carries any GLM metric — the two tables have identical column
+sets, and `pRF_r2` is the only quality column in either.
+
+**Assumed, not observed:** that the other seven subjects have the same fields. This follows from
+`main_singlesub.m`, which under `hRF_setting = 'glmsingle'` assigns
+`results.allevents = modelOut{1,4}` (the TYPED model) and saves it unconditionally at the end.
+It has not been checked against an actual file, and requires `/Volumes/Vision` mounted.
+
+Where they should live (`main_singlesub.m:37`):
+
+```
+<bidsDir>/derivatives/<projectName>GLM/hRF_glmsingle/<subj>/<ses>/results.mat
+   bidsDir = /Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/
+   projectName = dg | da
+```
+
+Two wrinkles for a batch extraction:
+- **The session ID differs per subject** and is set by hand at the top of `main_singlesub.m`
+  (`ses-05`, `ses-01`, `ses-nyu3t02`, … are all in the file as commented alternatives), so the
+  session has to be discovered per subject rather than assumed.
+- The same folder should also hold **`modelOutput.mat`** — stage 02's
+  `computeMetrics4PSCScale.m:42` loads that instead and re-derives `modelOut{1,4}` itself. Either
+  file is a valid source; `modelOutput.mat` is the rawer one.
+
+Fields in sub-0255's `results.allevents`:
 
 | field | size (sub-0255) | use |
 |---|---|---|
@@ -148,4 +175,12 @@ sub-0255, the only subject present on this machine; the others need `/Volumes/Vi
 4. Decide inclusion on those grounds and state it, rather than letting the normalizer apply an
    implicit and inverted version of the same judgement.
 5. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen it
-   alongside `pRF_r2`.
+   alongside `pRF_r2`. Note this is a real change of data source, not a one-line addition:
+   `createTables.m:169` builds the table from `betas_nonzscored.mat` and never opens
+   `results.mat`, so the quality fields would have to be loaded alongside.
+
+## Step 0 (doable now, without the volume)
+Confirm the assumption above as soon as `/Volumes/Vision` is reachable: for each of the 8
+subjects × 2 experiments, check the file exists and list `fieldnames(results.allevents)`. If any
+subject was run under a different `hRF_setting`, its `results` struct will not have the TYPED
+fields and that subject needs re-running before any of the rest of this is possible.

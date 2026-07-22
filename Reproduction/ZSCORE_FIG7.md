@@ -269,9 +269,16 @@ filter (`pRF_r2 > 0.1`) is built on it. **No GLMsingle fit-quality metric enters
 any stage.** Given §3a, that is a gap: a vertex can pass the filter on the strength of a good pRF
 fit while its 13 condition betas are essentially unconstrained.
 
-The metrics do exist. Every subject's `results.mat` preserves the full GLMsingle TYPED output
-(verified on sub-0255, the only subject on this machine — the rest need `/Volumes/Vision`
-mounted):
+The metrics do exist, but **only one subject's are checkable from this repository.**
+`Support/sub-0255/{dg,da}/results.mat` are the only GLM outputs present; a full sweep of the repo
+turns up no other `results.mat`, and neither `allsubjectsTable.csv` (nor the second copy under
+`Support/summaryTables_wleftV2d/`, which has an identical column set) carries a GLM metric. The
+claim that the *other* seven subjects have the same fields is an **inference from
+`main_singlesub.m`**, which saves `results.allevents = modelOut{1,4}` unconditionally under the
+`glmsingle` HRF setting — not something that has been observed. It needs `/Volumes/Vision`
+mounted to confirm.
+
+What sub-0255's `results.mat` does contain (both experiments, 270,291 vertices):
 
 | field | what it gives you |
 |---|---|
