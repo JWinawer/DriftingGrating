@@ -218,6 +218,11 @@ pRF maps never need copying.
 
 ## Ready to run
 
+**If someone else is running this on the server**, send them
+[`../server_extract/`](../server_extract/) instead — one self-contained file plus a README, no
+dependency on this repo, and it collects the retinotopy-gain inventory in the same pass so there
+is no second round trip. `audit_glm_quality` reads its output directly.
+
 ```matlab
 % On the machine with /Volumes/Vision mounted:
 cd Reproduction/cleanroom
