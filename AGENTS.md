@@ -142,6 +142,22 @@ Two versions of Figs 5–8 exist, differing only in whether each vertex's GLM be
 When working on these analyses, keep the two variants consistent across all four figures and
 across the Methods prose, and treat Fig 7 as the case where the choice actually matters.
 
+**What the Fig 7 difference turned out to be** (2026-07-22, full account in
+`Reproduction/ZSCORE_FIG7.md`): z-scoring changes which polar-grating asymmetry is largest
+(radial−tangential z-scored, horizontal−vertical raw). The cause is **observer reweighting**, not
+vertex-level gain control — a single scalar per subject reproduces the whole effect. At the
+subject level `beta_std` is overall response amplitude (r = +0.94), *not* data quality, so
+z-scoring weights observers by 1/responsiveness; the two it up-weights most have anomalous polar
+data. Neither ordering survives a subject bootstrap (P = 0.69 z-scored, 0.28 raw, 0.43 under an
+uncontaminated divisor). Two consequences for anyone picking this up:
+
+- **Do not frame Fig 7 around which asymmetry is largest.** The cross-experiment comparison is
+  what the data support.
+- **The GLM fits have never been quality-checked.** The only quality filter in the pipeline is on
+  the *pRF* fit (`pRF_r2 > 0.1`); no GLMsingle metric is used anywhere, though `R2`, `R2run`,
+  `FRACvalue` and `noisepool` are all sitting in each subject's `results.mat`. Settle this before
+  settling z-scoring — see `Reproduction/NEXT_STEPS.md`.
+
 ---
 
 ## Reproduction & the retracted "bug"
@@ -164,9 +180,13 @@ Do not "align" that array with `[0 45 90 …]`; that would introduce the bug int
 ## Related docs
 - `Reproduction/FINDINGS.md` — reproduction results and the derived-direction bug (read this
   before trusting any *derived* asymmetry: `da` H-V/card-obl, `dg` rad-tang/polar-card).
-- `Reproduction/NEXT_STEPS.md` — open follow-up: compare the z-scored vs non-z-scored analyses,
-  locate any large discrepancies, and judge which is more defensible (machinery for both variants
-  already exists in `Reproduction/cleanroom/`).
+- `Reproduction/ZSCORE_FIG7.md` — why z-scoring reverses the radTan/H−V rank order in Fig 7B:
+  observer reweighting, the two anomalous polar-experiment subjects, how observers should be
+  weighted, and the missing GLM quality check. Scripts: `cleanroom/diagnose_zscore_fig7.m`,
+  `diagnose_response_signs.m`, `compare_subject_weighting.m`.
+- `Reproduction/NEXT_STEPS.md` — open follow-ups: the remaining "which variant should the paper
+  adopt" call, and a **per-subject GLM fit-quality audit** that should be done first (machinery
+  for both z-scoring variants already exists in `Reproduction/cleanroom/`).
 - `README.md` — experiment (stimulus-presentation) overview.
 - `AnalysisCode/README.rtf` — detailed, near function-by-function description of the full
   analysis pipeline (includes stages upstream and downstream of Figs 5–8).

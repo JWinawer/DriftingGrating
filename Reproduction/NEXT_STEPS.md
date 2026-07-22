@@ -13,8 +13,13 @@
 > experiments; sub-0037 shows no condition differentiation at all in the polar experiment), and
 > rebuilding the divisor from the 8 motion conditions — no blank, independent of the analysed
 > conditions — restores H−V as the largest polar asymmetry (bootstrap 0.43).
-> Remaining open: the broader "which variant should the paper adopt" call, and whether those two
-> observers belong in the polar analysis.
+> Weighting (§6): between-observer variance exceeds within-observer measurement variance by
+> 14–104×, so inverse-variance weighting converges on equal weighting and gives essentially the
+> same answer; amplitude weighting (what z-scoring does) is the only scheme that changes the
+> Fig 7B ordering, and the observation it suppresses (sub-0395's radTan = −0.244 ± 0.028) is
+> precisely measured, not noise.
+> Remaining open: the broader "which variant should the paper adopt" call, whether those two
+> observers belong in the polar analysis, and **the GLM quality check below**.
 
 **Task (for a fresh session):** determine whether there are *large* discrepancies between the
 z-scored and the non-z-scored (raw) analyses of Figs 5–8; if so, find where they come from and
@@ -102,3 +107,45 @@ Two things to keep in mind while doing the z-scoring work:
   explicitly before regenerating anything.
 - Any array handed to a repo stage-04 function must have its polar-angle dimension in
   `cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135]`, not ascending conventional order.
+
+---
+
+# Next step: per-subject GLM fit quality
+
+**Task:** assess GLMsingle fit quality for all 8 subjects × both experiments, and decide
+inclusion on that basis. This should be settled *before* the z-scoring call, because z-scoring is
+currently acting as an implicit **inverse** quality weighting — it up-weights exactly the
+observers whose polar-grating data look worst (see [`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §3a, §7).
+
+## The gap
+`Support/allsubjectsTable.csv` has exactly one quality column, **`pRF_r2`**, which is the
+**retinotopy** model fit. The vertex filter (`pRF_r2 > 0.1`) is built on it. **No GLMsingle
+fit-quality metric enters the pipeline at any stage**, so a vertex can pass the filter on a good
+pRF fit while its 13 condition betas are barely constrained.
+
+## What is available
+Each subject's `results.mat` (stage 01) preserves the full GLMsingle TYPED output. Verified on
+sub-0255, the only subject present on this machine; the others need `/Volumes/Vision` mounted:
+
+| field | size (sub-0255) | use |
+|---|---|---|
+| `R2` | 270291 × 1 | per-vertex variance explained — the direct quality measure |
+| `R2run` | 270291 × 1 × 1 × 8 | per-run R²; exposes a single bad run |
+| `FRACvalue` | 270291 × 1 | ridge fraction; low = heavy shrinkage = poorly constrained |
+| `noisepool` | 270291 × 1 | GLMsingle's own noise classification (~61% of the surface here) |
+| `HRFindex`, `xvaltrend` | — | HRF selection and its cross-validation trend |
+| `meanvol` | 270291 × 1 | mean EPI intensity; flags dropout |
+
+## Steps
+1. Mount `/Volumes/Vision` and collect the fields above for all 8 subjects × `dg`/`da`.
+2. Restrict to the analysed patch (V1, 4–8°, `pRF_r2 > 0.1`). **This needs the V1 label** to map
+   `results.mat` vertices onto CSV rows — the CSV has no vertex-index column, which is worth
+   fixing while you are in there.
+3. Test whether **sub-0201** and **sub-0037** are outliers in the polar experiment specifically.
+   Predictions worth checking: sub-0201 has a bad run or motion artefact (visible in `R2run`)
+   given that its blank beta exceeds all 12 stimulus betas in *both* experiments; sub-0037 has a
+   session-specific failure in `da` only, given it responds strongly in `dg`.
+4. Decide inclusion on those grounds and state it, rather than letting the normalizer apply an
+   implicit and inverted version of the same judgement.
+5. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen it
+   alongside `pRF_r2`.

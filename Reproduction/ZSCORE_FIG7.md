@@ -13,9 +13,15 @@ shrinks H−V at the same time** — purely because the two effects have opposit
 whose polar-grating data are anomalous (§3a), and rebuilding the divisor from conditions that
 exclude the blank puts H−V back on top (§3b).
 
-Reproduce §1–2 and §4–5 with `cleanroom/diagnose_zscore_fig7.m`, and §3a–3b with
-`cleanroom/diagnose_response_signs.m` (which needs `cleanroom/load_allconditions.m`, a variant
-of `load_and_filter` that caches all 13 conditions per experiment).
+Underneath, this is a question about **how observers should be weighted** (§6) — and it cannot
+be settled without first checking the GLM fits, which nothing in the pipeline currently does
+(§7).
+
+| section | script |
+|---|---|
+| §1–2, §4–5 | `cleanroom/diagnose_zscore_fig7.m` |
+| §3a–3b | `cleanroom/diagnose_response_signs.m` (via `cleanroom/load_allconditions.m`, a variant of `load_and_filter` caching all 13 conditions) |
+| §6 | `cleanroom/compare_subject_weighting.m` |
 
 ---
 
@@ -198,6 +204,101 @@ sampling noise of n=8.
 
 ---
 
+## 6. How should observers be weighted?
+
+Everything above is really an argument about observer weighting, so it is worth making the
+choice explicit rather than letting it fall out of a normalization. Three candidates
+(`compare_subject_weighting.m`):
+
+| | weight | question it answers |
+|---|---|---|
+| **W1 equal** | 1/8 each | "what is the average observer's effect?" — what the raw analysis does |
+| **W2 precision** | ∝ 1/SE², SE from a within-subject bootstrap over vertices | "how well *measured* is this observer's effect?" — the standard inverse-variance / random-effects weight |
+| **W3 amplitude** | ∝ 1/`beta_std` | "how *big* is this observer's overall response?" — what per-vertex z-scoring produces |
+
+**W2 and W3 are not variants of one idea; they are unrelated.** Across the 8 observers the two
+weight vectors correlate **+0.15** in the polar experiment (+0.65 in the Cartesian one).
+
+### The decisive number
+
+Each observer's own effect is measured *very* precisely — within-subject bootstrap SEs are
+0.015–0.033 in raw units — while the observers disagree with each other by far more than that:
+
+| | between-subject SD | mean within-subject SE | variance ratio |
+|---|---|---|---|
+| da radTan | 0.209 | 0.020 | **104×** |
+| da H−V | 0.152 | 0.021 | 52× |
+| dg H−V | 0.200 | 0.025 | 64× |
+| dg radTan | 0.085 | 0.023 | 14× |
+
+Between-observer variance exceeds within-observer measurement variance by **one to two orders of
+magnitude**. Two consequences follow directly:
+
+1. **Inverse-variance weighting converges on equal weighting.** When between-subject variance
+   dominates, the optimal random-effects weights are nearly uniform. W2 indeed barely moves the
+   answer (da radTan 0.154 vs 0.150 equal-weighted; H−V −0.171 vs −0.211).
+2. **Down-weighting an observer here discards signal, not noise.** sub-0395's polar radTan of
+   **−0.244 ± 0.028** is a precisely measured effect in the *opposite* direction to the
+   hypothesis. It is not a noisy vertex average that normalization is cleaning up; it is a real
+   dissenting observation, and W3 reduces it to 5.1% of the group mean.
+
+### Group means under each weighting (polar experiment, raw units)
+
+| weighting | H−V | cardObl | radTan | polcard | ordering |
+|---|---|---|---|---|---|
+| W1 equal | −0.211 | −0.030 | 0.150 | 0.034 | H−V larger |
+| W2 precision | −0.171 | −0.016 | 0.154 | 0.028 | H−V larger |
+| **W3 amplitude** | −0.173 | −0.025 | **0.207** | 0.064 | **radTan larger** |
+
+The two statistically motivated schemes agree; the amplitude scheme is the one that differs, and
+it is the one currently in the manuscript. The Cartesian experiment gives H−V largest under all
+three.
+
+**W3 is not indefensible in principle** — normalizing by response gain is reasonable when
+amplitude differences are pure nuisance (coil sensitivity, vein density, head size) and the
+question is about relative tuning. But it requires a trustworthy estimate of gain in the
+denominator, and §3a shows that is exactly what is missing for the two observers it up-weights
+most. Whichever is chosen, the paper should **state the weighting as a deliberate choice**, not
+inherit it silently from a normalization step.
+
+## 7. Open: nobody has checked the GLM fits
+
+This analysis has been screening the wrong quality metric. `allsubjectsTable.csv` carries exactly
+one quality column, **`pRF_r2` — the retinotopy model fit, not the GLM fit** — and the inclusion
+filter (`pRF_r2 > 0.1`) is built on it. **No GLMsingle fit-quality metric enters the pipeline at
+any stage.** Given §3a, that is a gap: a vertex can pass the filter on the strength of a good pRF
+fit while its 13 condition betas are essentially unconstrained.
+
+The metrics do exist. Every subject's `results.mat` preserves the full GLMsingle TYPED output
+(verified on sub-0255, the only subject on this machine — the rest need `/Volumes/Vision`
+mounted):
+
+| field | what it gives you |
+|---|---|
+| `R2` | variance explained per vertex — the direct GLM quality measure |
+| `R2run` | per-run R², so run-to-run consistency and bad runs are visible |
+| `FRACvalue` | ridge fraction chosen per vertex; low = heavy shrinkage = poorly constrained |
+| `noisepool` | which vertices GLMsingle itself classified as noise |
+| `HRFindex` / `xvaltrend` | which HRF was selected, and the cross-validation trend |
+| `meanvol` | mean EPI intensity — flags dropout |
+
+Recommended next step, in priority order:
+
+1. Extract, for all 8 subjects × both experiments, the distribution of `R2`, `FRACvalue`,
+   `noisepool` membership and `meanvol` **within the analysed V1 4–8° patch** (this needs the
+   V1 label to map `results.mat` vertices onto CSV rows — the CSV has no vertex index column,
+   which is itself worth fixing).
+2. Ask specifically whether **sub-0201 and sub-0037** are outliers on those metrics in the polar
+   experiment. sub-0201's blank beta exceeding all 12 stimulus conditions in both experiments is
+   the kind of thing a bad-run or motion problem produces; sub-0037's total lack of condition
+   differentiation in `da` but strong response in `dg` points at a session-specific failure.
+   `R2run` would show a single bad run.
+3. Decide inclusion/exclusion on those grounds, **before** settling the z-scoring question — the
+   two are entangled, since z-scoring is currently acting as an implicit *inverse* quality
+   weighting.
+4. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen on
+   it alongside `pRF_r2`.
+
 ## Recommendation
 
 1. **Do not frame the paper around which polar-grating asymmetry is "largest."** The bootstrap
@@ -218,11 +319,18 @@ sampling noise of n=8.
    all 13 (§3b). It excludes the blank, is independent of the conditions being analysed, and
    yields far more uniform observer weights. Note that it does *not* rescue the z-scored
    ordering — it restores H−V as the largest polar-grating asymmetry.
-6. **Consider whether sub-0201 and sub-0037 belong in the polar analysis at all** (§3a).
+6. **Weight observers equally, and say so** (§6). Between-observer variance exceeds
+   within-observer measurement variance by 14–104×, so inverse-variance weighting converges on
+   equal weighting anyway and gives essentially the same answer. Amplitude weighting is the only
+   one of the three schemes that changes the Fig 7B ordering.
+7. **Consider whether sub-0201 and sub-0037 belong in the polar analysis at all** (§3a).
    sub-0201's blank beta exceeds all 12 stimulus conditions in *both* experiments; sub-0037 shows
    no differentiation whatsoever in the polar experiment despite a strong Cartesian response.
    Whatever is decided, it should be decided on data-quality grounds and stated — not left to be
    applied implicitly, and in reverse, by the choice of normalizer.
+8. **Check the GLM fits before settling any of this** (§7). No GLMsingle quality metric currently
+   enters the pipeline — the only quality filter is on the *pRF* fit. The metrics are sitting
+   unused in each subject's `results.mat`.
 
 ## Caveats
 
