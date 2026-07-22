@@ -151,8 +151,15 @@ z-scoring weights observers by 1/responsiveness; the two it up-weights most have
 data. Neither ordering survives a subject bootstrap (P = 0.69 z-scored, 0.28 raw, 0.43 under an
 uncontaminated divisor). Two consequences for anyone picking this up:
 
-- **Do not frame Fig 7 around which asymmetry is largest.** The cross-experiment comparison is
-  what the data support.
+- **Normalising observers is justified, but it has a precondition.** Percent BOLD is
+  scanner-dependent, so bringing observers into commensurate units is right; an observer whose
+  gain cannot be measured cannot be normalised, and sub-0037 and sub-0201 have non-positive
+  blank-referenced gain in the polar experiment. Do both and **all five normalisers agree that
+  H−V is the largest polar asymmetry** — `beta_std` included, which flips from 0.681 to 0.460.
+  The radTan-largest result exists only where two unnormalisable observers are normalised anyway.
+- **Even so, do not frame Fig 7 around which asymmetry is largest** (bootstraps 0.10–0.31 at n=6;
+  unanimous in direction, never decisive). The cross-experiment comparison is what the data
+  support.
 - **The GLM fits have never been quality-checked.** The only quality filter in the pipeline is on
   the *pRF* fit (`pRF_r2 > 0.1`); no GLMsingle metric is used anywhere, and neither
   `allsubjectsTable.csv` variant carries one. `R2`, `R2run`, `FRACvalue` and `noisepool` are

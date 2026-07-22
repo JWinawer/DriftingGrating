@@ -23,9 +23,13 @@
 > standard deviation always is, substituting the noise level for a gain. Gain also transfers
 > across experiments at only r = 0.45–0.68 Pearson (0.17–0.38 Spearman), i.e. it is substantially
 > session-specific rather than an observer trait.
-> Remaining open: the broader "which variant should the paper adopt" call, whether those two
-> observers belong in the polar analysis, **the GLM quality check below**, and the
-> retinotopy-derived gain estimate described next.
+> **Resolved, provisionally (§8).** Normalising is justified but requires a measurable gain, which
+> sub-0037 and sub-0201 lack in the polar experiment. Excluding them makes every normaliser
+> well-defined (five instead of three) and **all five then agree that H−V is the largest polar
+> asymmetry** — including the manuscript's own `beta_std`, which flips from radTan 0.681 to 0.460
+> against H−V −0.625. Bootstraps 0.10–0.31: unanimous in direction, moderate in strength.
+> Remaining open: **the GLM quality check below**, which is the independent test of that
+> exclusion, and the retinotopy-derived gain estimate described next.
 
 **Task (for a fresh session):** determine whether there are *large* discrepancies between the
 z-scored and the non-z-scored (raw) analyses of Figs 5–8; if so, find where they come from and

@@ -15,8 +15,10 @@ exclude the blank puts H−V back on top (§3b).
 
 Underneath, this is a question about **what units make observers commensurable** (§6) — a real
 question, since percent BOLD is scanner-dependent, and one that is separate from data quality.
-It cannot be settled without first checking the GLM fits, which nothing in the pipeline currently
-does (§7).
+Normalising is the right call, but it has a precondition: an observer whose gain cannot be
+measured cannot be normalised. **Apply both and the reversal disappears** — at n=6 all five
+normalisers, `beta_std` included, put H−V first (§8). Still provisional on the GLM fits, which
+nothing in the pipeline currently checks (§7).
 
 | section | script |
 |---|---|
@@ -24,6 +26,7 @@ does (§7).
 | §3a–3b | `cleanroom/diagnose_response_signs.m` (via `cleanroom/load_allconditions.m`, a variant of `load_and_filter` caching all 13 conditions) |
 | §6 precision | `cleanroom/compare_subject_weighting.m` |
 | §6 units / gain | `cleanroom/diagnose_gain_normalization.m` |
+| §8 | `cleanroom/diagnose_exclusion_x_normalization.m` |
 
 ---
 
@@ -377,11 +380,68 @@ Recommended next step, in priority order:
 4. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen on
    it alongside `pRF_r2`.
 
+## 8. Normalisation and exclusion are one decision, and together they resolve it
+
+Accepting that observers should be brought into commensurate units — which is the right call
+(§6) — carries a precondition: **an observer whose gain cannot be measured cannot be normalised.**
+In the polar experiment sub-0037 (−0.03) and sub-0201 (−0.40) have non-positive blank-referenced
+gain, so for them the normalisation is undefined. `beta_std` conceals this by returning a positive
+number regardless, and then divides by it.
+
+So the choice is not "normalise or not" but "normalise, having first removed the observers for
+whom normalisation is undefined". Crossing the two decisions
+(`diagnose_exclusion_x_normalization.m`); `P` is a subject bootstrap of P(radTan > |H−V|):
+
+**All 8 observers**
+
+| normaliser | H−V | radTan | P | ordering |
+|---|---|---|---|---|
+| raw | −0.211 | 0.150 | 0.28 | H−V larger |
+| **`beta_std`, all 13 (published)** | −0.568 | **0.681** | **0.63** | **radTan larger** |
+| std of 8 motion | −1.043 | 0.907 | 0.39 | H−V larger |
+| mean motion drive | — | — | — | *invalid: divisor ≤ 0* |
+| peak response | — | — | — | *invalid: divisor ≤ 0* |
+
+**n = 6 (gain estimable for every observer)**
+
+| normaliser | H−V | radTan | P | ordering |
+|---|---|---|---|---|
+| raw | −0.254 | 0.114 | 0.10 | H−V larger |
+| `beta_std`, all 13 (published) | −0.625 | 0.460 | 0.23 | **H−V larger** |
+| std of 8 motion | −1.213 | 0.725 | 0.17 | H−V larger |
+| mean motion drive | −0.284 | 0.237 | 0.31 | H−V larger |
+| peak response (ephys-style) | −0.204 | 0.158 | 0.27 | H−V larger |
+
+Two things happen at once. Removing those two observers makes **every** normaliser well-defined —
+the blank-referenced ones become positive throughout, so five schemes can be compared instead of
+three. And all five then **agree**: horizontal−vertical is the largest polar-grating asymmetry,
+including under the manuscript's own `beta_std`, which flips from 0.681 to 0.460 against an H−V of
+−0.625.
+
+**The radTan-largest result exists only in the configuration that normalises two observers whose
+gain is unmeasurable.** It does not survive its own methodology applied consistently.
+
+Strength of evidence, stated honestly: P runs 0.10–0.31 across the five, so the *direction* is
+unanimous but the margin is moderate — this is good evidence against radTan-largest, not proof of
+H−V-largest. The recommendation in §5 stands: do not build the framing on the ranking.
+
+**This is provisional on the GLM audit (§7).** The exclusion is currently justified on
+response-amplitude grounds alone. If the GLMsingle metrics show sub-0037 and sub-0201 are fine,
+the reasoning above needs revisiting — though it is hard to see how an observer with no
+stimulus-driven response can be normalised by its response amplitude whatever the fit statistics
+say.
+
 ## Recommendation
 
-1. **Do not frame the paper around which polar-grating asymmetry is "largest."** The bootstrap
-   (0.69 vs 0.28) says the dataset cannot support that ranking either way, and the z-scored
-   ordering hinges on a single observer.
+0. **Normalise, but exclude first** (§8). Bringing observers into commensurate units is
+   justified — percent BOLD is scanner-dependent. Its precondition is a measurable gain, which
+   sub-0037 and sub-0201 lack in the polar experiment. Apply both and all five normalisers agree
+   that H−V is the largest polar asymmetry, the manuscript's own `beta_std` included. The
+   radTan-largest result survives only when two unnormalisable observers are normalised anyway.
+   *Provisional on the GLM audit (§7).*
+1. **Even so, do not frame the paper around which polar-grating asymmetry is "largest."** The
+   bootstraps run 0.10–0.31 at n=6 and 0.28–0.63 at n=8: unanimous in direction once the
+   precondition is met, but never decisive. The ranking is not a load-bearing result.
 2. The claim the data *do* support, in both variants and with the sign preserved throughout, is
    the one in AGENTS.md: **the polar-frame asymmetries appear for polar gratings and the
    Cartesian-frame asymmetries weaken** relative to the Cartesian experiment. Compare each
