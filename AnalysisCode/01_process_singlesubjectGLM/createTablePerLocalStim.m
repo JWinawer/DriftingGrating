@@ -308,6 +308,186 @@ finalTable.cart_oriasym_PCvPO = cartPC - cartPO;
 finalTable.pol_oriasym_PCvPO = polPC - polPO;
 
 
+%% Replot polar plot with horizontal vs vertical
+
+% Included V1 voxels
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included==1;
+T = finalTable(idx,:);
+
+subjects = unique(T.subject);
+angleBins = 0:45:315;
+
+% Variables to compute
+vars = { ...
+    'cart_localori_0_localmotdir_none', ...
+    'cart_localori_90_localmotdir_none', ...
+    'pol_localori_0_localmotdir_none', ...
+    'pol_localori_90_localmotdir_none'};
+
+groupMean = cell(size(vars));
+
+for v = 1:numel(vars)
+
+    subjMedian = nan(numel(subjects), numel(angleBins));
+
+    for s = 1:numel(subjects)
+
+        subjIdx = strcmp(T.subject, subjects{s});
+
+        for b = 1:numel(angleBins)
+
+            binIdx = subjIdx & T.pRF_angle_bin == angleBins(b);
+
+            subjMedian(s,b) = median( ...
+                T.(vars{v})(binIdx), ...
+                'omitnan');
+
+        end
+    end
+
+    groupMean{v} = mean(subjMedian,1,'omitnan');
+
+end
+
+theta = deg2rad([angleBins angleBins(1)]);
+
+figure
+
+% Cartesian
+subplot(1,2,1)
+
+polarplot(theta,[groupMean{1} groupMean{1}(1)],'-o','LineWidth',2, 'Color', [0, 0, 0.5])
+hold on
+polarplot(theta,[groupMean{2} groupMean{2}(1)],'-o','LineWidth',2, 'Color', [1, 0.5, 0])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+
+title('Cartesian')
+legend({'Local ori 0','Local ori 90'},'Location','best')
+
+% Polar
+subplot(1,2,2)
+
+polarplot(theta,[groupMean{3} groupMean{3}(1)],'-o','LineWidth',2, 'Color', [0, 0, 0.5])
+hold on
+polarplot(theta,[groupMean{4} groupMean{4}(1)],'-o','LineWidth',2, 'Color', [1, 0.5, 0])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+
+title('Polar')
+legend({'Local ori 0','Local ori 90'},'Location','best')
+
+%% Replot polar plot with radial vs tangential
+
+% Compute radial and tangential responses per voxel
+
+n = height(finalTable);
+
+finalTable.cart_radial = nan(n,1);
+finalTable.cart_tangential = nan(n,1);
+finalTable.pol_radial = nan(n,1);
+finalTable.pol_tangential = nan(n,1);
+
+a = finalTable.pRF_angle_bin;
+
+% Horizontal meridian
+idx = ismember(a,[0 180]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_0_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_90_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_0_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_90_localmotdir_none(idx);
+
+% Vertical meridian
+idx = ismember(a,[90 270]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_90_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_0_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_90_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_0_localmotdir_none(idx);
+
+% 45° diagonal
+idx = ismember(a,[45 225]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_45_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_135_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_45_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_135_localmotdir_none(idx);
+
+% 135° diagonal
+idx = ismember(a,[135 315]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_135_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_45_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_135_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_45_localmotdir_none(idx);
+
+% Subject-averaged radial and tangential responses
+
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included==1;
+T = finalTable(idx,:);
+
+subjects = unique(T.subject);
+angleBins = 0:45:315;
+
+vars = { ...
+    'cart_radial', ...
+    'cart_tangential', ...
+    'pol_radial', ...
+    'pol_tangential'};
+
+groupMean = cell(size(vars));
+
+for v = 1:numel(vars)
+
+    subjMedian = nan(numel(subjects), numel(angleBins));
+
+    for s = 1:numel(subjects)
+
+        subjIdx = strcmp(T.subject,subjects{s});
+
+        for b = 1:numel(angleBins)
+
+            binIdx = subjIdx & T.pRF_angle_bin==angleBins(b);
+
+            subjMedian(s,b) = median(T.(vars{v})(binIdx),'omitnan');
+
+        end
+    end
+
+    groupMean{v} = mean(subjMedian,1,'omitnan');
+
+end
+
+theta = deg2rad([angleBins angleBins(1)]);
+
+figure
+
+% Cartesian
+subplot(1,2,1)
+polarplot(theta,[groupMean{1} groupMean{1}(1)],'-o','LineWidth',2,'Color',[0.5725, 0.7725, 0.8706])
+hold on
+polarplot(theta,[groupMean{2} groupMean{2}(1)],'-o','LineWidth',2,'Color',[0.7922, 0, 0.1255])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+title('Cartesian')
+legend({'Radial','Tangential'},'Location','best')
+
+% Polar
+subplot(1,2,2)
+polarplot(theta,[groupMean{3} groupMean{3}(1)],'-o','LineWidth',2,'Color',[0.5725, 0.7725, 0.8706])
+hold on
+polarplot(theta,[groupMean{4} groupMean{4}(1)],'-o','LineWidth',2,'Color',[0.7922, 0, 0.1255])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+title('Polar')
+legend({'Radial','Tangential'},'Location','best')
+
+
 %%
 
 plotAsymmetry(finalTable,...

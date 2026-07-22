@@ -97,11 +97,14 @@ function newMatrix = compute_derivativeDirections(medianBOLDpa, projectSettings,
                         currentlocalMotionDir = localMotionDirs(polarIndex);
     
                         if ismember(currentlocalMotionDir, [0, 180])
-                            provals = [provals, currentVal]; % this is actually right/left
+                            provals = [provals, currentVal]; % this is actually right/left motion, or horizontal ori
+                            disp('is H')
                         elseif ismember(currentlocalMotionDir, [90, 270])
-                            convals = [convals, currentVal]; % this is actually up/down
+                            convals = [convals, currentVal]; % this is actually up/down, or vertical ori
+                            disp('is V')
                         else
                             neutvals = [neutvals, currentVal];
+                            disp('is NEUT')
                         end
     
                     elseif strcmp(projectName, 'dg')
