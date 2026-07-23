@@ -154,19 +154,36 @@ recoverable it should be recovered rather than dropped.
 ## 6a. Open: the patch is 4–8°, and cannot be widened from the transferred files
 
 Everything above is computed within the **published 4–8° patch**, because that is what the
-extraction saved. A wider patch (2–8°) is a useful control — if sub-0037's polar session is equally
-flat once more foveal V1 is included, a patch-definition or pRF-mapping artefact is ruled out.
-Since 2–8° is a *superset* of what was transferred, **this requires another server run.**
+extraction saved. Since any wider band is a *superset* of what was transferred, widening
+**requires another server run.**
 
-`extract_for_transfer.m` has been changed for that run: `eccRange` is now `[2 8]`, and it saves
-each retained vertex's `patchEccen` and `patchVexpl`. With those, any narrower range — including
-the published 4–8° — can be re-cut locally, so no third round trip is needed regardless of what the
-answer turns out to be.
+**Why 4–8° is the wrong patch for this particular question.** The 4–8° restriction is a
+*stimulus-matching* constraint, not the stimulus extent. The stimulus is a much larger annulus
+(roughly 1–12°). Cartesian gratings hold spatial frequency uniform across the aperture, whereas
+polar gratings' SF scales inversely with eccentricity, so the two stimulus types are SF-matched
+only near 6°; 4–8° is the band where the mismatch stays tolerable.
 
-Expectation worth recording in advance: the stimulus was a 4–8° annulus, so 2–4° vertices are
-largely *outside* it and should dilute the ratios downward for everyone. The informative quantity
-is not the absolute values but whether sub-0037's polar session stays uniquely flat relative to the
-rest of the group.
+That constraint governs the **asymmetry** analysis, where an SF confound between stimulus types
+would be fatal. It has no bearing on a **fit-quality** question, which only asks whether a session
+produced a usable V1 response anywhere the stimulus drove cortex. Restricting the quality
+assessment to 4–8° discards most of the stimulated V1 and most of the available power — the
+numbers above rest on ~1100–1800 vertices where several times that many were driven.
+
+So `extract_for_transfer.m` now applies **no eccentricity restriction at all** (`eccRange =
+[-inf inf]`), keeping all of V1 that passes `vexpl > 0.1` and saving each vertex's `patchEccen`
+and `patchVexpl`. Any band — 4–8°, 2–8°, 1–12° — then becomes a one-line local filter, so the
+choice never forces another server run again.
+
+What to look for once it arrives: whether sub-0037's polar session stays uniquely flat across the
+full stimulated range. If it does, the session-wide failure is confirmed on far more data than §4
+had. If it is flat only in 4–8° and responsive elsewhere, that points at something about the patch
+definition or the pRF eccentricity assignment instead, and the exclusion argument collapses.
+
+A related question the wider extraction makes answerable: because polar SF varies inversely with
+eccentricity, the polar stimulus is *not* homogeneous even within 4–8° — SF differs twofold across
+that band, with no cartesian counterpart. Whether polar fit quality varies systematically with
+eccentricity, and whether that differs between observers, is worth checking with `patchEccen` in
+hand.
 
 ## 7. Also worth noting
 

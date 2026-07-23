@@ -44,7 +44,10 @@ Over a network mount this is the slow step.
 
 The folder it prints at the end (`glm_qc_for_transfer/` by default). Zip it.
 
-- With the V1 restriction working: well under 1 MB per file, so a few MB total.
+- With the V1 restriction working: a few MB per file at most, so tens of MB total. (The first
+  run of this script also restricted to 4–8°, giving ~50 kB files. It now keeps all of V1 and
+  saves each vertex's eccentricity, so the eccentricity band can be chosen after the fact —
+  bigger files, but no further round trips.)
 - If the V1 restriction fails (it warns), files are ~10 MB each and the folder is ~160 MB. Still
   far smaller than the 8 GB of `results.mat`, but too big to email — use a file transfer.
 - **If all else fails, `summary.csv` alone answers most of question 1.** It is a few kB.

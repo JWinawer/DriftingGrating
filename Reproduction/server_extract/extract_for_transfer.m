@@ -23,9 +23,11 @@ function extract_for_transfer(bidsDir, outDir)
 %       separate session, so it is the natural candidate -- but we do not know from here
 %       which maps that pipeline saves. The inventory answers that in the same trip.
 %
-% Everything is restricted to the analysed patch (V1, 4-8 deg, pRF R2 > 0.1) so the
-% FreeSurfer labels and retinotopy maps never have to be copied either. Whole-surface
-% percentile summaries are kept alongside so no context is lost.
+% Everything is restricted to V1 (pRF R2 > 0.1) so the FreeSurfer labels and retinotopy
+% maps never have to be copied either. Each vertex's eccentricity comes along in
+% `patchEccen`, so the published 4-8 deg band -- or any other -- is a local filter rather
+% than a reason to re-run this. Whole-surface percentile summaries are kept alongside so
+% no context is lost.
 %
 % Nothing here modifies anything on the server. It only reads.
 
@@ -37,16 +39,29 @@ function extract_for_transfer(bidsDir, outDir)
     end
     if ~isfolder(outDir), mkdir(outDir); end
 
-    % --- settings, matching the published analysis --------------------------------
+    % --- settings ------------------------------------------------------------------
     subjects = {'sub-0037','sub-0201','sub-0255','sub-wlsubj123', ...
                 'sub-wlsubj124','sub-0395','sub-0426','sub-0250'};
     projects    = {'dg','da'};
     hRF_setting = 'glmsingle';
-    % Deliberately WIDER than the published analysis (which uses 4-8 deg, the stimulus
-    % annulus). The per-vertex eccentricity is saved alongside, so any narrower range --
-    % including the published 4-8 -- can be re-cut from the transferred files without
-    % another server run. Do not narrow this.
-    eccRange    = [2 8];
+    % NO eccentricity restriction: keep all of V1 that passes the pRF filter, and save
+    % each vertex's eccentricity alongside (`patchEccen`).
+    %
+    % The published analysis restricts to 4-8 deg, but that restriction is a
+    % STIMULUS-MATCHING constraint, not the stimulus extent. The stimulus is a much
+    % larger annulus (roughly 1-12 deg). Cartesian gratings have uniform spatial
+    % frequency across the aperture while polar gratings' SF scales inversely with
+    % eccentricity, so the two stimulus types are SF-matched only near 6 deg; 4-8 is the
+    % band where the mismatch stays acceptable.
+    %
+    % That constraint governs the ASYMMETRY analysis. It has no bearing on a GLM
+    % FIT-QUALITY question, which only asks whether the session produced a usable
+    % response anywhere the stimulus drove V1. Restricting quality assessment to 4-8
+    % throws away most of the stimulated cortex and most of the statistical power.
+    %
+    % So: extract everything, cut locally. Any band -- 4-8, 2-8, 1-12 -- is then a
+    % one-line filter on patchEccen at the receiving end, with no further server run.
+    eccRange    = [-inf inf];
     r2min       = 0.1;
     qcFields    = {'R2','R2run','FRACvalue','noisepool','HRFindex','meanvol','xvaltrend','pcnum'};
 
@@ -164,8 +179,13 @@ function [v1idx, note, inventory, retPatch, patchEccen, patchVexpl] = ...
         v1idx = find(inLabel & ecc(:) >= eccRange(1) & ecc(:) <= eccRange(2) & vexp(:) > r2min);
         patchEccen = single(ecc(v1idx));
         patchVexpl = single(vexp(v1idx));
-        note  = sprintf('V1 patch: %d vertices, ecc %g-%g deg', ...
-                        numel(v1idx), eccRange(1), eccRange(2));
+        if all(isfinite(eccRange))
+            note = sprintf('V1 patch: %d vertices, ecc %g-%g deg', ...
+                           numel(v1idx), eccRange(1), eccRange(2));
+        else
+            note = sprintf('V1 patch: %d vertices, all ecc (cut locally on patchEccen)', ...
+                           numel(v1idx));
+        end
 
         % Inventory every retinotopy map, and its median in the patch. We are looking for
         % a response-amplitude / gain map to use as an effect-independent normaliser, but
