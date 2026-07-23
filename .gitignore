@@ -4,6 +4,7 @@ Manuscript draft/
 Reproduction/figures/
 Reproduction/**/_cache/
 Reproduction/_glmqc/
+dg_collect/
 *.pdf
 *.png
 *.bmp

@@ -62,25 +62,43 @@ function collect_everything(bidsDir, expOutDir, outDir, opts)
         expOutDir = '/Volumes/Vision/UsersShare/Rania/Project_dg/experimentalOutput';
     end
     if nargin < 3 || isempty(outDir)
-        outDir = fullfile(pwd, 'dg_collect');
+        % NOT pwd: pwd is usually inside the git repo, and a 1.2 GB folder that
+        % appears there is one `git add -A` away from being committed. Home is
+        % predictable, outside the repo, and easy to point rsync at.
+        home = getenv('HOME'); if isempty(home), home = pwd; end
+        outDir = fullfile(home, 'dg_collect');
     end
     if nargin < 4, opts = struct(); end
     if ~isfield(opts,'includeBetas'),      opts.includeBetas      = false; end
     if ~isfield(opts,'includeConstFiles'), opts.includeConstFiles = false; end
+    if ~isfield(opts,'username'),          opts.username          = ''; end
+    if ~isfield(opts,'preflightOnly'),     opts.preflightOnly     = false; end
+    if ~isfield(opts,'force'),             opts.force             = false; end
 
     subjects = {'sub-0037','sub-0201','sub-0255','sub-wlsubj123', ...
                 'sub-wlsubj124','sub-0395','sub-0426','sub-0250'};
     projects = {'dg','da'};
     hRF_setting = 'glmsingle';
 
+    % outDir must be absolute BEFORE setup_user runs, because setup_user may cd.
     if ~isfolder(outDir), mkdir(outDir); end
-    if ~isfolder(bidsDir)
-        error('bidsDir not reachable:\n  %s\nEdit the default at the top of this file.', bidsDir);
+    outDir = char(java.io.File(outDir).getCanonicalPath());
+
+    % ---- PREFLIGHT ---------------------------------------------------------------
+    % Runs in seconds and reports what the real run would produce. This exists because
+    % the failure that costs the most is a run that SUCCEEDS PARTIALLY: setup_user
+    % errors when the working directory is wrong, MRIread never reaches the path, and
+    % every retinotopy read fails while the GLM reads carry on. That looks like success
+    % and is worth another trip across the world to fix. So: check first, fail loudly.
+    ok = preflight(bidsDir, expOutDir, subjects, projects, hRF_setting, opts);
+    if opts.preflightOnly
+        fprintf('\nPreflight only -- nothing written. Re-run without preflightOnly to collect.\n\n');
+        return
     end
-    try
-        setup_user('rania', bidsDir);
-    catch
-        warning('setup_user failed -- MRIread/read_label may be missing. Continuing.');
+    if ~ok && ~opts.force
+        error('collect_everything:preflight', ...
+              ['Preflight failed -- see above. Fix the reported item, or re-run with\n' ...
+               '  opts.force = true\nto collect whatever IS reachable anyway.']);
     end
 
     fprintf('\ncollect_everything\n  bids  : %s\n  expOut: %s\n  out   : %s\n', ...
@@ -117,6 +135,147 @@ function collect_everything(bidsDir, expOutDir, outDir, opts)
 end
 
 % =====================================================================
+function ok = preflight(bidsDir, expOutDir, subjects, projects, hRF_setting, opts)
+% Check every prerequisite in seconds, before committing to ~1 hour of reading.
+    fprintf('\n=============== PREFLIGHT ===============\n');
+    ok = true;
+
+    % --- 1. working directory and toolbox paths --------------------------------
+    % setup_user must be called with AnalysisCode as the working directory (it errors
+    % otherwise), and it is the ONLY thing that puts FreeSurfer's matlab dir -- and
+    % therefore MRIread -- on the path. Rather than requiring the caller to be in the
+    % right folder, find AnalysisCode and go there ourselves. Run from anywhere.
+    acNote = ensure_toolboxes(bidsDir, opts.username);
+    if isempty(which('MRIread'))
+        fprintf('[FAIL] MRIread not on the MATLAB path. %s\n', acNote);
+        fprintf('       MRIread ships with FreeSurfer and is added by setup_user.\n');
+        fprintf('       Either FreeSurfer is not installed where setup_user expects\n');
+        fprintf('       (edit the freesurferDir for your machine in setup_user.m), or\n');
+        fprintf('       AnalysisCode was not found. Without MRIread NO retinotopy maps\n');
+        fprintf('       are exported and the run is wasted -- so this is a hard stop.\n');
+        ok = false;
+    else
+        fprintf('[ ok ] MRIread found (%s)\n', acNote);
+    end
+
+    % --- 2. the two data trees -------------------------------------------------
+    if isfolder(bidsDir)
+        fprintf('[ ok ] bidsDir reachable\n');
+    else
+        fprintf('[FAIL] bidsDir NOT reachable: %s\n', bidsDir);
+        fprintf('       Is the volume mounted? Pass the right path as argument 1.\n');
+        ok = false;
+    end
+    if isfolder(expOutDir)
+        fprintf('[ ok ] expOutDir reachable\n');
+    else
+        fprintf('[warn] expOutDir NOT reachable: %s\n', expOutDir);
+        fprintf('       Design/timing files will be skipped. This is the separate tree\n');
+        fprintf('       setup.json calls expoutputdir -- it is NOT inside data_bids.\n');
+    end
+
+    % --- 3. can each subject actually be found? --------------------------------
+    nGLM = 0; nRet = 0; nLab = 0;
+    for si = 1:numel(subjects)
+        for pj = 1:numel(projects)
+            g = fullfile(bidsDir,'derivatives',strcat(projects{pj},'GLM'), ...
+                         strcat('hRF_',hRF_setting), subjects{si});
+            if ~isempty(dir(fullfile(g,'**','results.mat'))), nGLM = nGLM + 1; end
+        end
+        if ~isempty(dir(fullfile(bidsDir,'derivatives','prfvista_mov',subjects{si},'**','lh.eccen.mgz')))
+            nRet = nRet + 1;
+        end
+        if isfolder(fullfile(bidsDir,'derivatives','freesurfer',subjects{si},'label'))
+            nLab = nLab + 1;
+        end
+    end
+    report('results.mat', nGLM, numel(subjects)*numel(projects));
+    report('retinotopy',  nRet, numel(subjects));
+    report('label dirs',  nLab, numel(subjects));
+    if nGLM == 0
+        fprintf('       No results.mat found at all -- check bidsDir and hRF_setting.\n');
+        ok = false;
+    end
+
+    fprintf('-----------------------------------------\n');
+    if ok
+        fprintf('Preflight OK. Expect roughly 1.2 GB and a while to read 16 x ~500 MB files.\n');
+    else
+        fprintf('Preflight FAILED. Fix the [FAIL] lines above before running.\n');
+    end
+    fprintf('=========================================\n');
+end
+
+% ---------------------------------------------------------------------
+function note = ensure_toolboxes(bidsDir, username)
+% Put MRIread on the path from wherever this is invoked.
+%
+% setup_user insists on being called with AnalysisCode as the working directory and
+% then cd's around, so this locates AnalysisCode (first relative to THIS file, then by
+% searching upward from pwd), calls setup_user from there, and restores the caller's
+% directory afterwards. The point is that `matlab -batch "collect_everything"` should
+% work from any folder -- a run that fails because of the wrong cwd costs a day.
+    if ~isempty(which('MRIread'))
+        note = 'already on path';
+        return
+    end
+
+    cands = {};
+    here = fileparts(mfilename('fullpath'));            % .../Reproduction/server_extract
+    cands{end+1} = fullfile(fileparts(fileparts(here)), 'AnalysisCode');
+    d = pwd;                                            % walk up from wherever we are
+    for k = 1:6
+        cands{end+1} = fullfile(d, 'AnalysisCode'); %#ok<AGROW>
+        if isfolder(fullfile(d,'setup.json')), cands{end+1} = d; end %#ok<AGROW>
+        p = fileparts(d); if strcmp(p,d), break; end; d = p;
+    end
+
+    orig = pwd;
+    restore = onCleanup(@() cd(orig));   % capture orig, not a live pwd() call
+    foundAC = '';
+    for k = 1:numel(cands)
+        if ~isfile(fullfile(cands{k},'setup.json')), continue; end
+        foundAC = cands{k};
+        % setup_user.m lives in AnalysisCode/general/, NOT in AnalysisCode itself, so
+        % cd'ing there is not enough to make it callable -- add the tree first.
+        addpath(genpath(cands{k}));
+        users = {username,'rania','sawtooth','JWLAB08M'};
+        users = users(~cellfun(@isempty, users));
+        for u = 1:numel(users)
+            try
+                cd(cands{k});
+                % evalc: setup_user echoes the username and a confirmation line, and
+                % trying three candidates would triple it. Keep the preflight readable.
+                evalc('setup_user(users{u}, bidsDir)');
+                if ~isempty(which('MRIread'))
+                    cd(orig);
+                    note = sprintf('via setup_user(''%s'') in %s', users{u}, cands{k});
+                    return
+                end
+            catch
+            end
+        end
+    end
+    cd(orig);
+    if isempty(foundAC)
+        note = 'AnalysisCode/setup.json not found near this file or the working directory';
+    else
+        note = sprintf('AnalysisCode found (%s) but setup_user did not yield MRIread', foundAC);
+    end
+end
+
+% ---------------------------------------------------------------------
+function report(what, n, total)
+    if n == total
+        fprintf('[ ok ] %-12s %d/%d found\n', what, n, total);
+    elseif n == 0
+        fprintf('[FAIL] %-12s %d/%d found\n', what, n, total);
+    else
+        fprintf('[warn] %-12s %d/%d found -- the rest are logged in manifest.csv\n', what, n, total);
+    end
+end
+
+% ---------------------------------------------------------------------
 function rows = collect_glm(bidsDir, subj, proj, hRF_setting, outDir, opts)
 % Whole-surface GLMsingle output, everything except the betas.
     rows = {};
