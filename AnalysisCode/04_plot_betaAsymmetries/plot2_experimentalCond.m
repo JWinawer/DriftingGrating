@@ -153,7 +153,7 @@ function plot2_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         meanDiff = mean(differences);
         
         % Bootstrap SED (standard error of the difference)
-        SED = std(bootMeans);
+        STD = std(bootMeans);
 
         % 95% bootstrap confidence interval
         ci_mean = prctile(bootMeans, [2.5 97.5]);
@@ -188,9 +188,9 @@ function plot2_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         scatter(2, vals_2_overall,  200, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', markerC, 'LineWidth',1.75); %, 'MarkerFaceAlpha', 0.5);
         
         hold on
-        errorbar(1, mean(vals_1), SED, 'k', 'LineWidth', 3, 'CapSize', 0);
+        errorbar(1, mean(vals_1), STD, 'k', 'LineWidth', 3, 'CapSize', 0);
         hold on
-        errorbar(2, mean(vals_2), SED, 'k', 'LineWidth', 3, 'CapSize', 0);
+        errorbar(2, mean(vals_2), STD, 'k', 'LineWidth', 3, 'CapSize', 0);
 
         title(rois{ii});
         %ylabel('zscored PSC')

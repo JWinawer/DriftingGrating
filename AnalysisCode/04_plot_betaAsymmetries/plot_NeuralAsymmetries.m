@@ -4,7 +4,7 @@ clc; clear all; close all;
 
 % set up
 addpath(genpath(pwd));
-projectName = 'da'; %'dots'; %'da';
+projectName = 'dg'; %'dots'; %'da';
 %bidsDir =  '/Volumes/server/Projects/Project_dg/data_bids/';
 %bidsDir =  '/Volumes/EXTERNAL_US/Project_dg/data_bids/';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';

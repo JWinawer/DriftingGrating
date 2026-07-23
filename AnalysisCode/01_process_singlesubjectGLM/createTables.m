@@ -17,7 +17,7 @@ if ~exist(savedir, 'dir')
 end
 
 hemis = {'lh'; 'rh'};
-roinames = {'V1', 'V2', 'V3', 'hV4', 'V3a', 'V3b', 'hMTcomplex', 'pMT', 'pMST'};
+roinames = {'V1', 'V2', 'V3', 'hV4', 'V3a', 'V3b', 'hMTcomplex', 'pMT', 'pMST', 'V2d'};
 
 dg_stimNames = {'cartexp_vertical_grating_rightwards_motion', 'cartexp_horizontal_grating_upwards_motion', ...
     'cartexp_vertical_grating_leftwards_motion', 'cartexp_horizontal_grating_downwards_motion', ...
@@ -105,12 +105,18 @@ for si=1:numel(subjects)
     % read ROI labels    
     for ri=1:length(roinames)
         roiname = roinames{ri};
-        
+
         lh_label = read_label(subjectname, sprintf('retinotopy_RE/lh.%s_REmanual', roiname));
         rh_label = read_label(subjectname, sprintf('retinotopy_RE/rh.%s_REmanual', roiname));
         
         % plus one because matlab starts from 1 not 0
         label_idx = [lh_label(:,1)+1 ; rh_label(:,1)+hSize(1)+1];
+
+        if strcmp(roiname, 'V2d')
+            label_idx = [lh_label(:,1)+1];
+            roiname = strcat('left_',roiname);
+        end
+
     
         if strcmp(roiname, 'pMT')
             roiname = 'MT';

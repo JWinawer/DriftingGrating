@@ -671,7 +671,10 @@ for i = 1:4
     hold on
 
     histogram2(x, y, xedges, yedges, 'DisplayStyle', 'tile', 'ShowEmptyBins','on'); 
-    clim([0 250])
+    %clim([0 250])
+    set(gca, "ZScale", 'linear')
+    %cx = colorbar();
+    %cx.Ruler.Scale = 'log';
     %h=scatter(x,y,10,'filled');
 %     h.MarkerFaceAlpha = 0.3;
 %     h.MarkerEdgeAlpha = 0.3;
