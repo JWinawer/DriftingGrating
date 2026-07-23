@@ -122,6 +122,17 @@ Two things to keep in mind while doing the z-scoring work:
 
 # Next step: an observer gain estimate from the retinotopy scan
 
+> **Closed — negative (2026-07-23).** `prfvista_mov` does not save a gain/amplitude map. The
+> server inventory came back identical for all 8 observers: `angle`, `angle_adj`, `eccen`,
+> `sigma`, `vexpl`, `x`, `y` — position and size parameters plus goodness of fit, and nothing
+> else. The pRF gain is fit and then discarded, so it cannot be read off the stored maps;
+> recovering it would require **refitting the pRF models**, which is a far larger job than
+> step 1 below assumed. Unless someone is willing to refit, the retinotopy route to a
+> principled per-observer normaliser is not available, and the units question in
+> [`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §6 stands unresolved by this route.
+>
+> The rest of this section is kept for the reasoning, which is still correct.
+
 **Task:** test whether `prfvista_mov` can supply a per-observer BOLD gain that the 13 GLM
 conditions cannot. This is the one route that could make a principled normalization possible, and
 it should be tried before the z-scoring question is settled either way — see
@@ -153,6 +164,21 @@ orientation conditions and does not collapse when V1 fails to respond to *these*
 ---
 
 # Next step: per-subject GLM fit quality
+
+> **Data received and audited (2026-07-23).** The extraction was run on the server and returned
+> in `Support/glm_qc_for_transfer/` — 16/16 files, all `ok`, V1 restriction working (the branch
+> flagged untested below), every QC field present. **Results and what they change are in
+> [`GLM_QUALITY.md`](GLM_QUALITY.md).**
+>
+> Headline: the two anomalous observers fail in *different* ways, and only one of them fails in a
+> way that supports the §8 exclusion. **sub-0037** has a genuine, session-specific polar failure —
+> V1 fit *worse* than the whole-surface baseline (ratio 0.92, the only sub-1.0 value in the
+> dataset) in `da` against 4.96 in `dg`. **sub-0201** does not: it is 1.15 / 1.16, uniformly weak
+> in *both* experiments, with no bad run and no session-specific drop. So the ZSCORE_FIG7.md §8
+> exclusion has independent support for sub-0037 and **none for sub-0201**, whose blank-beta
+> anomaly still needs an explanation. §8 needs revising accordingly.
+>
+> Steps 1–3 below are done. Steps 4–5 remain open.
 
 **Task:** assess GLMsingle fit quality for all 8 subjects × both experiments, and decide
 inclusion on that basis. This should be settled *before* the z-scoring call, because z-scoring is

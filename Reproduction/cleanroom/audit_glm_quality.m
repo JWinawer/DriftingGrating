@@ -46,7 +46,13 @@ function A = audit_glm_quality(qcDir)
         else
             r.worstRunR2 = NaN; r.runSpread = NaN;
         end
-        r.scope = q.scope;
+        % EXTRACT_GLM_QC calls this field `scope`; the standalone server script
+        % ../server_extract/extract_for_transfer.m calls it `patchNote`. Accept either,
+        % so output from whichever extractor was actually run can be audited.
+        if isfield(q,'scope'),   r.scope = q.scope;
+        elseif isfield(q,'patchNote'), r.scope = q.patchNote;
+        else,                    r.scope = 'unknown';
+        end
         rows(end+1) = r; %#ok<AGROW>
     end
     A = struct2table(rows);
@@ -56,7 +62,14 @@ function A = audit_glm_quality(qcDir)
         if isempty(P), continue; end
         P = sortrows(P, 'medR2');
         fprintf('\n================ %s : GLM fit quality ================\n', proj{1});
-        fprintf('scope: %s\n', P.scope{1});
+        % scope is per-subject when it came from extract_for_transfer (it embeds that
+        % subject's patch size), so print it only if every row agrees. Per-row vertex
+        % counts are in the nVert column either way.
+        if numel(unique(P.scope)) == 1
+            fprintf('scope: %s\n', P.scope{1});
+        else
+            fprintf('scope: V1 patch, per-subject size (see nVert)\n');
+        end
         fprintf('%-14s %8s %8s %9s %9s %9s %9s %9s\n', 'subject','nVert', ...
                 'medR2%','R2>5%','medFRAC','noisepool','worstRun','runSpread');
         for i = 1:height(P)
