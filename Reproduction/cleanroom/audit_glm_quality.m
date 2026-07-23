@@ -65,7 +65,7 @@ function A = audit_glm_quality(qcDir)
         % scope is per-subject when it came from extract_for_transfer (it embeds that
         % subject's patch size), so print it only if every row agrees. Per-row vertex
         % counts are in the nVert column either way.
-        if numel(unique(P.scope)) == 1
+        if isscalar(unique(P.scope))
             fprintf('scope: %s\n', P.scope{1});
         else
             fprintf('scope: V1 patch, per-subject size (see nVert)\n');

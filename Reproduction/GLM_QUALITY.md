@@ -85,12 +85,41 @@ cartesian runs). There is nothing to drop; the whole session is uniformly flat.
 
 **sub-0201 — prediction not confirmed.** The expected bad-run/motion signature is absent. Its
 `runSpread` is the *smallest* in the entire group (0.27 in `dg`, 0.89 in `da`) — every run is
-uniformly mediocre, which is the opposite of a motion artefact. Its ratios are 1.15 and 1.16, the
-two weakest non-failures in the set, and they are weak in **both** experiments. In the raw polar
-table it is mid-pack, 6th of 8.
+uniformly mediocre, which is the opposite of a motion artefact. On medians its ratios are 1.15 and
+1.16, the two weakest non-failures in the set.
 
-So sub-0201 is a quiet responder throughout, not a botched polar session. Its blank beta exceeding
-all 12 stimulus betas in both experiments remains unexplained by GLM fit quality.
+But see §4a: on the median sub-0201 looks uniformly weak, and **that reading is an artefact of the
+median.** Its polar session has a healthy responsive tail (25% of patch vertices strongly
+responsive, mid-pack for the group). Its polar GLM fit is fine. So its blank beta exceeding all 12
+stimulus betas in both experiments is not explained by fit quality in any form.
+
+## 4a. The median understates every session — and this matters for sub-0201
+
+Much of the V1 patch does not respond even to a stimulus that drives it, so a median across patch
+vertices is diluted by non-responsive vertices. A tail statistic avoids this: `fracAbove` is the
+percentage of patch vertices whose R² exceeds the **95th percentile of that session's whole
+surface**. Chance is 5%.
+
+| subject | dg fracAbove | da fracAbove |
+|---|---|---|
+| sub-0037 | 80.4% | **10.4%** |
+| sub-0201 | 14.6% | 25.0% |
+| sub-0250 | 47.6% | 35.3% |
+| sub-0255 | 24.8% | 46.5% |
+| sub-0395 | 83.4% | 74.1% |
+| sub-0426 | 50.0% | 66.5% |
+| sub-wlsubj123 | 43.8% | 36.9% |
+| sub-wlsubj124 | 58.5% | 37.8% |
+
+Every session has a responsive upper tail the median missed — including sub-0201's polar session,
+which reaches p95 = 27.59 against a median of 4.50. **This corrects §4's characterisation of
+sub-0201 as a quiet responder throughout: its polar session is unremarkable, and if either of its
+sessions is weak it is the cartesian one (14.6%).**
+
+**sub-0037's polar session survives the correction and looks worse.** 10.4% against a 5% chance
+floor, with patch p95 = 5.09 barely above the whole-surface p95 of 4.33 — no responsive tail
+exists. It is the flattest session in the dataset by a wide margin (next lowest 14.6%) against
+80.4% in its own cartesian session. That conclusion does not depend on the median.
 
 ## 5. What this changes
 
@@ -121,6 +150,23 @@ The discriminating check is to pull that session's design matrix and stimulus ti
 against a session that worked. It is worth doing before excluding: sub-0037 has the second-best
 cartesian data in the set, so losing the observer costs real power, and if the polar session is
 recoverable it should be recovered rather than dropped.
+
+## 6a. Open: the patch is 4–8°, and cannot be widened from the transferred files
+
+Everything above is computed within the **published 4–8° patch**, because that is what the
+extraction saved. A wider patch (2–8°) is a useful control — if sub-0037's polar session is equally
+flat once more foveal V1 is included, a patch-definition or pRF-mapping artefact is ruled out.
+Since 2–8° is a *superset* of what was transferred, **this requires another server run.**
+
+`extract_for_transfer.m` has been changed for that run: `eccRange` is now `[2 8]`, and it saves
+each retained vertex's `patchEccen` and `patchVexpl`. With those, any narrower range — including
+the published 4–8° — can be re-cut locally, so no third round trip is needed regardless of what the
+answer turns out to be.
+
+Expectation worth recording in advance: the stimulus was a 4–8° annulus, so 2–4° vertices are
+largely *outside* it and should dilute the ratios downward for everyone. The informative quantity
+is not the absolute values but whether sub-0037's polar session stays uniquely flat relative to the
+rest of the group.
 
 ## 7. Also worth noting
 

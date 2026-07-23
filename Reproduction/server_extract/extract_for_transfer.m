@@ -42,7 +42,11 @@ function extract_for_transfer(bidsDir, outDir)
                 'sub-wlsubj124','sub-0395','sub-0426','sub-0250'};
     projects    = {'dg','da'};
     hRF_setting = 'glmsingle';
-    eccRange    = [4 8];
+    % Deliberately WIDER than the published analysis (which uses 4-8 deg, the stimulus
+    % annulus). The per-vertex eccentricity is saved alongside, so any narrower range --
+    % including the published 4-8 -- can be re-cut from the transferred files without
+    % another server run. Do not narrow this.
+    eccRange    = [2 8];
     r2min       = 0.1;
     qcFields    = {'R2','R2run','FRACvalue','noisepool','HRFindex','meanvol','xvaltrend','pcnum'};
 
@@ -63,7 +67,8 @@ function extract_for_transfer(bidsDir, outDir)
         subjectname = subjects{si};
 
         % ---- V1 patch, shared by both experiments --------------------------------
-        [v1idx, patchNote, retInventory, retPatch] = build_patch(bidsDir, subjectname, eccRange, r2min);
+        [v1idx, patchNote, retInventory, retPatch, patchEccen, patchVexpl] = ...
+            build_patch(bidsDir, subjectname, eccRange, r2min);
         fprintf('%-14s %s\n', subjectname, patchNote);
 
         for pj = 1:numel(projects)
@@ -89,7 +94,8 @@ function extract_for_transfer(bidsDir, outDir)
 
             qc = struct('subject',subjectname,'project',proj,'sourceFolder',f(1).folder, ...
                         'nVertices',numel(a.R2),'v1idx',uint32(v1idx),'patchNote',patchNote, ...
-                        'retInventory',{retInventory},'retPatchMedians',retPatch);
+                        'retInventory',{retInventory},'retPatchMedians',retPatch, ...
+                        'eccRange',eccRange,'patchEccen',patchEccen,'patchVexpl',patchVexpl);
             qc.fieldsMissing = setdiff(qcFields, qcFields(isfield(a,qcFields)));
             qc.wholeSurface  = summarise(a, qcFields);
 
@@ -129,11 +135,16 @@ function extract_for_transfer(bidsDir, outDir)
 end
 
 % =========================================================================
-function [v1idx, note, inventory, retPatch] = build_patch(bidsDir, subjectname, eccRange, r2min)
+function [v1idx, note, inventory, retPatch, patchEccen, patchVexpl] = ...
+        build_patch(bidsDir, subjectname, eccRange, r2min)
 % V1 label intersected with the eccentricity and pRF-R2 filters. Deliberately uses only
 % eccen and vexpl, never angle -- polar angle has a Benson-vs-conventional convention
 % trap that is irrelevant here (see AUDIT.md), so this sidesteps it entirely.
+%
+% Returns each retained vertex's eccentricity and vexpl as well, so the receiving end can
+% narrow the range (e.g. back to the published 4-8 deg) without re-reading the server.
     v1idx = []; inventory = {}; retPatch = struct();
+    patchEccen = single([]); patchVexpl = single([]);
     try
         hSize = get_surfsize(subjectname);
         lh = read_label(subjectname, 'retinotopy_RE/lh.V1_REmanual');
@@ -151,7 +162,10 @@ function [v1idx, note, inventory, retPatch] = build_patch(bidsDir, subjectname, 
         nVert = numel(ecc);
         inLabel = false(nVert,1); inLabel(labelIdx) = true;
         v1idx = find(inLabel & ecc(:) >= eccRange(1) & ecc(:) <= eccRange(2) & vexp(:) > r2min);
-        note  = sprintf('V1 patch: %d vertices', numel(v1idx));
+        patchEccen = single(ecc(v1idx));
+        patchVexpl = single(vexp(v1idx));
+        note  = sprintf('V1 patch: %d vertices, ecc %g-%g deg', ...
+                        numel(v1idx), eccRange(1), eccRange(2));
 
         % Inventory every retinotopy map, and its median in the patch. We are looking for
         % a response-amplitude / gain map to use as an effect-independent normaliser, but
