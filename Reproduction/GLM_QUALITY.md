@@ -66,6 +66,24 @@ cortex in this session?**
 
 1.0 means V1 fit no better than average cortex, i.e. no measurable response to the stimulus.
 
+> **Caveat — the absolute values here are biased upward, and by an unknown amount.** The patch is
+> selected on `vexpl > 0.1`; the whole-surface baseline is not. `vexpl` is the *pRF* variance
+> explained from the retinotopy scan, so this is not literally thresholding the GLM R² under test
+> — but it selects vertices with good SNR (clean timeseries, no dropout, good registration), and
+> those have higher GLM R² whether or not they responded to this stimulus. Comparing a selected
+> numerator against an unselected denominator therefore inflates every ratio, and "1.0 = no
+> response" is not a calibrated threshold.
+>
+> **What survives the bias.** The patch is built **once per subject** and shared by both
+> experiments (`build_patch` is called outside the project loop), so a subject's `dg` and `da`
+> numbers come from *identical vertices under identical selection*. Within-subject,
+> between-experiment contrasts are unaffected — which is precisely what the sub-0037 conclusion
+> rests on (§4), and it can be stated without any baseline at all: 16.99 vs 2.83. What is
+> compromised is the absolute level, and cross-subject comparison to the extent that the retained
+> fraction differs per subject.
+>
+> The re-run removes the filter (§6a) so this can be quantified rather than assumed.
+
 Note how low this is across the board. Only sub-0395 (both experiments), sub-0037 (`dg`) and
 sub-0426 (`da`) are much above ~1.5 — for most observer-sessions, V1 is fit only slightly better
 than non-visual cortex. That is a general weakness of this dataset, not a two-observer problem.
@@ -169,10 +187,17 @@ produced a usable V1 response anywhere the stimulus drove cortex. Restricting th
 assessment to 4–8° discards most of the stimulated V1 and most of the available power — the
 numbers above rest on ~1100–1800 vertices where several times that many were driven.
 
-So `extract_for_transfer.m` now applies **no eccentricity restriction at all** (`eccRange =
-[-inf inf]`), keeping all of V1 that passes `vexpl > 0.1` and saving each vertex's `patchEccen`
-and `patchVexpl`. Any band — 4–8°, 2–8°, 1–12° — then becomes a one-line local filter, so the
-choice never forces another server run again.
+**And the pRF-R² filter has to go too, for the reason in the §3 caveat.** Selecting the patch on
+`vexpl > 0.1` while leaving the baseline unselected biases every ratio upward. Keeping the filter
+at extraction also makes its influence untestable — you cannot ask how sensitive a result is to a
+threshold that was applied before the data left the server.
+
+So `extract_for_transfer.m` now applies **no selection beyond the V1 label**: `eccRange =
+[-inf inf]`, `r2min = -inf`, with each vertex's `patchEccen` and `patchVexpl` saved alongside.
+Vertices whose pRF fit failed outright are kept too, carrying NaN, so that a local filter drops
+them explicitly rather than a blanket comparison dropping them silently — that silent drop is
+itself a selection on fit quality. Any band and any threshold — 4–8° with `vexpl > 0.1`, or
+anything else — then becomes a one-line local filter, and its influence becomes measurable.
 
 What to look for once it arrives: whether sub-0037's polar session stays uniquely flat across the
 full stimulated range. If it does, the session-wide failure is confirmed on far more data than §4

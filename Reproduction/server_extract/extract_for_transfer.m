@@ -23,7 +23,7 @@ function extract_for_transfer(bidsDir, outDir)
 %       separate session, so it is the natural candidate -- but we do not know from here
 %       which maps that pipeline saves. The inventory answers that in the same trip.
 %
-% Everything is restricted to V1 (pRF R2 > 0.1) so the FreeSurfer labels and retinotopy
+% Everything is restricted to the V1 label so the FreeSurfer labels and retinotopy
 % maps never have to be copied either. Each vertex's eccentricity comes along in
 % `patchEccen`, so the published 4-8 deg band -- or any other -- is a local filter rather
 % than a reason to re-run this. Whole-surface percentile summaries are kept alongside so
@@ -44,8 +44,8 @@ function extract_for_transfer(bidsDir, outDir)
                 'sub-wlsubj124','sub-0395','sub-0426','sub-0250'};
     projects    = {'dg','da'};
     hRF_setting = 'glmsingle';
-    % NO eccentricity restriction: keep all of V1 that passes the pRF filter, and save
-    % each vertex's eccentricity alongside (`patchEccen`).
+    % NO eccentricity restriction: keep the whole V1 label and save each vertex's
+    % eccentricity alongside (`patchEccen`).
     %
     % The published analysis restricts to 4-8 deg, but that restriction is a
     % STIMULUS-MATCHING constraint, not the stimulus extent. The stimulus is a much
@@ -62,7 +62,16 @@ function extract_for_transfer(bidsDir, outDir)
     % So: extract everything, cut locally. Any band -- 4-8, 2-8, 1-12 -- is then a
     % one-line filter on patchEccen at the receiving end, with no further server run.
     eccRange    = [-inf inf];
-    r2min       = 0.1;
+    % NO pRF-R2 restriction either, for the same reason plus a subtler one. vexpl is the
+    % pRF fit from the RETINOTOPY scan, so thresholding it is not literally thresholding
+    % the GLM R2 under test -- but it selects vertices with good SNR (clean timeseries,
+    % no dropout, good registration), and those have higher GLM R2 whether or not they
+    % responded to this stimulus. Any comparison of a vexpl-filtered patch against an
+    % unfiltered baseline is therefore biased upward by the selection alone.
+    %
+    % Keeping every V1 vertex and saving vexpl per vertex (`patchVexpl`) makes the
+    % threshold a local choice, and makes sensitivity to it testable rather than baked in.
+    r2min       = -inf;
     qcFields    = {'R2','R2run','FRACvalue','noisepool','HRFindex','meanvol','xvaltrend','pcnum'};
 
     if ~isfolder(bidsDir)
@@ -110,9 +119,32 @@ function extract_for_transfer(bidsDir, outDir)
             qc = struct('subject',subjectname,'project',proj,'sourceFolder',f(1).folder, ...
                         'nVertices',numel(a.R2),'v1idx',uint32(v1idx),'patchNote',patchNote, ...
                         'retInventory',{retInventory},'retPatchMedians',retPatch, ...
-                        'eccRange',eccRange,'patchEccen',patchEccen,'patchVexpl',patchVexpl);
+                        'eccRange',eccRange,'vexplMin',r2min, ...
+                        'patchEccen',patchEccen,'patchVexpl',patchVexpl);
             qc.fieldsMissing = setdiff(qcFields, qcFields(isfield(a,qcFields)));
             qc.wholeSurface  = summarise(a, qcFields);
+
+            % A BASELINE THE PATCH CAN HONESTLY BE COMPARED AGAINST.
+            % wholeSurface holds six pooled percentiles and includes the V1 vertices
+            % themselves, so it cannot support a matched comparison. Keep instead a fine
+            % percentile grid of R2 over NON-V1 cortex, whole-experiment and per run.
+            % 401 doubles is nothing, and it makes both directions available by
+            % interpolation: an arbitrary percentile of the baseline, or the fraction of
+            % baseline vertices below any given patch value.
+            qc.baselinePct = 0:0.25:100;
+            R2all = double(a.R2(:));
+            outside = true(numel(R2all),1);
+            if ~isempty(v1idx), outside(v1idx) = false; end
+            qc.baselineR2 = prctile(R2all(outside & isfinite(R2all)), qc.baselinePct);
+            qc.baselineN  = sum(outside & isfinite(R2all));
+            if isfield(a,'R2run')
+                rr = double(reshape(a.R2run, numel(R2all), []));
+                qc.baselineR2run = nan(size(rr,2), numel(qc.baselinePct));
+                for rIdx = 1:size(rr,2)
+                    col = rr(:,rIdx);
+                    qc.baselineR2run(rIdx,:) = prctile(col(outside & isfinite(col)), qc.baselinePct);
+                end
+            end
 
             for k = 1:numel(qcFields)
                 fn = qcFields{k};
@@ -176,15 +208,27 @@ function [v1idx, note, inventory, retPatch, patchEccen, patchVexpl] = ...
 
         nVert = numel(ecc);
         inLabel = false(nVert,1); inLabel(labelIdx) = true;
-        v1idx = find(inLabel & ecc(:) >= eccRange(1) & ecc(:) <= eccRange(2) & vexp(:) > r2min);
+        % Apply each filter only if it is actually bounded. A blanket comparison would
+        % silently drop NaN-eccen / NaN-vexpl vertices, which is itself a selection on
+        % pRF fit quality -- exactly what this extraction is trying not to bake in.
+        % Vertices whose pRF failed are kept, with NaN in patchEccen/patchVexpl, so any
+        % local filter drops them explicitly rather than by accident.
+        keep = inLabel;
+        if all(isfinite(eccRange))
+            keep = keep & ecc(:) >= eccRange(1) & ecc(:) <= eccRange(2);
+        end
+        if isfinite(r2min)
+            keep = keep & vexp(:) > r2min;
+        end
+        v1idx = find(keep);
         patchEccen = single(ecc(v1idx));
         patchVexpl = single(vexp(v1idx));
-        if all(isfinite(eccRange))
-            note = sprintf('V1 patch: %d vertices, ecc %g-%g deg', ...
-                           numel(v1idx), eccRange(1), eccRange(2));
+        if all(isfinite(eccRange)) || isfinite(r2min)
+            note = sprintf('V1 patch: %d vertices, ecc [%g %g], vexpl > %g', ...
+                           numel(v1idx), eccRange(1), eccRange(2), r2min);
         else
-            note = sprintf('V1 patch: %d vertices, all ecc (cut locally on patchEccen)', ...
-                           numel(v1idx));
+            note = sprintf(['V1 patch: %d vertices, unfiltered ' ...
+                            '(cut locally on patchEccen / patchVexpl)'], numel(v1idx));
         end
 
         % Inventory every retinotopy map, and its median in the patch. We are looking for
