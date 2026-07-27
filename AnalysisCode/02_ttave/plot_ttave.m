@@ -1,4 +1,14 @@
-function plot_ttave(ttaveOutput, projectSettings, asymmetryName)
+function plot_ttave(ttaveOutput_origin, projectSettings, asymmetryName)
+
+figure
+for fititer = 1:2 % one for data, one for model
+    if fititer==1
+        savename = 'data';
+    elseif fititer==2
+        savename = 'model';
+    end
+
+    ttaveOutput = ttaveOutput_origin.(savename);
 
     subj = projectSettings.subject;
     roiName = projectSettings.roiName;
@@ -7,7 +17,7 @@ function plot_ttave(ttaveOutput, projectSettings, asymmetryName)
     eventTRs_after = projectSettings.eventTRs_after;
     projectName = projectSettings.projectName;
     colors_data = projectSettings.colors_data;
-    secondary = projectSettings.secondary;
+    secondary = projectSettings.secondary.(savename);
     legendOn=0;
 
     colors = {colors_data.conditions.(projectName).(asymmetryName).color_pro', ...
@@ -35,7 +45,6 @@ function plot_ttave(ttaveOutput, projectSettings, asymmetryName)
     disadvStatic = ttaveOutput{6};
 
     
-    figure
     shift = nanmean(blank); %mean(base,'all');
 
     advMotionVals = nanmean(advMotion)-shift;
@@ -120,6 +129,7 @@ function plot_ttave(ttaveOutput, projectSettings, asymmetryName)
 
     end
 
+end % added
 
     title(sprintf('%s %s', subj, roiName))
     xlim([1, eventTRs_prior+eventTRs_after])

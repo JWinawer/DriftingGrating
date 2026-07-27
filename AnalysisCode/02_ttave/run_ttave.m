@@ -6,7 +6,7 @@ clear all; close all; clc;
 
 % setup path
 addpath(genpath(pwd));
-projectName = 'da'; % 'dg', or 'dgl' or 'da'
+projectName = 'dg'; % 'dg', or 'dgl' or 'da'
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 %bidsDir = '/Volumes/server/Projects/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
@@ -21,7 +21,7 @@ setup_user('rania', bidsDir)
 projectSettings = loadConfig(githubDir);
 
 hRF_setting = 'glmsingle'; %
-subjects = {'sub-0250'};
+subjects = {'sub-0037'};
 %{'sub-0250'}; %{'sub-0037', 'sub-0201', 'sub-wlsubj123', 'sub-wlsubj124' , ...
     %'sub-0255' , 'sub-0395', 'sub-0426', 'sub-0250'};
 %{'sub-0201', 'sub-wlsubj123', 'sub-wlsubj124', 'sub-0255', ...
@@ -65,6 +65,8 @@ for ss=1:numel(subjects)
     % load raw signal data (in wpToolbox) - convert to .mgh if not already
     run = 1:length(matrices_onset);
     datafiles = load_data(bidsDir,projectName,'fsnative','.mgh',subj,ses,run) ;
+    modelfiles = load(fullfile(derivativesFolder, 'derivedModelFit.mat'));
+    modelfiles = modelfiles.modelfit;
     
     %conditions = {'cardinaloblique', 'radialtangential'};
     conditions = {'mainCardinalVsMainOblique', 'derivedCardinalVsDerivedOblique'};
@@ -127,7 +129,7 @@ for ss=1:numel(subjects)
                 secondary = isSecondary(ci);
         
                 % compute and plot ttave main dir
-                ttave_compute(matrices_onset,datafiles, 'mainCardinalVsMainOblique', surfaceROI, projectSettings, secondary);
+                ttave_compute(matrices_onset,datafiles, modelfiles, 'mainCardinalVsMainOblique', surfaceROI, projectSettings, secondary);
                 %ttave_computeGLMsingle(matrices_onset,datafiles, 'mainCardinalVsMainOblique', surfaceROI, projectSettings, radialvstang);
         
             end
@@ -150,7 +152,7 @@ for ss=1:numel(subjects)
                 secondary = isSecondary(ci);
         
                 % compute and plot ttave main dir
-                ttave_compute(matrices_onset, datafiles, 'derivedCardinalVsDerivedOblique', surfaceROI, projectSettings, secondary);
+                ttave_compute(matrices_onset, datafiles, modelfiles, 'derivedCardinalVsDerivedOblique', surfaceROI, projectSettings, secondary);
                 %ttave_computeGLMsingle(matrices_onset, datafiles, 'derivedCardinalVsDerivedOblique', surfaceROI, projectSettings, radialvstang);
             end
         

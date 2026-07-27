@@ -307,6 +307,214 @@ polPO(isOblique) = mean([ ...
 finalTable.cart_oriasym_PCvPO = cartPC - cartPO;
 finalTable.pol_oriasym_PCvPO = polPC - polPO;
 
+%% Compute motion vs static per experiment
+
+% Get column names
+vars = finalTable.Properties.VariableNames;
+
+
+% Cartesian motion vs static
+% 8 motion-direction columns
+cartMotCols = vars(startsWith(vars,'cart_') & contains(vars,'localmotdir_') & ~contains(vars,'localmotdir_none'));
+
+% 4 static columns
+cartStatCols = vars(startsWith(vars,'cart_') & contains(vars,'localmotdir_none'));
+
+finalTable.cart_MotvStat = ...
+    mean(finalTable{:,cartMotCols},2,'omitnan') - ...
+    mean(finalTable{:,cartStatCols},2,'omitnan');
+
+% Polar motion vs static
+% 8 motion-direction columns
+polMotCols = vars(startsWith(vars,'pol_') & contains(vars,'localmotdir_') & ~contains(vars,'localmotdir_none'));
+
+% 4 static columns
+polStatCols = vars(startsWith(vars,'pol_') & contains(vars,'localmotdir_none'));
+
+finalTable.pol_MotvStat = ...
+    mean(finalTable{:,polMotCols},2,'omitnan') - ...
+    mean(finalTable{:,polStatCols},2,'omitnan');
+
+
+%% Replot polar plot with horizontal vs vertical
+
+% Included V1 voxels
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included==1;
+T = finalTable(idx,:);
+
+subjects = unique(T.subject);
+angleBins = 0:45:315;
+
+% Variables to compute
+vars = { ...
+    'cart_localori_0_localmotdir_none', ...
+    'cart_localori_90_localmotdir_none', ...
+    'pol_localori_0_localmotdir_none', ...
+    'pol_localori_90_localmotdir_none'};
+
+groupMean = cell(size(vars));
+
+for v = 1:numel(vars)
+
+    subjMedian = nan(numel(subjects), numel(angleBins));
+
+    for s = 1:numel(subjects)
+
+        subjIdx = strcmp(T.subject, subjects{s});
+
+        for b = 1:numel(angleBins)
+
+            binIdx = subjIdx & T.pRF_angle_bin == angleBins(b);
+
+            subjMedian(s,b) = median( ...
+                T.(vars{v})(binIdx), ...
+                'omitnan');
+
+        end
+    end
+
+    groupMean{v} = mean(subjMedian,1,'omitnan');
+
+end
+
+theta = deg2rad([angleBins angleBins(1)]);
+
+figure
+
+% Cartesian
+subplot(1,2,1)
+
+polarplot(theta,[groupMean{1} groupMean{1}(1)],'-o','LineWidth',2, 'Color', [0, 0, 0.5])
+hold on
+polarplot(theta,[groupMean{2} groupMean{2}(1)],'-o','LineWidth',2, 'Color', [1, 0.5, 0])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+
+title('Cartesian')
+legend({'Local ori 0','Local ori 90'},'Location','best')
+
+% Polar
+subplot(1,2,2)
+
+polarplot(theta,[groupMean{3} groupMean{3}(1)],'-o','LineWidth',2, 'Color', [0, 0, 0.5])
+hold on
+polarplot(theta,[groupMean{4} groupMean{4}(1)],'-o','LineWidth',2, 'Color', [1, 0.5, 0])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+
+title('Polar')
+legend({'Local ori 0','Local ori 90'},'Location','best')
+
+%% Replot polar plot with radial vs tangential
+
+% Compute radial and tangential responses per voxel
+
+n = height(finalTable);
+
+finalTable.cart_radial = nan(n,1);
+finalTable.cart_tangential = nan(n,1);
+finalTable.pol_radial = nan(n,1);
+finalTable.pol_tangential = nan(n,1);
+
+a = finalTable.pRF_angle_bin;
+
+% Horizontal meridian
+idx = ismember(a,[0 180]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_0_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_90_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_0_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_90_localmotdir_none(idx);
+
+% Vertical meridian
+idx = ismember(a,[90 270]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_90_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_0_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_90_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_0_localmotdir_none(idx);
+
+% 45° diagonal
+idx = ismember(a,[45 225]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_45_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_135_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_45_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_135_localmotdir_none(idx);
+
+% 135° diagonal
+idx = ismember(a,[135 315]);
+finalTable.cart_radial(idx)      = finalTable.cart_localori_135_localmotdir_none(idx);
+finalTable.cart_tangential(idx)  = finalTable.cart_localori_45_localmotdir_none(idx);
+finalTable.pol_radial(idx)       = finalTable.pol_localori_135_localmotdir_none(idx);
+finalTable.pol_tangential(idx)   = finalTable.pol_localori_45_localmotdir_none(idx);
+
+% Subject-averaged radial and tangential responses
+
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included==1;
+T = finalTable(idx,:);
+
+subjects = unique(T.subject);
+angleBins = 0:45:315;
+
+vars = { ...
+    'cart_radial', ...
+    'cart_tangential', ...
+    'pol_radial', ...
+    'pol_tangential'};
+
+groupMean = cell(size(vars));
+
+for v = 1:numel(vars)
+
+    subjMedian = nan(numel(subjects), numel(angleBins));
+
+    for s = 1:numel(subjects)
+
+        subjIdx = strcmp(T.subject,subjects{s});
+
+        for b = 1:numel(angleBins)
+
+            binIdx = subjIdx & T.pRF_angle_bin==angleBins(b);
+
+            subjMedian(s,b) = median(T.(vars{v})(binIdx),'omitnan');
+
+        end
+    end
+
+    groupMean{v} = mean(subjMedian,1,'omitnan');
+
+end
+
+theta = deg2rad([angleBins angleBins(1)]);
+
+figure
+
+% Cartesian
+subplot(1,2,1)
+polarplot(theta,[groupMean{1} groupMean{1}(1)],'-o','LineWidth',2,'Color',[0.5725, 0.7725, 0.8706])
+hold on
+polarplot(theta,[groupMean{2} groupMean{2}(1)],'-o','LineWidth',2,'Color',[0.7922, 0, 0.1255])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+title('Cartesian')
+legend({'Radial','Tangential'},'Location','best')
+
+% Polar
+subplot(1,2,2)
+polarplot(theta,[groupMean{3} groupMean{3}(1)],'-o','LineWidth',2,'Color',[0.5725, 0.7725, 0.8706])
+hold on
+polarplot(theta,[groupMean{4} groupMean{4}(1)],'-o','LineWidth',2,'Color',[0.7922, 0, 0.1255])
+rlim([-1 1])
+pax = gca;
+pax.ThetaZeroLocation = 'right';
+pax.ThetaDir = 'counterclockwise';
+title('Polar')
+legend({'Radial','Tangential'},'Location','best')
+
 
 %%
 
@@ -361,6 +569,9 @@ rhoMed = arrayfun(@(a) ...
     median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
     angleBins);
 
+theta = linspace(0, 2*pi, 361);
+polarplot(theta, zeros(size(theta)), 'r-', 'LineWidth', 2)
+hold on
 polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
 rlim([-.5 .5])
 hold off
@@ -382,6 +593,9 @@ rhoMed = arrayfun(@(a) ...
     median(rho(finalTable.pRF_angle_bin(idx)==a),'omitnan'), ...
     angleBins);
 
+
+polarplot(theta, zeros(size(theta)), 'r-', 'LineWidth', 2)
+hold on
 polarscatter(thetaMed, rhoMed, 120, 'k+', 'LineWidth',2)
 rlim([-.5 .5])
 hold off
@@ -446,7 +660,7 @@ writetable(finalTable, filename);
 
 %%
 
-function plotAsymmetry(finalTable, asymColCart, asymColPol, titleText)
+function plotAsymmetryCombinedSubjects(finalTable, asymColCart, asymColPol, titleText)
 
 idx = strcmp(finalTable.visual_area,'V1') & finalTable.included == 1;
 
@@ -466,28 +680,39 @@ for i = 1:4
     x = plots{i,1};
     y = plots{i,2};
 
-    yline(0,'r-','LineWidth',2)
+
+    if i <= 2
+        xlim([-3 3])
+        ylim([-3 3])
+        xline(0,'w-','LineWidth',1)
+        xedges = linspace(-3, 3, 81);
+        yedges = linspace(-3, 3, 81);
+        hold on
+    else
+        xlim([0 3])
+        ylim([-3 3])
+        xedges = linspace(-3, 3, 81);
+        yedges = linspace(-3, 3, 81);
+    end
+
+    yline(0,'w-','LineWidth',1)
     hold on
 
-    h = scatter(x,y,10,'filled');
+    %histogram2(x, y, xedges, yedges, 'DisplayStyle', 'tile', 'ShowEmptyBins','on'); 
+    %set(gca, "ZScale", 'linear')
+
+    h=scatter(x,y,10,'filled');
     h.MarkerFaceAlpha = 0.3;
     h.MarkerEdgeAlpha = 0.3;
 
-    plot(median(x,'omitnan'), median(y,'omitnan'), ...
-        'k+', 'MarkerSize',16,'LineWidth',2)
+%     plot(median(x,'omitnan'), median(y,'omitnan'), ...
+%         'k+', 'MarkerSize',16,'LineWidth',2)
 
     hold off
 
     xlabel(plots{i,3})
     ylabel(plots{i,4} + " " + titleText)
 
-    if i <= 2
-        xlim([-4 4])
-    else
-        xlim([0 3])
-    end
-
-    ylim([-4 3])
 
 end
 
@@ -496,6 +721,340 @@ sgtitle(strcat(titleText, ' per V1 voxel (ecc 4-8, R^2>.1)'))
 end
 
 
+%%
 
 
+function plotAsymmetryPersubject(finalTable, asymColCart, asymColPol, titleText)
+
+betaType = 'std';
+
+% Included V1 voxels
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included == 1;
+
+T = finalTable(idx,:);
+
+subjects = unique(T.subject,'stable');
+nSubjects = numel(subjects);
+
+figure;
+
+% Choose beta variable
+switch betaType
+    case 'mean'
+        dgBeta = 'dg_beta_mean';
+        daBeta = 'da_beta_mean';
+        xlimVals = [-3 3];
+    case 'std'
+        dgBeta = 'dg_beta_std';
+        daBeta = 'da_beta_std';
+        xlimVals = [0 3];
+end
+
+% Histogram bins
+xedges = linspace(xlimVals(1), xlimVals(2), 41);
+yedges = linspace(-3,3,41);
+
+for s = 1:nSubjects
+
+    subjIdx = strcmp(T.subject, subjects{s});
+
+    % DG row
+    subplot(2,nSubjects,s)
+
+    x = T.(dgBeta)(subjIdx);
+    y = T.(asymColCart)(subjIdx);
+
+    histogram2(x,y,xedges,yedges,...
+        'DisplayStyle','tile',...
+        'ShowEmptyBins','on');
+
+    hold on
+    xline(0,'w-','LineWidth',1,'HandleVisibility','off')
+    yline(0,'w-','LineWidth',1,'HandleVisibility','off')
+    hold off
+
+    xlim(xlimVals)
+    ylim([-3 3])
+
+    title(subjects{s})
+    
+    if s == 1
+        ylabel('DG asymmetry')
+    end
+
+
+    % DA row
+    subplot(2,nSubjects,nSubjects+s)
+
+    x = T.(daBeta)(subjIdx);
+    y = T.(asymColPol)(subjIdx);
+
+    histogram2(x,y,xedges,yedges,...
+        'DisplayStyle','tile',...
+        'ShowEmptyBins','on');
+
+    hold on
+    xline(0,'w-','LineWidth',1,'HandleVisibility','off')
+    yline(0,'w-','LineWidth',1,'HandleVisibility','off')
+    hold off
+
+    xlim(xlimVals)
+    ylim([-3 3])
+
+    if s == 1
+        ylabel('DA asymmetry')
+    end
+
+end
+
+% Same color scale across all plots
+clim([0 20])   % adjust depending on max counts
+
+sgtitle(sprintf('%s %s per subject', titleText, betaType))
+
+end
+
+%%
+
+% function plotAsymmetry(finalTable, asymColCart, asymColPol, titleText)
+% 
+% betaType = 'std';
+% 
+% % Included V1 voxels
+% idx = strcmp(finalTable.visual_area,'V1') & finalTable.included == 1;
+% 
+% T = finalTable(idx,:);
+% 
+% subjects = unique(T.subject,'stable');
+% nSubjects = numel(subjects);
+% 
+% % Choose beta variable
+% switch betaType
+%     case 'mean'
+%         dgBeta = 'dg_beta_mean';
+%         daBeta = 'da_beta_mean';
+%         xlimVals = [-3 3];
+%     case 'std'
+%         dgBeta = 'dg_beta_std';
+%         daBeta = 'da_beta_std';
+%         xlimVals = [0 3];
+% end
+% 
+% % pRF angle colors
+% angleBins = 0:45:315;
+% colors = hsv(numel(angleBins));
+% 
+% figure;
+% 
+% for s = 1:nSubjects
+% 
+%     subjIdx = strcmp(T.subject, subjects{s});
+% 
+%     % DG row
+%     subplot(2,nSubjects,s)
+% 
+%     x = T.(dgBeta)(subjIdx);
+%     y = T.(asymColCart)(subjIdx);
+%     angle = T.pRF_angle_bin(subjIdx);
+% 
+%     hold on
+% 
+%     for a = 1:numel(angleBins)
+% 
+%         aIdx = angle == angleBins(a);
+% 
+%         scatter(x(aIdx), y(aIdx), ...
+%             10, colors(a,:), 'filled', ...
+%             'MarkerFaceAlpha',0.3,...
+%             'MarkerEdgeAlpha',0.3);
+% 
+%     end
+% 
+%     xline(0,'k-','LineWidth',1,'HandleVisibility','off')
+%     yline(0,'k-','LineWidth',1,'HandleVisibility','off')
+% 
+%     hold off
+% 
+%     xlim(xlimVals)
+%     ylim([-3 3])
+% 
+%     title(subjects{s})
+% 
+%     if s == 1
+%         ylabel('DG asymmetry')
+%     end
+% 
+% 
+%     % DA row
+%     subplot(2,nSubjects,nSubjects+s)
+% 
+%     x = T.(daBeta)(subjIdx);
+%     y = T.(asymColPol)(subjIdx);
+%     angle = T.pRF_angle_bin(subjIdx);
+% 
+%     hold on
+% 
+%     for a = 1:numel(angleBins)
+% 
+%         aIdx = angle == angleBins(a);
+% 
+%         scatter(x(aIdx), y(aIdx), ...
+%             10, colors(a,:), 'filled', ...
+%             'MarkerFaceAlpha',0.3,...
+%             'MarkerEdgeAlpha',0.3);
+% 
+%     end
+% 
+%     xline(0,'k-','LineWidth',1,'HandleVisibility','off')
+%     yline(0,'k-','LineWidth',1,'HandleVisibility','off')
+% 
+%     hold off
+% 
+%     xlim(xlimVals)
+%     ylim([-3 3])
+% 
+%     if s == 1
+%         ylabel('DA asymmetry')
+%     end
+% 
+% end
+% 
+% 
+% % Add one shared legend
+% figure(gcf)
+% hold on
+% h = gobjects(numel(angleBins),1);
+% 
+% for a = 1:numel(angleBins)
+%     h(a) = scatter(nan,nan,30,colors(a,:),'filled');
+% end
+% 
+% legend(h,string(angleBins)+"°",...
+%     'Location','eastoutside')
+% 
+% sgtitle(sprintf('%s %s per subject (colored by pRF angle)', ...
+%     titleText,betaType))
+% 
+% end
+
+%%
+
+function plotAsymmetry(finalTable, asymColCart, asymColPol, titleText)
+
+betaType = 'std';
+
+% Included V1 voxels
+idx = strcmp(finalTable.visual_area,'V1') & finalTable.included == 1;
+
+T = finalTable(idx,:);
+
+subjects = unique(T.subject,'stable');
+nSubjects = numel(subjects);
+
+% Choose beta variable
+switch betaType
+    case 'mean'
+        dgBeta = 'dg_beta_mean';
+        daBeta = 'da_beta_mean';
+        xlimVals = [-3 3];
+    case 'std'
+        dgBeta = 'dg_beta_std';
+        daBeta = 'da_beta_std';
+        xlimVals = [0 4];
+end
+
+figure;
+
+for s = 1:nSubjects
+
+    subjIdx = strcmp(T.subject, subjects{s});
+
+
+    % DG row (Cartesian)
+    subplot(2,nSubjects,s)
+
+    x = T.(dgBeta)(subjIdx);
+    y = T.(asymColCart)(subjIdx);
+    motStat = T.cart_MotvStat(subjIdx);
+
+    h = plotMotHighlight(x,y,motStat);
+    legend({'Remaining voxels','',''})
+    
+
+    xline(0,'k-','LineWidth',1,'HandleVisibility','off')
+    yline(0,'k-','LineWidth',1,'HandleVisibility','off')
+
+    xlim(xlimVals)
+    ylim([-3 3])
+
+    title(subjects{s})
+
+    if s == 1
+        legend(h, {'Remaining voxels','Bottom 20% motion-selective','Top 20% motion-selective'}, ...
+            'Location','best');
+        ylabel('DG asymmetry')
+    else
+        legend('off');
+    end
+
+
+    % DA row (Polar)
+    subplot(2,nSubjects,nSubjects+s)
+
+    x = T.(daBeta)(subjIdx);
+    y = T.(asymColPol)(subjIdx);
+    motStat = T.pol_MotvStat(subjIdx);
+
+    plotMotHighlight(x,y,motStat);
+
+    xline(0,'k-','LineWidth',1,'HandleVisibility','off')
+    yline(0,'k-','LineWidth',1,'HandleVisibility','off')
+
+    xlim(xlimVals)
+    ylim([-3 3])
+
+    if s == 1
+        ylabel('DA asymmetry')
+    end
+
+end
+
+sgtitle(sprintf('%s %s per subject (highlighting motion sensitivity)', ...
+    titleText,betaType))
+f = gcf;
+
+f.Position = [32 274 2153 719];
+end
+
+
+function h = plotMotHighlight(x,y,motStat)
+
+% percentile thresholds
+lowThresh = prctile(motStat,20);
+highThresh = prctile(motStat,80);
+
+lowIdx = motStat <= lowThresh;
+highIdx = motStat >= highThresh;
+midIdx = ~lowIdx & ~highIdx;
+
+hold on
+
+% Middle 60%
+h(1) = scatter(x(midIdx),y(midIdx),10,[0.3 0.3 0.3],'filled',...
+    'MarkerFaceAlpha',0.3,...
+    'MarkerEdgeAlpha',0.3);
+
+% Lowest 20%
+h(2) = scatter(x(lowIdx),y(lowIdx),10,[0 0.45 1],'filled',...
+    'MarkerFaceAlpha',0.5,...
+    'MarkerEdgeAlpha',0.5);
+
+% Highest 20%
+h(3) = scatter(x(highIdx),y(highIdx),10,[1 0 0],'filled',...
+    'MarkerFaceAlpha',0.5,...
+    'MarkerEdgeAlpha',0.5);
+
+hold off
+
+end
 

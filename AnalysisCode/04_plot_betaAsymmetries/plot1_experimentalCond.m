@@ -136,8 +136,8 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
 
         % added to plot bootstrapped SED
         SED = nan(1,nLoc);
-        CI_lower = nan(1,nLoc);
-        CI_upper = nan(1,nLoc);
+        CI_95_lower = nan(1,nLoc);
+        CI_95_upper = nan(1,nLoc);
 
         for loc = 1:nLoc
         
@@ -165,18 +165,24 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             end
         
             % Bootstrap estimate of the standard error of the paired difference
-            SED(loc) = std(bootDiff);
+            STD(loc) = std(bootDiff);
 
             % 95% percentile confidence interval
             CI = prctile(bootDiff,[2.5 97.5]);
         
-            CI_lower(loc) = CI(1);
-            CI_upper(loc) = CI(2);
+            CI_95_lower(loc) = CI(1);
+            CI_95_upper(loc) = CI(2);
+
+            % 95% percentile confidence interval
+            CI_68 = prctile(bootDiff,[16 84]);
+        
+            CI_68_lower(loc) = CI(1);
+            CI_68_upper(loc) = CI(2);
         
         end
 
-        CI_lower
-        CI_upper
+        CI_95_lower
+        CI_95_upper
 
         %
 
@@ -208,8 +214,8 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         % using this method instead of subplot for TIGHT AXES
 %         axes(ha(ri)); 
         
-        sem1 = SED;
-        sem2 = SED;
+        std1 = STD;
+        std2 = STD;
         
         % plot average (connecting the last line)
         polarplot([deg2rad(anglevals(end)), deg2rad(anglevals(1))],[vals_1(end), vals_1(1)], 'o-', 'Color', colors{1}, 'MarkerSize', 12, 'LineWidth',1.75,  'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', markerC)
@@ -224,9 +230,9 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         hold on
 
         % Plot SEM per point
-        p1 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_1 - sem1; vals_1 + sem1], '-', 'Color', colors{1}, 'LineWidth',1.75);
+        p1 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_1 - std1; vals_1 + std1], '-', 'Color', colors{1}, 'LineWidth',1.75);
         hold on
-        p2 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_2 - sem2; vals_2 + sem2], '-', 'Color', colors{2}, 'LineWidth',1.75);
+        p2 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_2 - std2; vals_2 + std2], '-', 'Color', colors{2}, 'LineWidth',1.75);
         hold on
 
 %        for subjectIndex = 1:size(medianBOLDpa, 4)

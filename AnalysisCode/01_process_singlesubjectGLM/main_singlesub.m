@@ -143,7 +143,7 @@ else
         betas = results.allevents.modelmd(:,:,:,condSelect);
         newbetas = squeeze(betas);
         
-        % trial mean
+        % condition mean
         betamaps(:,ci) = mean(newbetas,2);
     end
 end
