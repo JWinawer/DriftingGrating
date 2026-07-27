@@ -173,13 +173,24 @@ produced by the current code), while its Fig 6A `da` horizontal-vertical (−0.4
   fixing the polar-angle reference order there would make the code reproduce the clean-room
   values for every asymmetry.
 
-## Status
-- [x] Path A data path validated (7/8 exact)
-- [x] Discrepancy localized + corroborated by manuscript's own Fig 6-vs-Fig 7 inconsistency
-- [x] **RESOLVED via Path B**: the first-harmonic *derived* asymmetries (`da` H-V, `dg` rad-tang)
-      carry a cardinal-meridian label swap (PA-ordering artifact) in
-      `compute_derivativeDirections.m`; correct values are ~0 and 0.23 respectively
+## Status — ⚠️ this checklist records the RETRACTED analysis
+
+**Nothing here is an open action.** See the banner at the top of this file and
+[`../AUDIT.md`](../AUDIT.md). Kept verbatim only as a record of what was concluded before the
+audit.
+
+- [x] Path A data path validated (7/8 exact) — *this part holds; the 8th reproduces too once the
+      reproduction's own two bugs are fixed*
+- [x] ~~Discrepancy localized + corroborated by manuscript's own Fig 6-vs-Fig 7 inconsistency~~ —
+      **void**: the Fig 7B value it relied on (0.02) has since been corrected to −0.30, so the
+      two figures agree and there is no inconsistency
+- [x] ~~**RESOLVED via Path B**: the first-harmonic *derived* asymmetries carry a
+      cardinal-meridian label swap in `compute_derivativeDirections.m`~~ — **wrong**. That code
+      is correct. The apparent swap was the reproduction's own Benson/conventional frame mismatch
 - [x] Cross-path validated (bridged vs clean-room group arrays identical); Figs 5/6 regenerated
-      through the real `plot1/plot2`
-- [ ] Suggested fix: align the polar-angle reference order in `compute_derivativeDirections.m`
-      (and `deriveLocalMotionfromUVM.m`) with `meanWithinLabel.m`'s `[0 45 90 …]` ordering
+      through the real `plot1/plot2` — *the mechanics hold; the conclusions drawn from them did not*
+- [x] ~~Suggested fix: align the polar-angle reference order in `compute_derivativeDirections.m`
+      (and `deriveLocalMotionfromUVM.m`) with `meanWithinLabel.m`'s `[0 45 90 …]` ordering~~ —
+      **DO NOT DO THIS.** `AUDIT.md` §9: it would *introduce* the cardinal-meridian swap into
+      working code and corrupt both first-harmonic derived asymmetries. The wedge dimension of
+      `medianBOLDpa` is in Benson order by design

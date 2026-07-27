@@ -1,5 +1,32 @@
 # Why z-scoring reverses radTan vs H−V in Fig 7B (polar gratings)
 
+> ## ⚠️ Partly superseded — 2026-07-24
+> **§§1–5 stand** and remain the best account of *how* z-scoring changes Fig 7: the reversal is
+> an observer reweighting, a per-subject scalar reproduces it, and neither ordering survives a
+> subject bootstrap.
+>
+> **§6–§8 and Recommendations 0, 3, 5, 6a, 7, 8 do not.** They are superseded by
+> [`local_qc/REPORT.md`](local_qc/REPORT.md), which had data this document did not:
+>
+> - **The blank is full-field pink noise, not a mean-luminance baseline** (REPORT §1). Pink noise
+>   is on screen for the whole run, so there is no true baseline and no absolute response
+>   magnitude to recover. Every "blank-referenced gain" below is a grating-vs-pink-noise
+>   *contrast*, so a non-positive value does not mean the observer had no gain — the premise of
+>   §8 fails, not just its conclusion.
+> - **Neither flagged observer is a non-responder** (REPORT §2.5–2.6). In the same sessions,
+>   sub-0037's and sub-0201's MT is motion-selective and their V4 prefers gratings to pink noise.
+>   **The §8 exclusion is withdrawn; all 8 observers are retained.** `GLM_QUALITY.md` §5 had
+>   already withdrawn the sub-0201 half on independent grounds.
+> - **The GLM fits have been checked** (§7's open question): all 16 sessions, twice, with no
+>   coding or processing error found — see `GLM_QUALITY.md` and REPORT §2.
+> - **The retinotopy-gain route (§6, Recommendation 6a) is closed negative.** `prfvista_mov`
+>   stores no gain map; it saves only `angle`, `angle_adj`, `eccen`, `sigma`, `vexpl`, `x`, `y`.
+>
+> **Where it lands.** The conclusion below — H−V is the largest polar asymmetry, and the ranking
+> should not be load-bearing — is the same one REPORT §4 reaches, but REPORT gets there by
+> **dropping z-scoring outright** rather than by normalising after an exclusion. Recommendations
+> 1, 2 and 4 are unaffected.
+
 **Question.** In the z-scored Fig 7, the largest polar-grating asymmetry is radial−tangential
 (0.603) with horizontal−vertical second (−0.446). Without z-scoring the order reverses
 (0.150 vs −0.211). What accounts for it?
@@ -335,7 +362,20 @@ and does not collapse when V1 fails to respond to *these* stimuli. That is testa
 doing before the z-scoring question is settled either way. Failing that, report raw units and say
 that observers were weighted equally as a deliberate choice.
 
-## 7. Open: nobody has checked the GLM fits
+## 7. ~~Open:~~ CLOSED — the GLM fits have now been checked
+
+> **Done, 2026-07-23 and 2026-07-24.** Steps 1–3 below were carried out: all 8 observers ×
+> both experiments were extracted from the server and audited (`GLM_QUALITY.md`), then
+> re-extracted with **no filtering at all** and reviewed in full
+> ([`local_qc/REPORT.md`](local_qc/REPORT.md)). Findings: **no coding or processing error**,
+> uniform model parameters, no bad run, no dropout, correct co-registration — and **neither
+> sub-0201 nor sub-0037 is a bad-data case** (step 2's prediction of a bad run or motion
+> artefact was not confirmed for either). Step 3's inclusion decision resolved as **retain all
+> 8 observers**. Only step 4 — a GLM-`R2` column in `allsubjectsTable.csv` — remains open.
+>
+> The section's premise is correct and still worth stating: no GLMsingle metric enters the
+> pipeline at any stage. Its factual claims about *availability* are out of date — the metrics
+> below are no longer "checkable only for sub-0255"; all 16 sessions are in `~/dg_collect/`.
 
 This analysis has been screening the wrong quality metric. `allsubjectsTable.csv` carries exactly
 one quality column, **`pRF_r2` — the retinotopy model fit, not the GLM fit** — and the inclusion
@@ -380,7 +420,25 @@ Recommended next step, in priority order:
 4. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen on
    it alongside `pRF_r2`.
 
-## 8. Normalisation and exclusion are one decision, and together they resolve it
+## 8. ~~Normalisation and exclusion are one decision, and together they resolve it~~ — WITHDRAWN
+
+> **Withdrawn 2026-07-24.** This section's own closing caveat — *"provisional on the GLM audit
+> (§7). If the GLMsingle metrics show sub-0037 and sub-0201 are fine, the reasoning above needs
+> revisiting"* — is exactly what happened. They are fine
+> ([`local_qc/REPORT.md`](local_qc/REPORT.md) §2.5–2.6): in the same sessions, both observers'
+> MT is motion-selective and their V4 prefers gratings to pink noise, so the visual system
+> responded normally and there is no quality ground for exclusion.
+>
+> The section anticipated that objection and answered it — *"it is hard to see how an observer
+> with no stimulus-driven response can be normalised by its response amplitude"* — but that
+> rests on reading a near-zero blank-referenced value as "no response." Under REPORT §1 the
+> blank is **pink noise**, so that quantity is a grating-vs-pink-noise contrast: sub-0037's V1
+> responded, it simply did not *differentiate* polar gratings from pink noise. There is no
+> observer here whose gain is unmeasurable, so there is nothing to exclude.
+>
+> **The n=6 tables below should not be used.** The conclusion they support (H−V largest) is
+> also reached without any exclusion, by dropping z-scoring — REPORT §4. Retained as a record
+> of the reasoning.
 
 Accepting that observers should be brought into commensurate units — which is the right call
 (§6) — carries a precondition: **an observer whose gain cannot be measured cannot be normalised.**
@@ -433,7 +491,15 @@ say.
 
 ## Recommendation
 
-0. **Normalise, but exclude first** (§8). Bringing observers into commensurate units is
+> **Read with the 2026-07-24 banner at the top of this file.** Superseded:
+> **0** (the exclusion is withdrawn), **3** and **5** (z-scoring is not retained in any form —
+> `local_qc/REPORT.md` §4), **6a** (the retinotopy-gain route is closed negative — no gain map
+> is stored), **7** (both observers are cleared), and **8** (the GLM fits have been checked).
+> **Standing: 1, 2, 4, 6.** The current recommendation is simply: report the raw variants,
+> weight observers equally as a deliberate choice, and frame the paper on the cross-experiment
+> comparison rather than on which asymmetry is largest.
+
+0. ~~**Normalise, but exclude first**~~ (§8, withdrawn). Bringing observers into commensurate units is
    justified — percent BOLD is scanner-dependent. Its precondition is a measurable gain, which
    sub-0037 and sub-0201 lack in the polar experiment. Apply both and all five normalisers agree
    that H−V is the largest polar asymmetry, the manuscript's own `beta_std` included. The

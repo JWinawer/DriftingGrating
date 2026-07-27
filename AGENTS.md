@@ -10,6 +10,25 @@ is **whether each vertex's GLM beta weights should be z-scored before analysis**
 versions of every one of Figs 5–8 currently exist (z-scored vs. not), and we need to decide
 which to adopt. See [The z-scoring question](#the-z-scoring-question) below.
 
+> ## Read this first
+> **[`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) (2026-07-24) is the
+> current authority** on data quality and on the z-scoring decision. It supersedes parts of
+> this file, of `Reproduction/ZSCORE_FIG7.md`, `GLM_QUALITY.md`, and `NEXT_STEPS.md`, all of
+> which predate it. Two findings there change how everything else should be read:
+>
+> 1. **The "blank" condition is full-field pink noise, not a mean-luminance baseline.** Pink
+>    noise is on the screen for the entire run, so every reported response is
+>    grating − pink-noise and **there is no true baseline anywhere**. A low GLM R² therefore
+>    means weak *differentiation among* the stimuli, **not** an absent response. The
+>    orientation asymmetries are unaffected — the common blank term cancels in each.
+> 2. **There are no bad observers and no processing errors.** The two observers previously
+>    flagged as anomalous (sub-0037, sub-0201) show normal MT motion-selectivity and V4
+>    grating preference in the same sessions. The exclusion argued for in `ZSCORE_FIG7.md` §8
+>    is **withdrawn**.
+>
+> Its recommendation: **use the non-z-scored analyses and remove z-scoring**, including the
+> "beta weights were standardized" Methods language and the σ-unit statistics.
+
 ---
 
 ## Study in one paragraph
@@ -142,6 +161,17 @@ Two versions of Figs 5–8 exist, differing only in whether each vertex's GLM be
 When working on these analyses, keep the two variants consistent across all four figures and
 across the Methods prose, and treat Fig 7 as the case where the choice actually matters.
 
+> **Settled 2026-07-24 — use the raw (non-z-scored) analyses.**
+> [`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) §4 resolves this
+> against z-scoring, on grounds that were not available when the account below was written:
+> the blank is **pink noise, not a baseline**, so `beta_std` is the spread among
+> contrast-pattern responses rather than a gain. It conflates BOLD gain with orientation-tuning
+> strength and motion sensitivity, and dividing the (blank-independent) raw asymmetries by it
+> *reintroduces* a dependence on the blank. In the raw analysis the largest polar asymmetry is
+> horizontal−vertical — the same ordering the analysis below arrived at, but without needing to
+> exclude any observer. The account below remains a correct description of *how* z-scoring
+> changes Fig 7; its §7–§8 conclusions do not survive.
+
 **What the Fig 7 difference turned out to be** (2026-07-22, full account in
 `Reproduction/ZSCORE_FIG7.md`): z-scoring changes which polar-grating asymmetry is largest
 (radial−tangential z-scored, horizontal−vertical raw). The cause is **observer reweighting**, not
@@ -151,21 +181,23 @@ z-scoring weights observers by 1/responsiveness; the two it up-weights most have
 data. Neither ordering survives a subject bootstrap (P = 0.69 z-scored, 0.28 raw, 0.43 under an
 uncontaminated divisor). Two consequences for anyone picking this up:
 
-- **Normalising observers is justified, but it has a precondition.** Percent BOLD is
-  scanner-dependent, so bringing observers into commensurate units is right; an observer whose
-  gain cannot be measured cannot be normalised, and sub-0037 and sub-0201 have non-positive
-  blank-referenced gain in the polar experiment. Do both and **all five normalisers agree that
-  H−V is the largest polar asymmetry** — `beta_std` included, which flips from 0.681 to 0.460.
-  The radTan-largest result exists only where two unnormalisable observers are normalised anyway.
-- **Even so, do not frame Fig 7 around which asymmetry is largest** (bootstraps 0.10–0.31 at n=6;
+- **~~Normalising observers is justified, but it has a precondition.~~ Withdrawn.** This bullet
+  argued for excluding sub-0037 and sub-0201 as having no measurable gain in the polar
+  experiment. `local_qc/REPORT.md` §2.5–2.6 rules that out with positive evidence — both
+  observers' MT is motion-selective and their V4 prefers gratings to pink noise in the same
+  sessions — and §1 removes the premise, since a "blank-referenced gain" measured against pink
+  noise is not a gain at all. **All 8 observers are retained.**
+- **Do not frame Fig 7 around which asymmetry is largest** (bootstraps 0.10–0.31 at n=6;
   unanimous in direction, never decisive). The cross-experiment comparison is what the data
-  support.
-- **The GLM fits have never been quality-checked.** The only quality filter in the pipeline is on
-  the *pRF* fit (`pRF_r2 > 0.1`); no GLMsingle metric is used anywhere, and neither
-  `allsubjectsTable.csv` variant carries one. `R2`, `R2run`, `FRACvalue` and `noisepool` are
-  available in `results.mat` — **verified only for sub-0255**, the one GLM output in this repo;
-  for the other seven this is inferred from `main_singlesub.m` and needs `/Volumes/Vision`
-  mounted to confirm. Settle this before settling z-scoring — see `Reproduction/NEXT_STEPS.md`.
+  support. *(This bullet stands.)*
+- **The GLM fits have been quality-checked — twice, and they are sound.** All 8 observers ×
+  both experiments were extracted from the server (2026-07-23, then again unfiltered on
+  2026-07-24) and audited: no coding or processing error, uniform model parameters, no bad run,
+  no dropout, correct surface co-registration. See `Reproduction/local_qc/REPORT.md` §2 and
+  `Reproduction/GLM_QUALITY.md`. What remains genuinely open is that **no GLMsingle metric
+  enters the pipeline** — the only quality filter is still on the *pRF* fit (`pRF_r2 > 0.1`),
+  and neither `allsubjectsTable.csv` variant carries a GLM column. Adding one is step 5 of
+  `Reproduction/NEXT_STEPS.md`.
 
 ---
 
@@ -187,15 +219,30 @@ dimension of `medianBOLDpa` is in **Benson** order — conventional `[90 45 0 31
 Do not "align" that array with `[0 45 90 …]`; that would introduce the bug into working code.
 
 ## Related docs
-- `Reproduction/FINDINGS.md` — reproduction results and the derived-direction bug (read this
-  before trusting any *derived* asymmetry: `da` H-V/card-obl, `dg` rad-tang/polar-card).
-- `Reproduction/ZSCORE_FIG7.md` — why z-scoring reverses the radTan/H−V rank order in Fig 7B:
-  observer reweighting, the two anomalous polar-experiment subjects, how observers should be
-  weighted, and the missing GLM quality check. Scripts: `cleanroom/diagnose_zscore_fig7.m`,
+
+Listed newest first — later documents supersede earlier ones where they overlap.
+
+- **`Reproduction/local_qc/REPORT.md` (2026-07-24) — start here.** GLM data-quality review of
+  all 8 observers × both experiments from the unfiltered server extraction. The pink-noise
+  reference, the clearing of both flagged observers, the fixed-`rng` design finding, and the
+  recommendation to drop z-scoring. Draft manuscript caveat text alongside it in
+  `manuscript_caveat_paragraph.md`; scripts and `glm_summary.csv` in the same folder.
+- `Reproduction/GLM_QUALITY.md` (2026-07-23) — the first GLM fit-quality audit, on the 4–8°
+  pRF-filtered extraction. Its R² tables stand; its §5 exclusion support and its §6/§6a open
+  questions are answered by `local_qc/REPORT.md`.
+- `Reproduction/NEXT_STEPS.md` — the task setups those two audits came from. The z-scoring and
+  fit-quality tasks are now closed; step 5 (a GLM-`R2` column in `allsubjectsTable.csv`) is the
+  live remainder.
+- `Reproduction/ZSCORE_FIG7.md` (2026-07-22) — why z-scoring reverses the radTan/H−V rank order
+  in Fig 7B: observer reweighting, and the algebra of the reversal (§1–§5), which remains the
+  best account of the mechanism. **Its §7–§8 conclusions — the missing GLM check and the
+  two-observer exclusion — are superseded.** Scripts: `cleanroom/diagnose_zscore_fig7.m`,
   `diagnose_response_signs.m`, `compare_subject_weighting.m`.
-- `Reproduction/NEXT_STEPS.md` — open follow-ups: the remaining "which variant should the paper
-  adopt" call, and a **per-subject GLM fit-quality audit** that should be done first (machinery
-  for both z-scoring variants already exists in `Reproduction/cleanroom/`).
+- `Reproduction/FINDINGS.md` — **fully retracted**; kept only as a record of the reproduction's
+  own two bugs. Do not act on it; `AUDIT.md` is the correct account.
+- `Reproduction/server_extract/` — the read-only server extraction (`collect_everything.m`) that
+  produced the data behind `local_qc/REPORT.md`, plus `RUNME.md` for whoever has the volume
+  mounted.
 - `README.md` — experiment (stimulus-presentation) overview.
 - `AnalysisCode/README.rtf` — detailed, near function-by-function description of the full
   analysis pipeline (includes stages upstream and downstream of Figs 5–8).

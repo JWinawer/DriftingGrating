@@ -1,4 +1,21 @@
-# Next step: z-scored vs non-z-scored analysis
+# ~~Next step:~~ CLOSED — z-scored vs non-z-scored analysis
+
+> ## Decided 2026-07-24: use the raw (non-z-scored) analyses
+> [`local_qc/REPORT.md`](local_qc/REPORT.md) §4 settles this, on a ground unavailable to
+> everything below: the "blank" is **full-field pink noise, not a mean-luminance baseline**, so
+> `beta_std` is the spread among contrast-pattern responses rather than a gain. It conflates
+> BOLD gain with orientation-tuning strength and motion sensitivity, and dividing the
+> (blank-independent) raw asymmetries by it *reintroduces* a dependence on the blank. Two
+> observers with equal gain but different tuning are forced to match. The recommendation is to
+> **remove z-scoring**, including the "beta weights were standardized" Methods language and the
+> σ-unit in-text statistics; Figures 5–8 use the raw variants, which already exist.
+>
+> **The exclusion of sub-0037 and sub-0201 recorded in the §8 summary below is withdrawn** —
+> REPORT §2.5–2.6 clears both observers with positive evidence (normal MT motion-selectivity,
+> normal V4 grating preference in the same sessions). All 8 observers are retained; the raw
+> analysis puts H−V first without needing any exclusion.
+>
+> The material below is kept for the mechanism (why z-scoring changes Fig 7) and as a record.
 
 > **Partly answered (2026-07-22).** The Fig 7B question — why z-scoring makes radial−tangential
 > rather than horizontal−vertical the largest polar-grating asymmetry — is resolved in
@@ -242,12 +259,22 @@ output (~10 MB per subject × experiment for whole-surface metrics, well under 1
 restricted to the V1 patch). Doing the V1 restriction there also means the FreeSurfer labels and
 pRF maps never need copying.
 
-## Ready to run
+## ~~Ready to run~~ — superseded; both extractions have been done
+
+> **Historical.** This describes the *first* extraction route (a V1-restricted ~10 MB payload).
+> It ran on 2026-07-23 → [`GLM_QUALITY.md`](GLM_QUALITY.md). It was then **replaced** by
+> [`../server_extract/collect_everything.m`](../server_extract/), which deliberately filters
+> nothing — whole surface, every retinotopy map, every label, ~1.2 GB to `~/dg_collect/` — for
+> the reasons in `GLM_QUALITY.md` §6a (a filter applied before the data leaves the server makes
+> its own influence untestable). That ran on 2026-07-24 →
+> [`local_qc/REPORT.md`](local_qc/REPORT.md). **Use `server_extract/RUNME.md` if this ever
+> needs running again**, not the commands below.
 
 **If someone else is running this on the server**, send them
 [`../server_extract/`](../server_extract/) instead — one self-contained file plus a README, no
 dependency on this repo, and it collects the retinotopy-gain inventory in the same pass so there
-is no second round trip. `audit_glm_quality` reads its output directly.
+is no second round trip. (`audit_glm_quality` needed a one-line fix to read its output — see
+`GLM_QUALITY.md` §1.)
 
 ```matlab
 % On the machine with /Volumes/Vision mounted:
@@ -264,10 +291,17 @@ reports missing files and unexpected struct layouts rather than failing, and if 
 restriction cannot run it still writes the whole-surface metrics and warns.
 
 **Tested:** the `results.mat` extraction and the whole audit, against `Support/sub-0255`.
-**Untested:** the V1-restriction branch — it follows `meanWithinLabel.m:96-183`, but no labels or
-pRF maps were on the machine where it was written. Check the warning line on first run.
+~~**Untested:** the V1-restriction branch~~ — **it worked** on the 2026-07-23 server run: every
+observer got a real patch of 1126–1786 vertices, no missing fields (`GLM_QUALITY.md` §1). The
+branch is moot now in any case, since the current extraction applies no restriction at all.
 
 ## Steps
+
+> **Status: 1–4 done, 5 open.** Steps 1–3 ran (`GLM_QUALITY.md`). Step 4's inclusion decision is
+> settled by [`local_qc/REPORT.md`](local_qc/REPORT.md) §2 — no genuine non-responders and no bad
+> data, so **all 8 observers are retained** and the z-scoring that was applying an implicit
+> inverse quality weighting is dropped instead (§4 there). **Step 5 is the live remainder.**
+
 1. Run `extract_glm_qc`, and check `manifest.csv`: all 16 rows should read `ok`. A
    `bad-structure` row means that subject was run under a different `hRF_setting` and has no
    TYPED fields — it would need re-running before the rest of this is possible.
@@ -281,7 +315,7 @@ pRF maps were on the machine where it was written. Check the warning line on fir
    implicit and inverted version of the same judgement.
 5. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen it
    alongside `pRF_r2`. Note this is a real change of data source, not a one-line addition:
-   `createTables.m:169` builds the table from `betas_nonzscored.mat` and never opens
+   `createTables.m:175` builds the table from `betas_nonzscored.mat` and never opens
    `results.mat`, so the quality fields would have to be loaded alongside. A vertex-index column
    would be worth adding at the same time — its absence is why the V1 mapping has to be done at
    extraction rather than afterwards.

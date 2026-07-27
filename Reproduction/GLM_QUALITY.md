@@ -1,5 +1,29 @@
 # GLMsingle fit quality, all 8 observers × both experiments
 
+> ## ⚠️ Superseded where it interprets — 2026-07-24
+> This was the **first** audit, on the 4–8° / `vexpl > 0.1` extraction. The re-run it calls for
+> in §6a happened, and the full review is in
+> [`local_qc/REPORT.md`](local_qc/REPORT.md). What changes:
+>
+> - **The numbers below stand.** R² tables, `fracAbove`, run consistency, `FRACvalue` — all
+>   reproduced by the unfiltered re-extraction.
+> - **The interpretation of a low R² does not.** REPORT §1: the "blank" is **full-field pink
+>   noise**, so GLM R² measures variance *across conditions*. Low R² means the observer did not
+>   differentiate gratings from pink noise, **not** that V1 failed to respond. So "1.0 = no
+>   measurable response" in §3 is wrong as a gloss, and §4's "confirmed session-specific
+>   failure" for sub-0037 should read *confirmed session-specific lack of differentiation*.
+> - **§5's support for excluding sub-0037 is withdrawn.** REPORT §2.5–2.6: in that same polar
+>   session, sub-0037's MT is motion-selective (+0.25) and its V4 prefers gratings to pink noise
+>   (+0.31). The session is sound and the result is a genuine V1 property. **All 8 observers are
+>   retained.** (This document was already right that sub-0201 had no support for exclusion.)
+> - **§6 is answered: not a processing error.** No bad run, no dropout, correct co-registration —
+>   and because the stimulus used a fixed `rng` seed, every observer's designs are byte-identical,
+>   so a swapped or mislabelled design matrix could have no effect (REPORT §2–§3).
+> - **§6a is done.** `extract_for_transfer.m`'s unfiltered successor
+>   (`server_extract/collect_everything.m`) ran; ~1.2 GB is in `~/dg_collect/`.
+>
+> §7's step 5 — a GLM-`R2` column in `allsubjectsTable.csv` — is still open.
+
 Results of the audit set up in [`NEXT_STEPS.md`](NEXT_STEPS.md) ("per-subject GLM fit quality").
 Data extracted on the server 2026-07-23 with
 [`server_extract/extract_for_transfer.m`](server_extract/extract_for_transfer.m), returned in
@@ -139,7 +163,15 @@ floor, with patch p95 = 5.09 barely above the whole-surface p95 of 4.33 — no r
 exists. It is the flattest session in the dataset by a wide margin (next lowest 14.6%) against
 80.4% in its own cartesian session. That conclusion does not depend on the median.
 
-## 5. What this changes
+## 5. What this changes — ⚠️ now moot: the exclusion is off entirely
+
+> **2026-07-24.** This section supports excluding sub-0037 while denying support for sub-0201.
+> [`local_qc/REPORT.md`](local_qc/REPORT.md) §2.5–2.6 removes the support for **both**: in the
+> same polar session sub-0037's MT is motion-selective and its V4 prefers gratings to pink noise,
+> so the data are good and the flat V1 fit is a real property of V1 under a pink-noise reference,
+> not a failed session. `ZSCORE_FIG7.md` §8 is withdrawn in full and **all 8 observers are
+> retained**. The "worth checking" question at the end of this section — does §8 survive
+> excluding sub-0037 only? — no longer needs answering.
 
 [`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §8 excludes sub-0037 and sub-0201 together, on the grounds that
 neither has a measurable gain in the polar experiment, and reports that all five normalisers then
@@ -156,7 +188,16 @@ polar asymmetry under all five normalisers with sub-0201 retained, the conclusio
 non-circular grounds and the §8 framing can simply be tightened. If it does not, the result depends
 on an exclusion that this audit cannot independently justify, and that has to be stated plainly.
 
-## 6. Open: is sub-0037's polar session a processing error?
+## 6. ~~Open:~~ ANSWERED — sub-0037's polar session is not a processing error
+
+> **Resolved 2026-07-24** ([`local_qc/REPORT.md`](local_qc/REPORT.md) §2, §3). The
+> discriminating check proposed below was run. The design matrices are **byte-identical across
+> every observer and both experiments** (fixed `rng` seed), so a wrong or swapped design matrix
+> is ruled out by construction — there is no other design it could have been given. Stimulus
+> timing, EPI intensity, and surface co-registration are all clean, and higher visual areas in
+> that same session respond normally (MT motion-selective, V4 grating-preferring). The session
+> was processed correctly; **the observer's V1 did not differentiate polar gratings from the
+> pink-noise reference.** Nothing to recover, and nothing to exclude.
 
 A processing error — wrong design matrix, misaligned stimulus timing, swapped or mislabelled runs
 — produces a poor fit in V1 while the rest of the brain looks normal. That is precisely the
@@ -169,7 +210,19 @@ against a session that worked. It is worth doing before excluding: sub-0037 has 
 cartesian data in the set, so losing the observer costs real power, and if the polar session is
 recoverable it should be recovered rather than dropped.
 
-## 6a. Open: the patch is 4–8°, and cannot be widened from the transferred files
+## 6a. ~~Open:~~ DONE — the unfiltered re-extraction was run
+
+> **Completed 2026-07-24.** The re-run described below happened, via
+> `server_extract/collect_everything.m` (which filters nothing at all — whole surface, every
+> retinotopy map, every label): ~1.2 GB in `~/dg_collect/`, all 8 observers × both experiments.
+> Results in [`local_qc/REPORT.md`](local_qc/REPORT.md).
+>
+> **The question posed at the end of this section is answered.** sub-0037's polar session is
+> *not* flat only within 4–8° — the pattern holds across the stimulated range, and REPORT §2.1
+> shows the eccentricity restriction is what *isolates* the responsive patch rather than what
+> creates the effect (over the whole V1 label its dg R² is 5.4, within 4–8° it is 16.6). The
+> reasoning below about why 4–8° is the wrong band for a fit-quality question is correct and
+> worth keeping.
 
 Everything above is computed within the **published 4–8° patch**, because that is what the
 extraction saved. Since any wider band is a *superset* of what was transferred, widening

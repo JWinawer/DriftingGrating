@@ -4,6 +4,13 @@ This folder reproduces the manuscript's Figures 5–8 (V1 orientation asymmetrie
 polar gratings) **starting from a single tidy table**, `../Support/allsubjectsTable.csv`
 (git-ignored). See `../AGENTS.md` for what those figures are, and the plan the work follows.
 
+> **Newest first: [`local_qc/REPORT.md`](local_qc/REPORT.md) (2026-07-24)** is the current
+> authority on data quality and on the z-scoring decision, and supersedes parts of the docs in
+> this folder. Headline: the "blank" condition is **full-field pink noise, not a baseline**
+> (so a low GLM R² means weak differentiation among stimuli, not an absent response), there are
+> **no bad observers and no processing errors**, and the recommendation is to **use the raw,
+> non-z-scored analyses**. The orientation asymmetries themselves are unaffected.
+
 Two independent routes:
 
 - **`cleanroom/`** — Path A. Standalone MATLAB that goes CSV → filter → per-vertex
@@ -11,6 +18,13 @@ Two independent routes:
   **not** call the original `AnalysisCode` analysis functions, so it is an independent check.
 - **`bridge/`** — Path B. Regenerates the group `.mat` arrays the existing `AnalysisCode`
   stage-04 scripts expect, then runs that original code. (Built after Path A validates.)
+
+Two further folders, added later as the work moved from reproduction to data quality:
+
+- **`server_extract/`** — a self-contained, read-only extraction (`collect_everything.m`) to run
+  on the machine with `/Volumes/Vision` mounted. Deliberately filters nothing. See `RUNME.md`.
+- **`local_qc/`** — the GLM data-quality review built on that extraction: `REPORT.md`,
+  `glm_summary.csv`, per-question scripts, and a draft manuscript caveat paragraph.
 
 Both produce **two variants** of each figure: **z-scored** (each vertex's betas standardized
 across its 13 conditions before analysis — the manuscript's default) and **non-z-scored**. Since
@@ -29,6 +43,12 @@ just `(orientation − blank) / beta_std` and the raw contrast is `(orientation 
 ## Analysis inclusion filter (applied explicitly)
 `visual_area == "V1"`, `4 ≤ pRF_ecc ≤ 8`, `pRF_r2 > 0.1`. Do **not** rely on the `included`
 column (it is a superset of this set).
+
+This is the filter for the **figure/asymmetry** analysis, where the 4–8° band is a
+stimulus-matching constraint (Cartesian and polar gratings are spatial-frequency-matched only
+near 6°). It is *not* the right filter for **fit-quality** questions, and the server extraction
+deliberately applies neither restriction — see `GLM_QUALITY.md` §6a. Don't re-apply these when
+asking whether a session produced a usable response.
 
 ## Subjects (fixed order, those who did both experiments)
 `sub-0037, sub-0201, sub-0255, sub-wlsubj123, sub-wlsubj124, sub-0395, sub-0426, sub-0250`
@@ -64,5 +84,13 @@ computed here; the direct asymmetries were unaffected.
 - [x] Path A: Figs 5, 6, 7, 8 generated (z-scored + raw)
 - [x] Path B: CSV bridged into the existing pipeline; cross-path arrays identical (0.0 diff)
 - [x] Path B: Figs 5/6 regenerated through the real `plot1/plot2`; da H-V artifact resolved
-- [x] Finding documented in [FINDINGS.md](FINDINGS.md)
-- [ ] **Next:** z-scored vs non-z-scored comparison — see [NEXT_STEPS.md](NEXT_STEPS.md)
+- [x] Finding documented in [FINDINGS.md](FINDINGS.md) — subsequently **retracted**, see AUDIT.md
+- [x] z-scored vs non-z-scored comparison — mechanism in [ZSCORE_FIG7.md](ZSCORE_FIG7.md),
+      **decided** in [local_qc/REPORT.md](local_qc/REPORT.md) §4: use the raw variants
+- [x] GLM fit quality, all 8 observers × both experiments — [GLM_QUALITY.md](GLM_QUALITY.md),
+      then the full unfiltered review in [local_qc/REPORT.md](local_qc/REPORT.md): no errors,
+      no bad data, all observers retained
+- [ ] **Open:** add a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen
+      on it alongside `pRF_r2` ([NEXT_STEPS.md](NEXT_STEPS.md) step 5)
+- [ ] **Open:** confirm the fixed stimulus `rng` seed was intended
+      ([local_qc/REPORT.md](local_qc/REPORT.md) §3)
