@@ -115,7 +115,27 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             avgConditions1 = squeeze(avgConditions1);
             avgConditions2 = squeeze(avgConditions2);
         end
-        
+
+        % Gain-weight each observer: divide their value at every polar
+        % angle by their own mean pRF gain (prfvista_mov/prfvista average),
+        % BEFORE any averaging across observers. This down-weights
+        % high-gain observers and up-weights low-gain observers, and all
+        % downstream stats/bootstrapped error bars below inherit the
+        % adjustment automatically since they are computed from these
+        % arrays. See projectSettings.observerGain / retrieveObserverGainWeights.m
+        %
+        % The across-observer average gain is then multiplied back in, so
+        % the plotted scale/units resemble the original (unweighted) data.
+        % Dividing by gain_i and then multiplying by groupGain is the same
+        % as dividing by gain_i normalized to the group mean (gain_i /
+        % groupGain), so the relative weighting -- and therefore the
+        % relative pattern across data points/error bars -- is unchanged;
+        % only the overall scale shifts.
+        gainWeights = projectSettings.observerGain;
+        groupGain = mean(gainWeights);
+        avgConditions1 = avgConditions1 .* (groupGain ./ gainWeights);
+        avgConditions2 = avgConditions2 .* (groupGain ./ gainWeights);
+
         % Extract polar angles
         %anglevals = [90, 135, 180, 225, 270, 315, 0, 45];
         anglevals = [90, 45, 0, 315, 270, 225, 180, 135]; % <-- these were manually converted based on the order of polarAngles above (Noah's convention)

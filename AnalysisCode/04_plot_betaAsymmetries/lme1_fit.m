@@ -1,8 +1,13 @@
 clc; clear all; close all
 
+% set overwrite=1 to refit the LME and rerun the bootstrap (slow); set
+% overwrite=0 to skip both and just load the previously saved modeldata/
+% estimates/boot files for plotting.
+overwrite = 0;
+
 % set up
 addpath(genpath(pwd));
-projectName = 'dg';
+projectName = 'da';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
 %bidsDir =  '/Volumes/server/Projects/Project_dg/data_bids/';
 githubDir = '~/Documents/GitHub';
@@ -66,6 +71,18 @@ elseif strcmp(projectName, 'da')
 %         'sub-0395', 'sub-0426'};
 end
 
+% per-observer mean pRF gain (prfvista_mov/prfvista average), used to
+% gain-weight each observer's contribution to the LME below -- same
+% correction as in plot1_experimentalCond.m/plot2_experimentalCond.m, see
+% retrieveObserverGainWeights.m. subjectScale(i) = groupGain / gain_i, so
+% multiplying a subject's data by subjectScale(i) both re-weights them
+% relative to the group (low gain -> up-weighted) AND restores the overall
+% scale to be comparable to the original (unweighted) BOLD units.
+gainSummaryFile = fullfile(bidsDir, 'derivatives', 'summaryTables', 'gainSummary.mat');
+gainWeights = retrieveObserverGainWeights(subjects, gainSummaryFile);
+groupGain = mean(gainWeights);
+subjectScale = groupGain ./ gainWeights;
+
 radialvstang = 0;
 [proConditions, conConditions, allConditions] = retrieveProConIdx(projectName, comparisonName, radialvstang);
 
@@ -92,9 +109,10 @@ maincardinalmDir = [0; 90; 180; 270]; % this is up/down/left/right for DG
 primaryMeridians = [90; 0; 270; 180];
 
 
+if overwrite
 rng(0)
 for roi=1:length(rois)  % just 1 ROI at a time (makes interprettability easier)
-    
+
     saveDir = fullfile(glmResultsfolder,'LME_results', comparisonName, rois{roi});
     
     if ~isfolder(saveDir)
@@ -194,6 +212,17 @@ for roi=1:length(rois)  % just 1 ROI at a time (makes interprettability easier)
     variable_names = {'bold', 'motiondir', 'polarangle', 'sub', 'mainCardinal', 'derivedCardinal', 'mainSubset', 'derivedSubset'};
     modeldata = array2table(finalMat, 'VariableNames', variable_names);
 
+    % Gain-weight each observer's BOLD values (see subjectScale above):
+    % divide by their own mean pRF gain, then multiply the across-observer
+    % average gain back in. Applied per row via that row's subject index
+    % (modeldata.sub), so every row for a given subject -- across all polar
+    % angles/motion directions -- gets the SAME scale factor. This is
+    % computed BEFORE fitting and BEFORE saving modeldata to disk, so the
+    % LME fit/anova/estimates below, and the bootstrap section further down
+    % (which reloads this saved modeldata), all inherit the gain-weighted,
+    % rescaled values automatically.
+    modeldata.bold = modeldata.bold .* subjectScale(modeldata.sub)';
+
     modeldata.subject = categorical(modeldata.sub);
 
     lme = fitlme(modeldata, 'bold ~ mainCardinal + derivedCardinal + mainSubset + derivedSubset + (1|sub)');
@@ -219,11 +248,13 @@ for roi=1:length(rois)  % just 1 ROI at a time (makes interprettability easier)
     disp(lme)
     save(strcat(saveDir, '/modeldata'), 'modeldata');
 end
+end % if overwrite
 
 %% bootstrap data
 
+if overwrite
 subjects = {'ALL'};
- 
+
 rng('default'); rng(1);
 
 subjID = 1:nSubjs; %10;
@@ -281,6 +312,7 @@ for roi=1:length(rois)
 
     save(strcat(saveDir, '/boot'), 'saveboot','coeffs');
 end
+end % if overwrite
 
 
 
@@ -331,6 +363,24 @@ for ai=1:numel(asymmetryNames)
         end
     end
 
+    % human-readable label for the master figure's x-tick (kept separate
+    % from asymmetryName, which is also used as a COLORS.json lookup key
+    % that only has entries for the literal 'mainCardinalVsMainOblique'/
+    % 'derivedCardinalVsDerivedOblique' names, not these renamed ones)
+    displayLabel = asymmetryName;
+    if strcmp(projectName, 'dg')
+        if strcmp(asymmetryName, 'mainCardinalVsMainOblique')
+            displayLabel = 'cardinalVsOblique';
+        elseif strcmp(asymmetryName, 'derivedCardinalVsDerivedOblique')
+            displayLabel = 'polarCardinalVsPolarOblique';
+        end
+    elseif strcmp(projectName, 'da')
+        if strcmp(asymmetryName, 'mainCardinalVsMainOblique')
+            displayLabel = 'polarCardinalVsPolarOblique';
+        elseif strcmp(asymmetryName, 'derivedCardinalVsDerivedOblique')
+            displayLabel = 'cardinalVsOblique';
+        end
+    end
 
     colors = colors_data.conditions.(projectName).(asymmetryName).color_pro';
     colors2 = colors_data.conditions.(projectName).(asymmetryName).color_con';
@@ -341,7 +391,7 @@ for ai=1:numel(asymmetryNames)
     % save for later plot
     color_pro(ai,:) = colors;
     color_con(ai,:) = colors2;
-    asymLabel(ai) = string(asymmetryName);
+    asymLabel(ai) = string(displayLabel);
 
     figure
     xlim([0 8]);
@@ -511,38 +561,55 @@ end
 
 %% Make master figure
 
+% Desired left-to-right order: vertical vs horizontal, cardinal vs oblique,
+% radial vs tangential, polar cardinal vs polar oblique. asymmetryNames was
+% collected in the fixed order {mainCardinalVsMainOblique,
+% derivedCardinalVsDerivedOblique, mainSubset, derivedSubset}, but which of
+% those is "cardinal vs oblique" vs "polar cardinal vs polar oblique" (and
+% "radial vs tangential" vs "vertical vs horizontal") swaps between dg and
+% da, so the permutation into the desired order is project-dependent.
+if strcmp(projectName, 'dg')
+    % desired order <- [mainSubset, mainCardinalVsMainOblique, derivedSubset, derivedCardinalVsDerivedOblique]
+    plotOrder = [3, 1, 4, 2];
+elseif strcmp(projectName, 'da')
+    % desired order <- [derivedSubset, derivedCardinalVsDerivedOblique, mainSubset, mainCardinalVsMainOblique]
+    plotOrder = [4, 2, 3, 1];
+end
+
 figure; hold on
 
 x = 1:nA;
 dx = 0; %0.18;
 
 for ai = 1:nA
+    srcIdx = plotOrder(ai); % index into box_pro/box_con/etc, in their original collection order
+
     % Pro
-    boxchart((x(ai)-dx)*ones(size(box_pro{ai})), box_pro{ai}, ...
-        'BoxFaceColor', color_pro(ai,:), ...
+    boxchart((x(ai)-dx)*ones(size(box_pro{srcIdx})), box_pro{srcIdx}, ...
+        'BoxFaceColor', color_pro(srcIdx,:), ...
         'LineWidth', 4, 'BoxWidth', 0.6);
     hold on
 
-    errorbar(x(ai)-dx, mean_pro(ai), ...
-        errlow_pro(ai), errhigh_pro(ai), ...
+    errorbar(x(ai)-dx, mean_pro(srcIdx), ...
+        errlow_pro(srcIdx), errhigh_pro(srcIdx), ...
         'LineStyle','none', 'LineWidth', 2, ...
-        'Color', color_pro(ai,:));
+        'Color', color_pro(srcIdx,:));
 
     % Con
-    boxchart((x(ai)+dx)*ones(size(box_con{ai})), box_con{ai}, ...
-        'BoxFaceColor', color_con(ai,:), ...
+    boxchart((x(ai)+dx)*ones(size(box_con{srcIdx})), box_con{srcIdx}, ...
+        'BoxFaceColor', color_con(srcIdx,:), ...
         'LineWidth', 4, 'BoxWidth', 0.6);
     hold on
 
-    errorbar(x(ai)+dx, mean_con(ai), ...
-        errlow_con(ai), errhigh_con(ai), ...
+    errorbar(x(ai)+dx, mean_con(srcIdx), ...
+        errlow_con(srcIdx), errhigh_con(srcIdx), ...
         'LineStyle','none', 'LineWidth', 2, ...
-        'Color', color_con(ai,:));
+        'Color', color_con(srcIdx,:));
 end
 
 yline(0, '--', 'Color', [0 0 0], 'LineWidth', 2)
 
-ylim([-0.75 0.75])
+ylim([-0.4 0.4])
 xlim([0.5 nA+0.5])
 
 set(gca,'XTick',[])
@@ -551,7 +618,7 @@ set(gca,'linewidth',2, 'YColor',[0 0 0], 'XColor',[0 0 0]);
 set(gca,'FontName','Arial','FontSize',20);
 
 xticks(x)
-xticklabels(asymLabel)
+xticklabels(asymLabel(plotOrder))
 xtickangle(25)
 
 ylabel('zscored BOLD psc', 'FontSize', 20);

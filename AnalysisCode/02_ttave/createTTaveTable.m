@@ -175,7 +175,7 @@ for si = 1:numel(subjects)
 
         fprintf('  [%s] computing raw-data TTA...\n', projectName);
         condTTA_raw.(projectName) = computeConditionTTA_rawdata( ...
-            bidsDir, projectName, subjectname, ses, roiVertexIdx, meanvol, eventTRs_prior, eventTRs_after);
+            bidsDir, projectName, subjectname, ses, roiVertexIdx, meanvol, tr_s, eventTRs_prior, eventTRs_after);
 
         fprintf('  [%s] computing model-fit TTA...\n', projectName);
         condTTA_model.(projectName) = computeConditionTTA_modelfit( ...
@@ -236,9 +236,9 @@ fprintf('Done. Saved %d rows to ttaveTable_raw.mat and ttaveTable_model.mat in %
 % savePlotsAsPDF saves each figure as a vector PDF into figSaveDir.
 
 makeExamplePlot = true;
-exampleSubject = 'all'; %'sub-wlsubj124'; % a specific subject ID, or 'all'
+exampleSubject = 'sub-wlsubj124'; %'sub-wlsubj124'; % a specific subject ID, or 'all'
 exampleROI = 'V1';
-exampleAggregation = 'meanROI'; % 'peakR2' or 'meanROI'
+exampleAggregation = 'peakR2'; % 'peakR2' or 'meanROI'
 offsetRawToBaseline = true;
 offsetModelToBaseline = true;
 savePlotsAsPDF = true;
@@ -275,6 +275,28 @@ if makeSubjectComparisonPlot
     plotOrientationConditionsAllSubjects(allRawTables, allModelTables, subjects, exampleROI, ...
         offsetRawToBaseline, offsetModelToBaseline, savePlotsAsPDF, figSaveDir);
 end
+%%
+% Single-bin, two-condition version: restricted to one specified
+% pRF_angle_bin (instead of all 8) and two specified conditions per
+% experiment (instead of averaging all 4) -- still one subplot per
+% experiment (dg/cartexp_ left, da/polexp_ right). Within each subplot, one
+% line per condition (not per subject); exampleSubject controls whether
+% subjects are averaged together ('all') or restricted to one subject's
+% data, same as plotOrientationConditionsAllVoxels.
+makeOneBinPlot = true;
+exampleSubject = 'sub-0201'; %'sub-wlsubj124'; % a specific subject ID, or 'all'
+exampleROI = 'MT';
+targetBin = 180;
+cartCondition1 = 'cartexp_horizontal_grating_upwards_motion'; %%'cartexp_vertical_stationary';
+cartCondition2 = 'cartexp_horizontal_stationary'; %'cartexp_horizontal_stationary';
+polCondition1 = 'polexp_pinwheel_grating_clockwise_motion'; %'polexp_annulus_grating_stationary'; 
+polCondition2 = 'polexp_pinwheel_grating_stationary'; %%'polexp_pinwheel_grating_stationary';
+
+if makeOneBinPlot
+    plotOrientationConditionsOneBin(allRawTables, allModelTables, subjects, exampleSubject, exampleROI, targetBin, ...
+        cartCondition1, cartCondition2, polCondition1, polCondition2, ...
+        offsetRawToBaseline, offsetModelToBaseline, savePlotsAsPDF, figSaveDir);
+end
 
 %% ===================== LOCAL FUNCTIONS =====================
 
@@ -289,7 +311,7 @@ function sesFolder = findses(subjdir)
     sesFolder = d.name;
 end
 
-function condTTA = computeConditionTTA_rawdata(bidsDir, projectName, subj, ses, roiVertexIdx, meanvol, eventTRs_prior, eventTRs_after)
+function condTTA = computeConditionTTA_rawdata(bidsDir, projectName, subj, ses, roiVertexIdx, meanvol, tr_s, eventTRs_prior, eventTRs_after)
 % Voxelwise trial-triggered average per condition, computed from the raw
 % preprocessed BOLD time series (%-signal-change). Mirrors the fititer==1
 % branch of ttave_compute.m, but keeps every vertex instead of collapsing
@@ -299,6 +321,19 @@ function condTTA = computeConditionTTA_rawdata(bidsDir, projectName, subj, ses, 
 % mean, so it is on the same scale as the model-fit reconstruction (which
 % is built from GLMsingle's own %-BOLD betas, themselves scaled by this
 % same meanvol).
+%
+% Before converting to %-signal-change, each run is polynomial-denoised
+% the same way GLMestimatesingletrial.m denoises its own noise-pool data
+% (see its line ~1089: projectionmatrix(constructpolynomialmatrix(n,
+% 0:maxpolydeg))*data): a per-run polynomial nuisance basis is projected
+% out to remove low-frequency drift, using the same default polynomial
+% degree GLMsingle itself uses (round(L/2), L = run duration in minutes --
+% GLMestimatesingletrial.m line ~525). This keeps the raw-data values that
+% end up in allRawTables/ttaveTable_raw on the same denoising basis as the
+% betas the model-fit table is built from. constructpolynomialmatrix and
+% projectionmatrix are GLMsingle utilities (matlab/utilities/), assumed to
+% already be on the path alongside GLMpredictresponses/
+% getcanonicalhrflibrary.
 
     nConditions = 13;
     nTimepoints = eventTRs_prior + eventTRs_after;
@@ -317,7 +352,16 @@ function condTTA = computeConditionTTA_rawdata(bidsDir, projectName, subj, ses, 
     countTTA = zeros(nConditions, nSel, nTimepoints);
 
     for r = 1:nRuns
-        df = datafiles{r}(roiVertexIdx, :);
+        df = datafiles{r}(roiVertexIdx, :); % nSel x nTRsRun (voxels x time)
+
+        % polynomial-denoise: project out a run-specific low-degree
+        % polynomial basis (DC, linear, ...) along the time dimension
+        nTRsRun = size(df, 2);
+        maxpolydeg = round(((nTRsRun * tr_s) / 60) / 2);
+        pmatrix = constructpolynomialmatrix(nTRsRun, 0:maxpolydeg);
+        polymatrix = projectionmatrix(pmatrix);
+        df = (polymatrix * df')'; % denoise in time x voxels, then back to voxels x time
+
         timeseries_psc = ((df ./ meanvol) - 1) * 100;
 
         onsetsByCondition = cell(1, nConditions);
@@ -833,6 +877,8 @@ function plotOrientationConditionsAllVoxels(allRawTables, allModelTables, subjec
     
         if strcmpi(exampleSubject, 'all')
             ylim([-.2 1])
+        elseif strcmp(exampleSubject, 'sub-wlsubj124')
+            ylim([-1 3])
         end
     
     end
@@ -942,6 +988,7 @@ function plotOrientationConditionsAllSubjects(allRawTables, allModelTables, subj
 
         keep = isgraphics(legendHandles);
         legend(legendHandles(keep), legendLabels(keep), 'Location', 'best', 'Interpreter', 'none')
+
     end
 
     sgtitle(sprintf('%s orientation response (4-condition avg minus blank) per subject (circles=raw, solid=model)', ...
@@ -971,6 +1018,150 @@ function plotOrientationConditionsAllSubjects(allRawTables, allModelTables, subj
 
         fprintf('  %s: dg (cartexp) R^2 = %.3f, da (polexp) R^2 = %.3f\n', ...
             subjects{si}, mean(Tsi.cartexp_R2), mean(Tsi.polexp_R2));
+    end
+end
+
+function plotOrientationConditionsOneBin(allRawTables, allModelTables, subjects, exampleSubject, exampleROI, targetBin, ...
+    cartCondition1, cartCondition2, polCondition1, polCondition2, offsetRaw, offsetModel, savePDFFlag, figSaveDir)
+% Restricted variant of the orientation-condition plots above: instead of
+% averaging/plotting across all 8 polar angle bins, uses only the single
+% specified targetBin; instead of averaging all 4 orientation conditions
+% per experiment, plots two specified conditions separately (each minus
+% that experiment's own blank). Subplot structure matches
+% plotOrientationConditionsAllSubjects: one subplot for dg/cartexp_ (left),
+% one for da/polexp_ (right). Within each subplot, one line per condition
+% (not per subject) -- color = condition, matching
+% plotOrientationConditionsAllVoxels's pattern.
+%
+% cartCondition1/cartCondition2: full column names for the cartexp_
+% subplot, e.g. 'cartexp_vertical_stationary', 'cartexp_horizontal_stationary'.
+% polCondition1/polCondition2: full column names for the polexp_ subplot
+% (dg and da conditions are named completely differently, so these are
+% independent from the cart* pair), e.g.
+% 'polexp_annulus_grating_stationary', 'polexp_pinwheel_grating_stationary'.
+%
+% exampleSubject may be a specific subject ID, or 'all' -- in which case
+% the exact same per-subject computation is run for every processed
+% subject and the resulting per-condition curves are averaged across
+% subjects before plotting (same pattern as plotOrientationConditionsAllVoxels).
+%
+% offsetRaw/offsetModel: if true, that curve type is shifted so its own
+% pre-stimulus baseline (TR -5:-1) is 0-centered, applied independently per
+% curve.
+%
+% savePDFFlag/figSaveDir: if savePDFFlag is true, saves the figure as a
+% vector PDF into figSaveDir (created if needed).
+%
+% Reads directly from the allRawTables/allModelTables per-subject cell
+% arrays (no need to reload the saved .mat files).
+
+    if strcmpi(exampleSubject, 'all')
+        subjectIndices = find(~cellfun(@isempty, allRawTables));
+        subjectLabel = sprintf('all subjects (n=%d)', numel(subjectIndices));
+    else
+        si_example = find(strcmp(subjects, exampleSubject), 1);
+        if isempty(si_example) || isempty(allRawTables{si_example})
+            warning('%s not found/processed in this run -- skipping plot.', exampleSubject);
+            return
+        end
+        subjectIndices = si_example;
+        subjectLabel = exampleSubject;
+    end
+
+    if isempty(subjectIndices)
+        warning('No processed subjects found -- skipping plot.');
+        return
+    end
+
+    projectConditions = {{cartCondition1, cartCondition2}, {polCondition1, polCondition2}};
+    projectBlanks = {'cartexp_blank', 'polexp_blank'};
+    projectLabels = {'dg (Cartesian)', 'da (Polar)'};
+
+    fig = figure('Name', sprintf('%s %s bin%d selected conditions', subjectLabel, exampleROI, targetBin));
+    fig.Position = [1 954 2383 383];
+
+    for pj = 1:numel(projectConditions)
+        theseConditions = projectConditions{pj};
+        blankCol = projectBlanks{pj};
+        colors = lines(numel(theseConditions));
+
+        subplot(1, 2, pj)
+        hold on
+        legendHandles = gobjects(numel(theseConditions), 1);
+        legendLabels = strings(numel(theseConditions), 1);
+
+        for ci = 1:numel(theseConditions)
+            condCol = theseConditions{ci};
+            col = colors(ci, :);
+
+            rawCurves = {};
+            modelCurves = {};
+            rawTR = [];
+            modelTR = [];
+
+            % single subject: this loop runs once. exampleSubject=='all':
+            % runs once per processed subject, and the resulting curves
+            % are averaged across subjects below.
+            for k = 1:numel(subjectIndices)
+                Traw = allRawTables{subjectIndices(k)};
+                Tmodel = allModelTables{subjectIndices(k)};
+
+                Traw = Traw(Traw.visual_area == exampleROI & Traw.included == 1 & Traw.pRF_angle_bin == targetBin, :);
+                Tmodel = Tmodel(Tmodel.visual_area == exampleROI & Tmodel.included == 1 & Tmodel.pRF_angle_bin == targetBin, :);
+
+                if isempty(Traw) || ~ismember(condCol, Traw.Properties.VariableNames) || ...
+                        ~ismember(blankCol, Traw.Properties.VariableNames)
+                    continue
+                end
+
+                rawDiff = Traw.(condCol) - Traw.(blankCol);
+                [subjRawTR, ~, gRaw] = unique(Traw.TR);
+                subjRawVals = accumarray(gRaw, rawDiff, [], @mean);
+
+                modelDiff = Tmodel.(condCol) - Tmodel.(blankCol);
+                [subjModelTR, ~, gModel] = unique(Tmodel.TR);
+                subjModelVals = accumarray(gModel, modelDiff, [], @mean);
+
+                rawCurves{end+1} = subjRawVals(:)'; %#ok<AGROW>
+                modelCurves{end+1} = subjModelVals(:)'; %#ok<AGROW>
+                rawTR = subjRawTR;
+                modelTR = subjModelTR;
+            end
+
+            if isempty(rawCurves)
+                continue
+            end
+
+            rawVals = mean(cell2mat(rawCurves'), 1);
+            modelVals = mean(cell2mat(modelCurves'), 1);
+
+            rawVals = baselineCenter(rawTR, rawVals, offsetRaw);
+            modelVals = baselineCenter(modelTR, modelVals, offsetModel);
+
+            plot(rawTR, rawVals, 'o', 'LineWidth', 1.5, 'Color', col, ...
+                'MarkerFaceColor', col, 'MarkerEdgeColor', 'w', 'HandleVisibility', 'off')
+            h = plot(modelTR, modelVals, '-', 'LineWidth', 1.5, 'Color', col);
+            legendHandles(ci) = h;
+            legendLabels(ci) = strrep(condCol, '_', ' ');
+        end
+
+        yline(0, 'k:', 'HandleVisibility', 'off')
+        xline(0, 'k:', 'HandleVisibility', 'off')
+        hold off
+
+        xlabel('TR')
+        ylabel('% signal change')
+        title(sprintf('%s: %s (%d^\\circ)', projectLabels{pj}, exampleROI, targetBin))
+
+        keep = isgraphics(legendHandles);
+        legend(legendHandles(keep), legendLabels(keep), 'Location', 'best', 'Interpreter', 'none')
+    end
+
+    sgtitle(sprintf('%s %s %d^\\circ: selected conditions minus blank (circles=raw, solid=model)', ...
+        subjectLabel, exampleROI, targetBin))
+
+    if savePDFFlag
+        savePDF(fig, figSaveDir, sprintf('orientationConditionsOneBin_bin%d_%s_%s', targetBin, exampleROI, subjectLabel));
     end
 end
 

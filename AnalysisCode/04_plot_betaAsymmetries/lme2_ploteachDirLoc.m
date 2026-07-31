@@ -2,7 +2,7 @@ clc; clear all; close all
 
 % set up
 addpath(genpath(pwd));
-projectName = 'da';
+projectName = 'dg';
 subj = 'ALL';
 metric = 'meanBOLD';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
@@ -147,7 +147,7 @@ dotsize = 8;
 if strcmp(comparisonName, 'orientation_minus_baseline') || ...
     strcmp(comparisonName, 'motion_minus_orientation')
     globalMin = -0.5; %min(realdata.(metric));
-    globalMax = 1.5; %max(realdata.(metric));
+    globalMax = 1; %max(realdata.(metric));
 elseif strcmp(comparisonName, 'motion_minus_baseline')
     globalMin = 0; %min(realdata.(metric));
     globalMax = 2; %max(realdata.(metric));

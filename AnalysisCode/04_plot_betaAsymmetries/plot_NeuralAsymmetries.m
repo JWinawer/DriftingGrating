@@ -4,7 +4,7 @@ clc; clear all; close all;
 
 % set up
 addpath(genpath(pwd));
-projectName = 'dg'; %'dots'; %'da';
+projectName = 'da'; %'dots'; %'da';
 %bidsDir =  '/Volumes/server/Projects/Project_dg/data_bids/';
 %bidsDir =  '/Volumes/EXTERNAL_US/Project_dg/data_bids/';
 bidsDir =  '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/';
@@ -97,15 +97,21 @@ projectSettings.comparisonName = comparisonName;
 projectSettings.subjects = subjects;
 projectSettings.figureDir = figureDir;
 
+% per-observer mean pRF gain (prfvista_mov/prfvista average), used to
+% gain-weight each observer's contribution in plot1_experimentalCond.m and
+% plot2_experimentalCond.m -- see retrieveObserverGainWeights.m
+projectSettings.gainSummaryFile = fullfile(bidsDir, 'derivatives', 'summaryTables', 'gainSummary.mat');
+projectSettings.observerGain = retrieveObserverGainWeights(subjects, projectSettings.gainSummaryFile);
+
 
 %% MAIN CONDITION: Plot pairwise plots (JUST FOR SANITY CHECK)
 % e.g. condition indices 4 v 5: clearly shows MT as motion responsive
 % these do not depend on polar angle / retinotopy (just contrasts)
 
-condIdx1 = [27]; %[26,27]; %[9,11];   
-condIdx2 = [26]; %[28,29]; %[8, 10];
-
-plot0_experimentalCond(condIdx1, condIdx2, medianBOLD, projectSettings)
+% condIdx1 = [27]; %[26,27]; %[9,11];   
+% condIdx2 = [26]; %[28,29]; %[8, 10];
+% 
+% plot0_experimentalCond(condIdx1, condIdx2, medianBOLD, projectSettings)
 
 %% MAIN CONDITION: Plot polor plots
 
