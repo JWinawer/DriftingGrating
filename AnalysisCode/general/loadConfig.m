@@ -6,6 +6,8 @@ function projectSettings = loadConfig(githubDir)
     str = fileread(roisfile); rois_dict = jsondecode(str);
     rois = {rois_dict.ROIs.filename};
     roi_idx = {rois_dict.ROIs.index};
+    roi_plotnames = {rois_dict.ROIs.plotname}; % display names (e.g. 'V3A'), vs
+        % rois/filename which matches the on-disk FreeSurfer label casing (e.g. 'V3a')
     
     % read in file for axes limits
     axesLimfile = fullfile(githubDir, 'DriftingGrating', 'AnalysisCode', 'general', 'jsons', 'polaraxes_limits.json');
@@ -51,6 +53,7 @@ function projectSettings = loadConfig(githubDir)
     projectSettings.contrasts_dict = contrasts_dict;
     projectSettings.subjectwise_tta_limits = subjectwise_tta_limits;
     projectSettings.roi_idx = roi_idx;
+    projectSettings.roi_plotnames = roi_plotnames;
 
 end
 

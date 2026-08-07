@@ -4,6 +4,41 @@
             "plotname": "V1",
             "filename": "V1",
             "index": 1
+        },
+        {
+            "plotname": "V2",
+            "filename": "V2",
+            "index": 2
+        },
+        {
+            "plotname": "V3",
+            "filename": "V3",
+            "index": 3
+        },
+        {
+            "plotname": "V3A",
+            "filename": "V3a",
+            "index": 4
+        },
+        {
+            "plotname": "V3B",
+            "filename": "V3b",
+            "index": 5
+        },
+        {
+            "plotname": "hV4",
+            "filename": "hV4",
+            "index": 6
+        },
+        {
+            "plotname": "pMT",
+            "filename": "pMT",
+            "index": 7
+        },
+        {
+            "plotname": "pMST",
+            "filename": "pMST",
+            "index": 8
         }
     ]
 }

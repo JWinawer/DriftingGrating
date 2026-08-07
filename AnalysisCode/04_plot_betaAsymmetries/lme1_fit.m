@@ -21,6 +21,10 @@ comparisonName = 'orientation_minus_baseline';
 projectSettings = loadConfig(githubDir);
 
 rois = projectSettings.rois;
+roi_idx = projectSettings.roi_idx; % rois{ri} is the ri-th ROI in THIS list, but
+    % roi_idx{ri} is its actual column in meanBOLDpa/medianBOLDpa's ROI
+    % dimension -- these only coincide if rois lists every ROI in the data
+    % matrix in the matrix's own order, which is not guaranteed in general.
 axes_limits = projectSettings.axes_limits;
 pairaxes_limits = projectSettings.pairaxes_limits;
 pairaxes_PAew_limits = projectSettings.pairaxes_PAew_limits;
@@ -134,8 +138,11 @@ for roi=1:length(rois)  % just 1 ROI at a time (makes interprettability easier)
         for pa = 1:nPAs
             for md = 1:nMotDirs
                % fill the new reshaped matrix with the foiled values
-               % (condition, polar angle, roi, subject)
-               reshaped_mat(index, 1) = filtered_meanBOLDpa(md, pa, roi, subject);
+               % (condition, polar angle, roi, subject) -- index into the
+               % data matrix via roi_idx{roi}, NOT the raw loop counter
+               % roi, since rois{roi} is not guaranteed to be the roi-th
+               % column of the underlying matrix
+               reshaped_mat(index, 1) = filtered_meanBOLDpa(md, pa, roi_idx{roi}, subject);
                index = index + 1;
             end
         end
@@ -323,6 +330,7 @@ asymmetryNames = {'mainCardinalVsMainOblique', 'derivedCardinalVsDerivedOblique'
 
 % initialize arrays to store data for 1 ROI : for a later plot
 nA = numel(asymmetryNames);
+nROIs_plot = numel(rois);
 box_pro = cell(nA,1);
 box_con = cell(nA,1);
 mean_pro = nan(nA,1);
@@ -334,6 +342,15 @@ errhigh_con = nan(nA,1);
 color_pro = nan(nA,3);
 color_con = nan(nA,3);
 asymLabel = strings(nA,1);
+
+% same as above, but for EVERY roi (not just roi==1), so a per-ROI version
+% of the master figure can be made below -- indexed (ai, roi)
+mean_pro_allroi = nan(nA, nROIs_plot);
+mean_con_allroi = nan(nA, nROIs_plot);
+errlow_pro_allroi = nan(nA, nROIs_plot);
+errhigh_pro_allroi = nan(nA, nROIs_plot);
+errlow_con_allroi = nan(nA, nROIs_plot);
+errhigh_con_allroi = nan(nA, nROIs_plot);
 
 %all_labels = {{'Main Cardinal', 'Main Oblique'}, {'Derived Cardinal', 'Derived Oblique'}, {'Radial', 'Tangential'}};
 
@@ -422,7 +439,7 @@ for ai=1:numel(asymmetryNames)
         CI_mainsubset = CIFcn(coeffs(4,:)+Gintercept,p);
         CI_derivedsubset = CIFcn(coeffs(5,:)+Gintercept,p);
 
-        % this is for the 95% CI of the DIFFERENCE (stats, not the plot)
+        % this is for the CI of the DIFFERENCE (stats, not the plot)
         % requires multiplying the beta by 2 (.*2) to compute the difference
         % (they have identical magnitude)
         % do not need the mean
@@ -432,12 +449,33 @@ for ai=1:numel(asymmetryNames)
         CI_mainsubset_stats = CIFcn(coeffs(4,:).*2,97.5);
         CI_derivedsubset_stats = CIFcn(coeffs(5,:).*2,97.5);
 
-        disp('stats:')
-        beta_estimate_difference = [estimates(2) estimates(3) estimates(4) estimates(5)].*2
-        CI_maincardinality_stats
-        CI_derivedcardinality_stats
-        CI_mainsubset_stats
-        CI_derivedsubset_stats
+        CI_maincardinality_stats68 = CIFcn(coeffs(2,:).*2,84);
+        CI_derivedcardinality_stats68 = CIFcn(coeffs(3,:).*2,84);
+        CI_mainsubset_stats68 = CIFcn(coeffs(4,:).*2,84);
+        CI_derivedsubset_stats68 = CIFcn(coeffs(5,:).*2,84);
+
+        % labeled term-by-term printout, so each estimate sits next to its
+        % own CI unambiguously. Guarded by ai==1 so this prints once per
+        % roi instead of once per asymmetryName (these values only depend
+        % on roi -- modeldata/estimates/coeffs are reloaded identically
+        % regardless of asymmetryName, so printing on every ai iteration
+        % just reprinted the same numbers numel(asymmetryNames) times).
+        if ai == 1
+            diffNames = {'mainCardinal','derivedCardinal','mainSubset','derivedSubset'};
+            beta_estimate_difference = [estimates(2) estimates(3) estimates(4) estimates(5)] .* 2;
+            diffCIs95 = [CI_maincardinality_stats; CI_derivedcardinality_stats; ...
+                CI_mainsubset_stats; CI_derivedsubset_stats];
+            diffCIs68 = [CI_maincardinality_stats68; CI_derivedcardinality_stats68; ...
+                CI_mainsubset_stats68; CI_derivedsubset_stats68];
+
+            fprintf('\nstats (roi=%s): CI of the pro-vs-con difference (beta*2)\n', rois{roi});
+            fprintf('%-16s %12s %24s %24s\n', 'term', 'estimate*2', '95% CI', '68% CI');
+            for ni = 1:numel(diffNames)
+                fprintf('%-16s %12.5f   [%9.5f %9.5f]   [%9.5f %9.5f]\n', diffNames{ni}, ...
+                    beta_estimate_difference(ni), diffCIs95(ni,1), diffCIs95(ni,2), ...
+                    diffCIs68(ni,1), diffCIs68(ni,2));
+            end
+        end
     
         y = [estimates(2) estimates(3) estimates(4) estimates(5)]; %[0.11446, 0.033442, 0.015738];
     
@@ -447,8 +485,10 @@ for ai=1:numel(asymmetryNames)
         y1 = Gintercept + y;
         y2 = Gintercept - y;
 
-        disp('estimates:')
-        y1-y2
+        if ai == 1
+            disp('estimates:')
+            y1-y2
+        end
     
         errlow1 = y1-errlow;
         errhigh1 = errhigh -y1;
@@ -495,7 +535,16 @@ for ai=1:numel(asymmetryNames)
             errlow_con(ai)  = errlow2(x);
             errhigh_con(ai) = errhigh2(x);
         end
-    
+
+        % same values as above, stashed for every roi (used by the
+        % per-ROI figures below)
+        mean_pro_allroi(ai,roi)    = y1(x) - baselineSub;
+        mean_con_allroi(ai,roi)    = y2(x) - baselineSub;
+        errlow_pro_allroi(ai,roi)  = errlow1(x);
+        errhigh_pro_allroi(ai,roi) = errhigh1(x);
+        errlow_con_allroi(ai,roi)  = errlow2(x);
+        errhigh_con_allroi(ai,roi) = errhigh2(x);
+
     end
     
     hold on
@@ -535,15 +584,18 @@ for ai=1:numel(asymmetryNames)
     y_pos = ylim;
     %text(ylabelPosition(1), mean(y_pos), '\Delta BOLD signal (%)', 'FontSize', 20, 'Rotation', 90, 'HorizontalAlignment', 'center');
     
-    ylim([-0.75 0.75])
+    ylim([-0.4 0.4])
     ax1 = gca;
-    ax1.YTick = [-0.75, -0.5, -0.25 0, .25, 0.5, 0.75];
+    ax1.YTick = -0.4:0.2:0.4;
     text(ylabelPosition(1), mean(y_pos), '\Delta standardized BOLD response', 'FontSize', 20, 'Rotation', 90, 'HorizontalAlignment', 'center');
     
     xticks(1:length(rois))
     
-    roinamesEdit = rois;
-    roinamesEdit{5} = "hMT+"; % edit the MT complex ; it was too long as 'MTcomplex'
+    % use the config's display names (e.g. 'V3A' instead of the on-disk
+    % 'V3a', 'hMT+' instead of 'hMTcomplex') rather than hardcoding which
+    % position needs relabeling, since that depended on a specific,
+    % now-changed ROI list/order
+    roinamesEdit = projectSettings.roi_plotnames;
     
     % Create a custom legend with the dummy plot objects
     legend([h1, h2], labelnames, 'Location', 'best');
@@ -552,7 +604,13 @@ for ai=1:numel(asymmetryNames)
     
     f1 = gcf;
     f1.Position = [298 843 651 494];
-    
+
+    % Force all pending graphics updates (legend, xticklabels, position)
+    % to render before capturing -- without this, print() can grab a
+    % stale frame left over from the previous asymmetryName's figure
+    % (observed: mainSubset/derivedSubset pair rendered identically).
+    drawnow;
+
     % Save the figure as a TIFF file with specific options
     print(fullfile(figureDir, sprintf('LME_%s_%s_%s', comparisonName, projectName, asymmetryName)), '-dpdf', '-bestfit');
 
@@ -635,3 +693,67 @@ f.Position = [298 843 651 494];
 %    '-dtiff', '-r300');
 %ylim([-0.4 0.4]) % for non zscore
 print(fullfile(figureDir, sprintf('MASTER_ROI1_%s_%s', comparisonName, projectName)), '-dpdf', '-bestfit');
+
+
+%% Per-ROI figures: same layout/colors as the master figure above (4
+% asymmetries, pro vs con), but one figure per ROI instead of ROI 1 only.
+
+for roi = 1:length(rois)
+
+    figure; hold on
+
+    for ai = 1:nA
+        srcIdx = plotOrder(ai);
+
+        % Pro
+        boxchart(x(ai)-dx, mean_pro_allroi(srcIdx,roi), ...
+            'BoxFaceColor', color_pro(srcIdx,:), ...
+            'LineWidth', 4, 'BoxWidth', 0.6);
+        hold on
+
+        errorbar(x(ai)-dx, mean_pro_allroi(srcIdx,roi), ...
+            errlow_pro_allroi(srcIdx,roi), errhigh_pro_allroi(srcIdx,roi), ...
+            'LineStyle','none', 'LineWidth', 2, ...
+            'Color', color_pro(srcIdx,:));
+
+        % Con
+        boxchart(x(ai)+dx, mean_con_allroi(srcIdx,roi), ...
+            'BoxFaceColor', color_con(srcIdx,:), ...
+            'LineWidth', 4, 'BoxWidth', 0.6);
+        hold on
+
+        errorbar(x(ai)+dx, mean_con_allroi(srcIdx,roi), ...
+            errlow_con_allroi(srcIdx,roi), errhigh_con_allroi(srcIdx,roi), ...
+            'LineStyle','none', 'LineWidth', 2, ...
+            'Color', color_con(srcIdx,:));
+    end
+
+    yline(0, '--', 'Color', [0 0 0], 'LineWidth', 2)
+
+    ylim([-0.4 0.4])
+    xlim([0.5 nA+0.5])
+
+    set(gca,'XTick',[])
+    box off
+    set(gca,'linewidth',2, 'YColor',[0 0 0], 'XColor',[0 0 0]);
+    set(gca,'FontName','Arial','FontSize',20);
+
+    xticks(x)
+    xticklabels(asymLabel(plotOrder))
+    xtickangle(25)
+
+    ylabel('zscored BOLD psc', 'FontSize', 20);
+    title(projectSettings.roi_plotnames{roi}, 'FontSize', 20, 'Interpreter', 'none');
+
+    % Legend (dummy handles, same as the master figure)
+    h1 = plot(nan, nan, 'Color', color_pro(1,:), 'LineWidth', 3);
+    h2 = plot(nan, nan, 'Color', color_con(1,:), 'LineWidth', 3);
+    %legend([h1 h2], {'pro','con'}, 'Location', 'best');
+
+    f = gcf;
+    f.Position = [298 843 651 494];
+
+    drawnow;
+
+    print(fullfile(figureDir, sprintf('MASTER_%s_%s_%s', rois{roi}, comparisonName, projectName)), '-dpdf', '-bestfit');
+end
