@@ -17,6 +17,88 @@ from itertools import product
 from scipy.ndimage import gaussian_filter
 
 
+def get_fast_device():
+    """Best available torch device for accelerating the normalization models'
+    Gaussian blurring (Apple Silicon/Metal GPUs via MPS, NVIDIA via CUDA, else CPU)."""
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    return torch.device("cpu")
+
+
+def _torch_gaussian_1d(x, sigma, axis, truncate=4.0, device=None):
+    """1D Gaussian filter along `axis` of a numpy array, matching
+    scipy.ndimage.gaussian_filter1d's default mode='reflect' (half-sample
+    symmetric, edge pixel duplicated: d c b a | a b c d | d c b a) boundary
+    handling exactly -- including when the kernel radius exceeds the axis
+    length (the reflection folds back and forth periodically, period 2*L),
+    which matters here since several calls use a ~90px spatial sigma on axes
+    only 4-6 elements long.
+
+    Implemented as a dense (L, L) linear operator applied via matmul, rather
+    than padding + conv1d: padding would materialize a tensor of length
+    L+2*radius along `axis` while every *other* axis stays at full size
+    (e.g. filtering the 6-element SF axis of a (6,4,896,896) array with a
+    ~750-tap kernel would pad to shape (4,896,896,756) -- multiple GB, and
+    it blew up MPS's buffer limit in practice). The (L, L) matrix is at most
+    ~3MB even for the 896px spatial axes, and matmul reshapes to the same
+    size as the input, so memory stays bounded regardless of axis length.
+    """
+    if device is None:
+        device = get_fast_device()
+
+    radius = int(truncate * float(sigma) + 0.5)
+    if radius < 1:
+        return x
+
+    L = x.shape[axis]
+
+    m = torch.arange(L, device=device).unsqueeze(1)
+    k = torch.arange(-radius, radius + 1, device=device)
+    positions = m + k.unsqueeze(0)                    # (L, K)
+    period = 2 * L
+    q = positions % period
+    src = torch.where(q < L, q, period - 1 - q)        # (L, K), in [0, L-1]
+
+    weights = torch.exp(-0.5 * (k.to(torch.float32) / sigma) ** 2)
+    weights = weights / weights.sum()
+    weights = weights.unsqueeze(0).expand(L, -1).contiguous()
+
+    W = torch.zeros(L, L, dtype=torch.float32, device=device)
+    W.scatter_add_(1, src, weights)
+
+    t = torch.as_tensor(x, dtype=torch.float32, device=device)
+    t = t.movedim(axis, 0)
+    orig_shape = t.shape
+    out = (W @ t.reshape(L, -1)).reshape(orig_shape).movedim(0, axis)
+
+    return out.detach().cpu().numpy().astype(x.dtype, copy=False)
+
+
+def gaussian_filter_gpu(x, sigma, truncate=4.0, device=None):
+    """Drop-in accelerated replacement for scipy.ndimage.gaussian_filter(x, sigma=sigma).
+
+    scipy's multi-axis gaussian_filter is separable: it applies a 1D filter to
+    each axis in turn, and its per-axis cost scales with kernel radius (not
+    axis length) since every output element still needs one weighted sum per
+    kernel tap. With a spatial sigma of ~90px (radius ~375), that is true
+    even for the 4-6 element SF/orientation axes -- so every axis with
+    sigma>0 is routed through a GPU/torch 1D convolution here, not just the
+    large spatial ones. Axes with sigma==0 ("don't filter this axis") are
+    skipped entirely, matching scipy.
+    """
+    if np.isscalar(sigma):
+        sigma = (sigma,) * x.ndim
+
+    out = x
+    for axis, s in enumerate(sigma):
+        if s == 0:
+            continue
+        out = _torch_gaussian_1d(out, s, axis, truncate=truncate, device=device)
+    return out
+
+
 def stimLookupTable():
 
     # the order of stimuli and polar angles here should not change, otherwise verify mapping is not affected.
@@ -957,8 +1039,8 @@ def canonical_normalization(stim_energy, pixpdeg, representative_chIdx=0, p_exp 
 
 
 
-def div_normalization(stim_energy, pixpdeg, p_exp = 1, q_exp = 1, tuned=False):
-    
+def div_normalization(stim_energy, pixpdeg, p_exp = 1, q_exp = 1, tuned=False, device=None):
+
     # normalization strength (when sigma is large --> less normalization; approaching 0 is strong normalization)
     sigma = 0.01
     
@@ -995,9 +1077,10 @@ def div_normalization(stim_energy, pixpdeg, p_exp = 1, q_exp = 1, tuned=False):
                 # ----------------------------------------
                 
                 # apply 4D gaussian filter across 4D matrix (all SFs, ORIs, X, Y)
-                Z[i,j] = gaussian_filter(
+                Z[i,j] = gaussian_filter_gpu(
                     stim_energy[i, j] ** q_exp,
-                    sigma=(std_pix, std_pix, std_pix, std_pix)
+                    sigma=(std_pix, std_pix, std_pix, std_pix),
+                    device=device,
                 )
 
             elif tuned==True:
@@ -1011,9 +1094,10 @@ def div_normalization(stim_energy, pixpdeg, p_exp = 1, q_exp = 1, tuned=False):
                 for h in range(n_ori):          # orientation
 
                     # 1) Orientation-tuned spatial surround for orientation h ((6, 1, 896, 896))
-                    S_h = gaussian_filter(
-                        stim_energy[i,j][:,h:h+1] ** q_exp, 
-                        sigma=(std_pix, 1, std_pix, std_pix)
+                    S_h = gaussian_filter_gpu(
+                        stim_energy[i,j][:,h:h+1] ** q_exp,
+                        sigma=(std_pix, 1, std_pix, std_pix),
+                        device=device,
                     )
 
                     # 2) Cross-orientation suppression for orientation h
@@ -1150,7 +1234,7 @@ def normalization_byAnisotropy_NOA(stim_energy, pixpdeg):
     return norm_energy
 
 
-def normalization_byStimHomogeneity(stim_energy, pixpdeg):
+def normalization_byStimHomogeneity(stim_energy, pixpdeg, device=None):
 
     # Normalization based on homogeneity of center-surround stimulus match
     # The measure of homogeneity is contrast-independent, 
@@ -1217,7 +1301,7 @@ def normalization_byStimHomogeneity(stim_energy, pixpdeg):
             ######## CALCULATE HOMOGENEITY ACROSS SPACE) ##########
             # --- Center and surround via convolution --- 
             C = gaussian_filter(E_full, sigma=(0, 0, sigma_c, sigma_c)) # weighted average at center neighborhood at x,y
-            S = gaussian_filter(E_full, sigma=(0, 0, sigma_s, sigma_s)) # weighted average for larger pool (surround) at x,y
+            S = gaussian_filter_gpu(E_full, sigma=(0, 0, sigma_s, sigma_s), device=device) # weighted average for larger pool (surround) at x,y
 
             # To normalize distributions:
             # --- Compute sum across SF and ORI dimensions ---

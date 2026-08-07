@@ -1,0 +1,28 @@
+# Pinned dependencies for model_DriftingGratings.ipynb, for Intel (x86_64) Macs.
+#
+# PyTorch dropped Intel-macOS wheels after the 2.2.x series, and torch 2.2.x
+# was built against NumPy 1.x's ABI (installing NumPy 2.x alongside it
+# produces a "compiled using NumPy 1.x" warning and real crash risk). This
+# also caps the usable Python version at 3.11 (no cp312/cp313 macOS x86_64
+# wheels exist for any torch release). See requirements.txt / AGENTS.md for
+# the Apple Silicon (arm64) pins, which do not have these constraints.
+#
+# Use with a python=3.11 conda environment:
+#   conda create -n viz -c conda-forge python=3.11 -y
+#   conda activate viz
+#   pip install jupyter ipykernel
+#   pip install -r requirements-intel-mac.txt
+
+numpy==1.26.4
+scipy==1.16.3
+pandas==2.3.3
+matplotlib==3.10.6
+seaborn
+opencv-python==4.9.0.80
+pillow
+tqdm==4.67.1
+einops==0.8.1
+ipdb==0.13.13
+torch==2.2.2
+torchvision==0.17.2
+plenoptic==1.3.1

@@ -12,3 +12,5 @@ Data/**
 .DS_Store
 **/*.asv
 **/*.html
+__pycache__/
+*.pyc
