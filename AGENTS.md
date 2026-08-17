@@ -222,6 +222,24 @@ Do not "align" that array with `[0 45 90 …]`; that would introduce the bug int
 
 Listed newest first — later documents supersede earlier ones where they overlap.
 
+- **`Reproduction/HARMONIC_MODEL.md` (2026-08-17).** A per-vertex harmonic model that replaces
+  the eight polar-angle wedges with each vertex's own pRF polar angle, to separate within-ROI
+  local-orientation geometry from genuine context effects. Vertices are weighted for equal
+  polar-angle coverage, which is what the published ROI analysis does implicitly and what makes
+  the four predictors orthogonal. Findings: geometry accounts for only
+  **5.6% / 7.6%** of the Cartesian-vs-polar gap in the horizontal/vertical and cardinal/oblique
+  asymmetries, so **the context claim survives**; but in raw (% signal change) units the
+  **radial/tangential asymmetry does not differ between the two experiments** (dg 0.119, da 0.162), so it is the
+  Cartesian-frame asymmetries that are context-dependent, not the polar-frame ones — a sharper,
+  more asymmetric statement than the current framing. That last point reverses under z-scoring,
+  which is why it is stated for the raw analysis only. pRF polar-angle error was measured (not
+  assumed) from the two independent pRF fits at **σ = 3.9°**, against the ~39° that would be needed
+  for measurement error to explain the result away. Code in `Reproduction/cleanroom/harmonic_*`
+  and `run_harmonic_model.m`; `test_harmonic_model.m` asserts the convention against `lme_codes`.
+- **`Reproduction/supplement/SUPPLEMENT_harmonic_model.md` (2026-08-17).** The same work written
+  for a paper supplement — motivation, model design, results, interpretation, with four committed
+  figures. Written for readers, not agents; `HARMONIC_MODEL.md` remains the fuller internal account
+  (z-scored sensitivity, weighting diagnostics, implementation notes).
 - **`Reproduction/local_qc/REPORT.md` (2026-07-24) — start here.** GLM data-quality review of
   all 8 observers × both experiments from the unfiltered server extraction. The pink-noise
   reference, the clearing of both flagged observers, the fixed-`rng` design finding, and the
