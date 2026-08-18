@@ -321,21 +321,39 @@ test across observers — is the correct analysis, and it is what we report.
 
 The standard objection to a summary-statistic test is that it treats each observer's effect as
 noiseless, so the across-observer variance it uses contains within-observer estimation error as well
-as true between-observer variability — which is what a mixed model is normally for. We do not have a
-valid estimate of that within-observer error. Estimating it requires resampling the *measurement* —
-a bootstrap or split-half over the eight runs per experiment per observer, refitting the GLM each
-time — and the beta estimates needed for that are not part of the present analysis. Resampling
-vertices instead, which we initially attempted, does not answer the question: it holds the GLM betas
-fixed and merely reshuffles which of them enter the wedge median, so it characterises the spatial
-sampling of V1 rather than the reliability of the measurement, and it ignores spatial
-autocorrelation.
+as true between-observer variability — which is what a mixed model is normally for. We measured that
+error by resampling the *measurement*: GLMsingle retains single-trial betas, and the design is
+balanced (8 runs × 52 trials, exactly 4 trials per condition per run), so both a split-half over all
+35 balanced run splits and a bootstrap over runs are available. The two agree closely.
 
-Two things follow. The paired test remains **valid** regardless: its Type I error is correct
-whatever the within-observer error, because the across-observer variance is an unbiased estimate of
-the variance of the per-observer estimates, measurement error included. What remains **unresolved**
-is whether a mixed model would recover useful efficiency, and how much of the across-observer spread
-is genuine individual variation rather than measurement noise — the latter bearing on how much
-weight to place on sub-0395's discrepant value.
+Within-observer SE of the context differences is **0.07–0.13**, which is **23–39% of the
+across-observer variance** — a substantial minority, but the majority of the spread is genuine
+between-observer variation. Disattenuating (removing the measurement variance and re-testing) is the
+ceiling on what a mixed model could recover, and it changes no conclusion:
+
+| | *p* observed | *p* disattenuated |
+|---|---|---|
+| horizontal − vertical | 0.024 | 0.014 |
+| cardinal − oblique | 0.006 | 0.0015 |
+| radial − tangential | 0.70 | 0.66 |
+| polar-cardinal − polar-oblique | 0.93 | 0.92 |
+
+The Cartesian-frame effects tighten somewhat; the polar-frame ones remain null. **The binding
+limitation is between-observer variability at n = 8, not measurement noise**, so a mixed model that
+recovered the measurement variance perfectly would not alter any inference reported here. The paired
+test is valid regardless — only efficiency was ever at stake.
+
+One structural feature is worth noting for anyone designing a similar comparison. The
+within-observer SE is roughly three times larger for the asymmetry *matched* to each experiment
+(0.121 for horizontal/vertical in the Cartesian experiment, 0.121 for radial/tangential in the polar
+one) than for the derived asymmetry (0.042 in each case). A matched contrast uses the same two
+stimulus conditions in every wedge, so its measurement noise does not average across wedges, whereas
+a derived contrast rotates which stimuli it draws on and averages more effectively.
+
+Finally, sub-0395's discrepant radial/tangential context difference (+0.521 against a group mean of
+−0.034) sits **3.5 within-observer SE** from the mean in its own measurement units. It is a genuine
+outlier rather than a noisy estimate, though less extreme than a naive reading suggests, and its
+polar session has only 6 runs against 8 for the other observers.
 
 ### S5.4 Model adequacy
 

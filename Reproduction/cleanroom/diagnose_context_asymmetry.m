@@ -43,32 +43,21 @@ function S = diagnose_context_asymmetry(varargin)
 %   (F) a within-subject difference of differences: is the Cartesian-frame context
 %       effect reliably LARGER than the polar-frame one?
 %
-% (G) WITHIN-OBSERVER VARIANCE -- NOT ESTIMATED. The standard objection to a
-%     summary-statistic test is that it treats each observer's effect as noiseless, so
-%     the across-observer variance carries within-observer estimation error as well as
-%     true between-observer variability. That is what a mixed model is normally for.
+% (G) WITHIN-OBSERVER VARIANCE -- now measured, in DIAGNOSE_WITHIN_OBSERVER_ERROR.
+%     The standard objection to a summary-statistic test is that it treats each
+%     observer's effect as noiseless. Resampling RUNS (split-half over all balanced
+%     splits, and a bootstrap over runs, on GLMsingle single-trial betas) gives a
+%     within-observer SE of 0.07-0.13 for the context differences, which is 23-39% of
+%     the across-observer variance. An earlier attempt resampled VERTICES and reported
+%     0.02-0.03; that was invalid -- it holds the GLM betas fixed and only reshuffles
+%     which enter the wedge median -- and understated the error by a factor of 4-5.
 %
-%     A previous version of this file tried to measure it by bootstrapping VERTICES
-%     within each wedge. That is invalid and the number it produced (0.02-0.03) has
-%     been withdrawn. Resampling vertices holds the GLM betas FIXED and merely
-%     reshuffles which of them enter the median: it estimates how much the answer
-%     depends on which patch of V1 was sampled, not how much it depends on the
-%     measurement. It also ignores spatial autocorrelation, so the effective n is far
-%     below the vertex count and the variance is understated by an unknown factor.
-%
-%     A valid estimate has to resample the MEASUREMENT: bootstrap or split-half over
-%     RUNS (there are 8 per experiment per observer, cf. R2run in the glm_*.mat files),
-%     refitting the GLM each time. The local extraction carries GLM diagnostics only
-%     -- R2, R2run, HRFindex, noisepool -- and no run-level or trial-level betas, so
-%     this cannot be done without a further pull from the server.
-%
-%     What does NOT depend on this: the paired test above is VALID either way. Its
-%     Type I error is correct whatever the within-observer error, because the
-%     across-observer variance is an unbiased estimate of the variance of the
-%     per-observer estimates, measurement error included. What is unresolved is
-%     (i) whether a mixed model would recover useful efficiency, and (ii) how much of
-%     the across-observer spread is genuine individual variation -- which bears on
-%     whether sub-0395 is a real outlier or a noisy one.
+%     Disattenuating (removing the measurement variance and re-testing) changes no
+%     conclusion: horiz-vert p 0.024 -> 0.014, card-obl 0.006 -> 0.0015, rad-tang
+%     0.70 -> 0.66, polc-polo 0.93 -> 0.92. The binding limitation is between-observer
+%     variability at n = 8, not measurement noise, so a mixed model recovering that
+%     variance perfectly would not alter any inference. The paired test is valid
+%     regardless; only efficiency was ever at stake.
 %
 % Absence of evidence is not evidence of absence, and with n = 8 the distinction is
 % not academic here. See ../HARMONIC_MODEL.md and ../supplement/.
@@ -169,21 +158,16 @@ function S = diagnose_context_asymmetry(varargin)
         fprintf('  %-24s %7.3f  CI [%7.3f %7.3f]%-2s  p=%.4f\n', cmp{i,3}, mean(dd), c, star(c), pp);
     end
 
-    % ---- (G) within-observer variance: not estimable from what is local -------
-    banner('WITHIN-OBSERVER VARIANCE -- NOT ESTIMATED (see the header)');
-    fprintf(['The vertex-resampling estimate previously reported here was invalid and is\n' ...
-             'withdrawn: resampling vertices holds the GLM betas fixed and only reshuffles\n' ...
-             'which enter the median, so it measures spatial sampling of V1, not measurement\n' ...
-             'error, and it ignores spatial autocorrelation.\n\n' ...
-             'A valid estimate must resample the measurement -- bootstrap or split-half over\n' ...
-             'the 8 RUNS per experiment per observer, refitting the GLM. The local glm_*.mat\n' ...
-             'files carry diagnostics only (R2, R2run, HRFindex, noisepool), no run- or\n' ...
-             'trial-level betas, so this needs a further server pull.\n\n' ...
-             'The paired test above is valid either way: its Type I error is correct whatever\n' ...
-             'the within-observer error, because the across-observer variance is an unbiased\n' ...
-             'estimate of the variance of the per-observer estimates, measurement error\n' ...
-             'included. Unresolved: whether a mixed model would gain efficiency, and how much\n' ...
-             'of the across-observer spread is genuine individual variation.\n']);
+    % ---- (G) within-observer variance: measured elsewhere ---------------------
+    banner('WITHIN-OBSERVER VARIANCE -- see DIAGNOSE_WITHIN_OBSERVER_ERROR');
+    fprintf(['Measured by resampling RUNS (split-half over all balanced splits, and a\n' ...
+             'bootstrap over runs) on GLMsingle single-trial betas: within-observer SE is\n' ...
+             '0.07-0.13 for the context differences, i.e. 23-39%% of the across-observer\n' ...
+             'variance. Disattenuating changes no conclusion (horiz-vert p 0.024 -> 0.014,\n' ...
+             'rad-tang 0.70 -> 0.66): the binding limit is between-observer variability at\n' ...
+             'n = 8, not measurement noise.\n\n' ...
+             'A previous vertex-resampling estimate of 0.02-0.03 was invalid and is\n' ...
+             'withdrawn; it understated the error by a factor of 4-5.\n']);
 
     banner('READING');
     fprintf(['Every comparison here is WITHIN SUBJECT: the per-observer difference is formed\n' ...

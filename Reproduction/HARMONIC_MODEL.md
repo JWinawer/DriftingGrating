@@ -330,6 +330,13 @@ Radial−tangential is 0.119 [0.061 0.194] for `dg` and 0.162 [0.025 0.264] for 
 Report absence of evidence, not evidence of absence. Separating a genuinely one-sided context effect
 from a two-sided one of unequal size needs more observers.
 
+**Within-observer measurement error was measured, by resampling runs** (`diagnose_within_observer_error.m`,
+on GLMsingle single-trial betas pulled by `server_extract/collect_runwise_betas.m`). It is 0.07–0.13
+for the context differences, i.e. **23–39% of the across-observer variance**. Disattenuating changes
+no conclusion — horiz−vert p 0.024 → 0.014, card−obl 0.006 → 0.0015, rad−tang 0.70 → 0.66 — so the
+binding limitation is between-observer variability at n = 8, not measurement noise. (An earlier
+vertex-resampling estimate of 0.02–0.03 was invalid and understated the error by 4–5×.)
+
 **All context tests are within subject**, forming the per-observer difference first. An LME with
 experiment × asymmetry interactions is **anti-conservative here and must not be quoted**: only the
 intercept is random, so `fitlme` tests the interaction on DF = 502 (wedge-level observations) rather
@@ -467,6 +474,8 @@ results struct in `cleanroom/_cache/harmonic_<variant>.mat`.
 | `cleanroom/test_harmonic_model.m` | assertions — run first |
 | `cleanroom/diagnose_prf_angle_error.m` | measures pRF polar-angle σ from the two independent fits |
 | `cleanroom/diagnose_context_asymmetry.m` | within-subject context tests, leave-one-out, equivalence bound, and why the LME is not used |
+| `cleanroom/diagnose_within_observer_error.m` | within-observer SE from split-half and bootstrap over runs |
+| `server_extract/collect_runwise_betas.m` | per-run condition betas for V1 from GLMsingle single-trial fits (needs the mount, once) |
 | `server_extract/collect_prf_replicate.m` | mirrors the second pRF solution to `~/dg_collect` (needs the mount, once) |
 | `cleanroom/run_harmonic_model.m` | driver, prints the full report |
 | `cleanroom/plot_harmonic.m` | the three figures |
