@@ -360,6 +360,38 @@ DF at 502. Because the 4 × 8 design is balanced and orthogonal, the LME fixed e
 to the mean of the per-observer contrasts (0.268459 either way), so the mixed model adds nothing to
 the estimate and only misstates its uncertainty.
 
+That equivalence is not confined to one contrast. Running both routes over the same `M` from
+`bin_and_aggregate`, **all four asymmetries in both experiments agree to < 2e-16** (`dg` −0.479829,
+−0.204375, 0.115887, 0.029248; `da` −0.211370, −0.029590, 0.150079, 0.033570 — identical either
+way). Two conditions make it exact, and both hold here:
+
+- the four codes from `lme_codes` are **exactly orthogonal**, to each other and to the intercept
+  (cross-product matrix diagonal, 16/32/16/32; every column sums to 0, both experiments);
+- the design is **completely balanced** — no empty wedge/subject cells in either experiment, minimum
+  22 vertices per wedge.
+
+Three consequences, all worth knowing before anyone proposes "fixing" the LME:
+
+- **The Gaussian prior cannot touch the four asymmetries.** With `(1|subject)` only the subject
+  intercept is shrunk, and each asymmetry contrast sums to zero within a subject, so the intercept
+  cancels out of it exactly — shrunk or not. Random *slopes* would shrink each observer's BLUP
+  toward the group mean, but the fixed effect would still be the unweighted mean of the per-observer
+  contrasts.
+- **Treating subject as a FIXED effect changes nothing.** Fixed-subject OLS returns the same four
+  estimates to ~1e-16; it merely spends 7 more DF on intercepts (DFE 244 vs 251) while still fitting
+  one asymmetry slope for everyone and testing it against wedge-level residuals. Random-vs-fixed is
+  not the lever.
+- **The lever is whether the asymmetry SLOPE varies by observer, and how DF is computed.** Fitting
+  random slopes and then querying `fixedEffects(lme,'DFMethod','satterthwaite')` gives DF ≈ n−1 and
+  very nearly reproduces the paired test. `fitlme`'s default *residual* DF reports the wedge-level
+  number whatever the random structure — which is what the DF = 502 above refers to. The blocker is
+  the DF method as much as the random-effects specification.
+
+So the choice between the ROI route and the LME is **only** a choice of standard error; the
+estimates are the same object. Note also that the equivalence depends on balance: deleting a single
+wedge for a single observer makes the two routes diverge by ~1.2e-2. Not a concern at the published
+inclusion criteria, but it would become one if a stricter filter emptied a wedge.
+
 **This particular conclusion depends on the z-scoring decision.** In the z-scored variant the
 radial−tangential difference between experiments is −0.204 [−0.341 −0.031], i.e. significant, and
 the "polar asymmetries are stronger for polar gratings" reading returns. Since z-scoring has been

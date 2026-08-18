@@ -1,8 +1,21 @@
 # Server extraction — for whoever has access to the data volume
 
-One self-contained MATLAB file, [`extract_for_transfer.m`](extract_for_transfer.m), that reads
-data on the server and writes a small folder to send back. **It only reads. It writes nothing
-into the data directories and modifies nothing.**
+Self-contained MATLAB that reads data on the server and writes a small folder to send back.
+**It only reads. It writes nothing into the data directories and modifies nothing.**
+
+## Which script
+
+Four scripts have accumulated here, each a separate one-pass extraction. Run the one that
+matches what is needed; none depends on the others.
+
+| script | feeds | status |
+|---|---|---|
+| `collect_everything.m` | the GLM quality review (`../local_qc/REPORT.md`) — the main extraction | done 2026-07-24, all 8 observers |
+| `collect_prf_replicate.m` | the pRF polar-angle precision control (`../HARMONIC_MODEL.md`, supplement §S6) | done |
+| `collect_runwise_betas.m` | per-run condition betas for the within-observer error estimate (supplement §S5.5) | done |
+| `extract_for_transfer.m` | the original narrower extraction, superseded by `collect_everything.m` | kept as a record |
+
+`RUNME.md` is the step-by-step for `collect_everything.m` specifically.
 
 ## Why this exists
 

@@ -263,7 +263,7 @@ pRF maps never need copying.
 
 > **Historical.** This describes the *first* extraction route (a V1-restricted ~10 MB payload).
 > It ran on 2026-07-23 → [`GLM_QUALITY.md`](GLM_QUALITY.md). It was then **replaced** by
-> [`../server_extract/collect_everything.m`](../server_extract/), which deliberately filters
+> [`server_extract/collect_everything.m`](server_extract/), which deliberately filters
 > nothing — whole surface, every retinotopy map, every label, ~1.2 GB to `~/dg_collect/` — for
 > the reasons in `GLM_QUALITY.md` §6a (a filter applied before the data leaves the server makes
 > its own influence untestable). That ran on 2026-07-24 →
@@ -271,7 +271,7 @@ pRF maps never need copying.
 > needs running again**, not the commands below.
 
 **If someone else is running this on the server**, send them
-[`../server_extract/`](../server_extract/) instead — one self-contained file plus a README, no
+[`server_extract/`](server_extract/) instead — one self-contained file plus a README, no
 dependency on this repo, and it collects the retinotopy-gain inventory in the same pass so there
 is no second round trip. (`audit_glm_quality` needed a one-line fix to read its output — see
 `GLM_QUALITY.md` §1.)

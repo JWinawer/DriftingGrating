@@ -99,6 +99,15 @@ experiments. Run separately for `dg` and `da` → **panel A = Cartesian, panel B
 **This is the figure whose significance pattern differs between the z-scored and non-z-scored
 versions.**
 
+> **The random intercept does nothing to these estimates.** The design is balanced (4 ori × 8
+> wedges × 8 observers, no empty cells) and the four codes are exactly orthogonal to each other
+> and to the intercept, so each asymmetry contrast sums to zero within an observer and the
+> observer term — shrunk or not, random or fixed — cancels out of it. The LME fixed effects equal
+> the plain mean of the per-observer wedge-averaged contrasts to < 2e-16, on all four asymmetries
+> in both experiments. So Fig 7 "controls for observer variability" only in the sense of changing
+> the *standard error*, not the estimate — and it changes it in the wrong direction (DF = 502, the
+> wedge-level count, not 7). See `Reproduction/HARMONIC_MODEL.md` Result 3.
+
 ### Figure 8 — Per-location context effects (data + model)
 Summarizes the LME's predicted response for **each orientation at every polar-angle location**,
 irrespective of the asymmetry groupings. One small polar plot per visual-field location: local

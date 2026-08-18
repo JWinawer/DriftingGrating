@@ -4,7 +4,15 @@ This folder reproduces the manuscript's Figures 5–8 (V1 orientation asymmetrie
 polar gratings) **starting from a single tidy table**, `../Support/allsubjectsTable.csv`
 (git-ignored). See `../AGENTS.md` for what those figures are, and the plan the work follows.
 
-> **Newest first: [`local_qc/REPORT.md`](local_qc/REPORT.md) (2026-07-24)** is the current
+> **Newest first: [`HARMONIC_MODEL.md`](HARMONIC_MODEL.md) (2026-08-18)** and its reader-facing
+> version [`supplement/SUPPLEMENT_harmonic_model.md`](supplement/SUPPLEMENT_harmonic_model.md).
+> A per-vertex harmonic model that replaces the eight wedges with each vertex's own pRF polar
+> angle, to test whether the Cartesian-vs-polar difference is within-ROI geometry rather than a
+> context effect. It is not: geometry accounts for 6–8%. Also establishes that the Fig-7 LME and
+> the wedge-average route give **identical** estimates (the design is balanced and the codes
+> orthogonal), so the choice between them is only a choice of error bar.
+>
+> **Before that: [`local_qc/REPORT.md`](local_qc/REPORT.md) (2026-07-24)** is the current
 > authority on data quality and on the z-scoring decision, and supersedes parts of the docs in
 > this folder. Headline: the "blank" condition is **full-field pink noise, not a baseline**
 > (so a low GLM R² means weak differentiation among stimuli, not an absent response), there are
@@ -90,6 +98,11 @@ computed here; the direct asymmetries were unaffected.
 - [x] GLM fit quality, all 8 observers × both experiments — [GLM_QUALITY.md](GLM_QUALITY.md),
       then the full unfiltered review in [local_qc/REPORT.md](local_qc/REPORT.md): no errors,
       no bad data, all observers retained
+- [x] Geometry-vs-context test — per-vertex harmonic model in
+      [HARMONIC_MODEL.md](HARMONIC_MODEL.md), written up in
+      [supplement/](supplement/SUPPLEMENT_harmonic_model.md): within-ROI geometry explains only
+      6–8%, pRF angle error is an order of magnitude too small, the Cartesian-frame context
+      effect stands, the polar-frame one is uninformative (not absent)
 - [ ] **Open:** add a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen
       on it alongside `pRF_r2` ([NEXT_STEPS.md](NEXT_STEPS.md) step 5)
 - [ ] **Open:** confirm the fixed stimulus `rng` seed was intended
