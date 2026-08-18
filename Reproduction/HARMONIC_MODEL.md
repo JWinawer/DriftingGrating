@@ -137,9 +137,19 @@ Two consequences worth knowing:
 ### Why the model is interpretable, not a black box
 
 Four orientations at 45° spacing give each vertex's demeaned response vector exactly **three**
-degrees of freedom — `sin(4θ)` is identically zero at that sampling. Writing the three per-vertex
-amplitudes on `cos2`, `sin2`, `cos4` as *A, B, C*, the model is **exactly equivalent** to three
-scalar regressions across vertices:
+degrees of freedom: the 4th-harmonic pair collapses to one dimension because `sin(4θ)` and
+`cos(4θ)` are proportional at the sampled points — degenerately so for `dg`, where `sin(4θ)` is
+identically zero, and with a per-vertex ratio for `da`, where it is not (see the structural facts
+below).
+
+That count is **per vertex**, and it is not a cap on how many parameters can be estimated: `b1`–`b4`
+are shared across vertices whose `thetaV` differs, so identification comes from *across*-vertex
+variation in `thetaV`, not from the three within-vertex dimensions. The four-column design is full
+rank. What the per-vertex structure does determine is *how* each coefficient is identified, and how
+precisely.
+
+Writing the three per-vertex amplitudes on `cos2`, `sin2`, `cos4` as *A, B, C*, the model is
+**exactly equivalent** to three scalar regressions across vertices:
 
 ```
 Cartesian (absolute frame)          Polar (radial-relative frame)
@@ -151,7 +161,11 @@ C = b2 + b4*cos(4*thetaV)           C = b4 + b2*cos(4*thetaV)
 The two experiments are exact mirror images, with the absolute and polar terms swapping roles.
 Read off the first line: **`b1` and `b3` are separated only by the `thetaV` modulation of A, plus
 the B channel** — which is precisely the question of how much apparent horizontal-vs-vertical is
-radial-vs-tangential leaking through geometry. `figures/cleanroom/harmonic_decomposition_raw.png`
+radial-vs-tangential leaking through geometry. This makes `b1`/`b3` the **strong** pair: because
+`b3` alone drives the B channel, the two separate even within a single vertex, provided it is off
+the meridians where `sin(2*thetaV) = 0`. `b2`/`b4` have no such channel and need across-vertex
+spread in `cos(4*thetaV)` — see the structural facts below.
+`figures/cleanroom/harmonic_decomposition_raw.png`
 plots these six panels with the fitted curves; the functional form holds well. It plots **2A, 2B
 and 2C**, because each of those is exactly a pro-minus-con response difference between two
 conditions — `dg`: horizontal−vertical, 45°−135°, cardinal−oblique; `da`: radial−tangential,

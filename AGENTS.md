@@ -241,6 +241,12 @@ Listed newest first — later documents supersede earlier ones where they overla
   assumed) from the two independent pRF fits at **σ = 3.9°**, against the ~39° that would be needed
   for measurement error to explain the result away. Code in `Reproduction/cleanroom/harmonic_*`
   and `run_harmonic_model.m`; `test_harmonic_model.m` asserts the convention against `lme_codes`.
+  The summary-statistic route was then defended by MEASURING within-observer error rather than
+  assuming it away (split-half over the 35 balanced run splits, plus a bootstrap over runs;
+  `diagnose_within_observer_error.m`, fed by `server_extract/collect_runwise_betas.m`): it is
+  23-39% of the across-observer variance, and disattenuating changes no conclusion. The binding
+  limitation is between-observer variability at n = 8, not measurement noise — so a mixed model
+  would not have rescued anything.
 - **`Reproduction/supplement/SUPPLEMENT_harmonic_model.md` (2026-08-17).** The same work written
   for a paper supplement — motivation, model design, results, interpretation, with four committed
   figures. Written for readers, not agents; `HARMONIC_MODEL.md` remains the fuller internal account

@@ -77,7 +77,12 @@ At the eight wedge centres the four predictors reduce exactly to the ±1/0 asymm
 the ROI analysis, so the parameters are on the same footing as the linear-mixed-effects weights
 reported in the main text.
 
-### S2.3 What the model can and cannot represent
+### S2.3 How the four coefficients are identified, and what the model cannot represent
+
+This section sets out the model's identification structure. It is drawn on three times later: it
+accounts for the mirror-image form of **Figure S1**, it supplies the specification test used in
+§S5.4, and it is why the two fourth-harmonic coefficients are reported more cautiously than the
+other two (§S5.3, §S6).
 
 Four orientations spaced 45° apart give each vertex's demeaned response vector exactly **three**
 degrees of freedom. Those three are not distributed evenly across harmonics:
@@ -87,11 +92,18 @@ degrees of freedom. Those three are not distributed evenly across harmonics:
 ```
 
 The second-harmonic subspace is two-dimensional; the fourth-harmonic subspace collapses to one
-dimension, because at 45° spacing cos(4θ) and sin(4θ) are proportional at the sampled points. Three
-consequences follow, and they govern how the results should be read.
+dimension, because at 45° spacing cos(4θ) and sin(4θ) are proportional at the sampled points.
 
-**(i) The model is exactly three scalar regressions on θ_V.** Writing the per-vertex amplitudes on
-cos(2θ), sin(2θ) and cos(4θ) as *A*, *B* and *C*, the model is algebraically equivalent to
+That count is **per vertex**, and it is not a limit on how many parameters can be estimated. The
+four coefficients are shared across vertices while θ_V varies between them, so identification rests
+on *across*-vertex variation in θ_V, not on the three within-vertex dimensions; the four-column
+design is full rank (§S3). What the per-vertex structure does determine is *how* each coefficient is
+identified, and how precisely. Three consequences follow, and they govern how the results should be
+read.
+
+**(i) The model reduces to three scalar regressions on θ_V** — one per within-vertex channel, each
+carrying an intercept and a θ_V-dependent modulation. Writing the per-vertex amplitudes on cos(2θ),
+sin(2θ) and cos(4θ) as *A*, *B* and *C*, the model is algebraically equivalent to
 
 | | Cartesian (absolute frame) | Polar (radial-relative frame) |
 |---|---|---|
@@ -100,7 +112,10 @@ cos(2θ), sin(2θ) and cos(4θ) as *A*, *B* and *C*, the model is algebraically 
 | C | b2 + b4·cos(4θ_V) | b4 + b2·cos(4θ_V) |
 
 The two experiments are exact mirror images, with the absolute and polar terms exchanging the roles
-of offset and modulation. This is the content of **Figure S1**. Note in particular that b1 and b3
+of offset and modulation. This is the content of **Figure S1**: b1 sets the offset of *A* and b3 its
+modulation in the Cartesian experiment, and the roles swap in the polar one, so a difference
+residing in b1 must appear as a difference in *level* in the Cartesian panel and as a difference in
+*amplitude* in the polar panel — which is what that figure shows. Note in particular that b1 and b3
 are separated *only* by the θ_V modulation of A, together with the independent B channel — which is
 precisely the horizontal-versus-radial confound the model exists to adjudicate.
 
@@ -109,13 +124,17 @@ modulation of A and as the sine modulation of B. The model forces these two inde
 to agree; relaxing that constraint is the specification test of §S5.4.
 
 **(iii) b2 and b4 are the weaker pair.** They occupy a single channel and are separated only by
-across-vertex variation in cos(4θ_V). They are estimable, but less precisely than b1 and b3, and
-conclusions resting on them should be treated accordingly.
+across-vertex variation in cos(4θ_V) — unlike b1 and b3, which the independent B channel separates
+even within a single vertex, provided it does not lie on a meridian. They are estimable, but less
+precisely than b1 and b3, and conclusions resting on them should be treated accordingly: the polar
+experiment's b4 does not separate from zero (§S5.1, §S5.3), and the reversed-ratio argument of §S6
+that depends on it is offered as suggestive rather than decisive.
 
 Finally, every term depends on θ_V only through cos(2θ_V), sin(2θ_V) and cos(4θ_V), all of which
 have period 180°. **The model is therefore invariant to θ_V → θ_V + 180° and cannot represent
 upper/lower or left/right visual-field asymmetries.** Such effects, if present, are averaged rather
-than fitted.
+than fitted. The related left–right symmetry assumption, which the model *can* be tested against, is
+checked in §S5.4.
 
 ---
 
@@ -297,6 +316,16 @@ reach significance. The raw analysis is the one adopted, for reasons independent
 The conclusions are unchanged under a stricter pRF quality threshold (R² > 0.3): horizontal −
 vertical −0.367 \*, cardinal − oblique −0.193 \*, radial − tangential −0.036 n.s.
 
+### S5.4 Model adequacy
+
+The complete harmonic basis at the second and fourth harmonics adds four sine terms, which should
+vanish under left–right visual-field symmetry. They do, with one small exception. For the Cartesian
+experiment all three estimable sine coefficients have intervals containing zero (largest 0.016
+[−0.024, 0.052]). For the polar experiment the same holds except sin(4θ) = −0.012 [−0.022, −0.003],
+an order of magnitude below the core terms — a slight clockwise/counter-clockwise spiral asymmetry
+the model does not capture. Core coefficients move by less than 0.002 when the sine terms are
+included. The four-term model is adequate.
+
 ### S5.5 A note on the inferential test
 
 Every context-effect statistic reported above is formed **within observer**: the difference between
@@ -354,16 +383,6 @@ Finally, sub-0395's discrepant radial/tangential context difference (+0.521 agai
 −0.034) sits **3.5 within-observer SE** from the mean in its own measurement units. It is a genuine
 outlier rather than a noisy estimate, though less extreme than a naive reading suggests, and its
 polar session has only 6 runs against 8 for the other observers.
-
-### S5.4 Model adequacy
-
-The complete harmonic basis at the second and fourth harmonics adds four sine terms, which should
-vanish under left–right visual-field symmetry. They do, with one small exception. For the Cartesian
-experiment all three estimable sine coefficients have intervals containing zero (largest 0.016
-[−0.024, 0.052]). For the polar experiment the same holds except sin(4θ) = −0.012 [−0.022, −0.003],
-an order of magnitude below the core terms — a slight clockwise/counter-clockwise spiral asymmetry
-the model does not capture. Core coefficients move by less than 0.002 when the sine terms are
-included. The four-term model is adequate.
 
 ---
 
@@ -462,11 +481,15 @@ with `run_harmonic_model.m` as the driver and `plot_harmonic.m` generating the f
 `test_harmonic_model.m` asserts that the four harmonic predictors reduce exactly to the ROI
 analysis's asymmetry codes at the eight wedge centres, and verifies the analytic identities and
 synthetic recovery; it must pass before results are interpreted. The pRF precision control is
-`diagnose_prf_angle_error.m`, with `server_extract/collect_prf_replicate.m` retrieving the second
-pRF solution. The within-subject context tests, the leave-one-observer-out and equivalence analyses,
-and the mixed-model comparison of §S5.5 are in `diagnose_context_asymmetry.m`. Coefficients for both weighting schemes and both scaling variants are tabulated in
-`harmonic_coefficients_raw.csv`. A fuller internal account, including the z-scored sensitivity
-analysis, is in `Reproduction/HARMONIC_MODEL.md`.
+`diagnose_prf_angle_error.m`, with `Reproduction/server_extract/collect_prf_replicate.m` retrieving
+the second pRF solution. The within-subject context tests, the leave-one-observer-out and
+equivalence analyses, and the mixed-model comparison of §S5.5 are in
+`diagnose_context_asymmetry.m`; the within-observer error of §S5.5 is measured in
+`diagnose_within_observer_error.m`, which draws on the per-run condition betas extracted by
+`Reproduction/server_extract/collect_runwise_betas.m`. Coefficients for both weighting schemes and
+both scaling variants are tabulated in `harmonic_coefficients_raw.csv`, alongside this document. A
+fuller internal account, including the z-scored sensitivity analysis, is in
+`Reproduction/HARMONIC_MODEL.md`.
 
 ---
 
