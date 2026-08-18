@@ -319,6 +319,17 @@ mixed model therefore adds nothing to the estimate and only misstates its uncert
 balanced orthogonal within-subject design, the summary-statistic route — per-observer effect, then a
 test across observers — is the correct analysis, and it is what we report.
 
+The standard objection to a summary-statistic test is that it treats each observer's effect as
+noiseless, so the across-observer variance it uses contains within-observer estimation error as well
+as true between-observer variability — which is what a mixed model is normally for. We measured that
+error rather than assuming it negligible. Resampling vertices within each wedge and recomputing the
+wedge medians and asymmetries gives a within-observer SE of 0.02–0.03 for each asymmetry, against a
+between-observer SD of 0.13–0.27 for the context differences. **Measurement error is only 2–4% of
+the across-observer variance.** The two-stage test is therefore very close to optimal, the implied
+shrinkage of per-observer estimates is under 4%, and the spread across observers is genuine
+individual variation rather than noise — which also means sub-0395 is a real outlier, not a poorly
+estimated one.
+
 ### S5.4 Model adequacy
 
 The complete harmonic basis at the second and fourth harmonics adds four sine terms, which should

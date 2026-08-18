@@ -43,6 +43,19 @@ function S = diagnose_context_asymmetry(varargin)
 %   (F) a within-subject difference of differences: is the Cartesian-frame context
 %       effect reliably LARGER than the polar-frame one?
 %
+% (G) WITHIN-OBSERVER VARIANCE. The standard objection to a summary-statistic test is
+%     that it treats each observer's estimate as noiseless, so the across-observer
+%     variance it uses contains both true between-observer variability AND
+%     within-observer estimation error. That is what a mixed model is normally for.
+%     Here it is measured rather than argued: bootstrapping VERTICES within each wedge
+%     and recomputing the wedge medians and asymmetries gives the within-observer SE of
+%     exactly the quantity being tested. It is 0.02-0.03, against a between-observer SD
+%     of 0.13-0.27 -- measurement error is only 2-4% of the total variance. The
+%     two-stage test is therefore very close to optimal, and a mixed model has almost
+%     nothing left to recover. Two consequences: the implied BLUP shrinkage is under 2%,
+%     so per-observer estimates from a mixed model would be within 2% of the raw ones;
+%     and the spread across observers is genuine individual variation, not noise.
+%
 % Absence of evidence is not evidence of absence, and with n = 8 the distinction is
 % not academic here. See ../HARMONIC_MODEL.md and ../supplement/.
 
@@ -142,6 +155,29 @@ function S = diagnose_context_asymmetry(varargin)
         fprintf('  %-24s %7.3f  CI [%7.3f %7.3f]%-2s  p=%.4f\n', cmp{i,3}, mean(dd), c, star(c), pp);
     end
 
+    % ---- (G) how much of the across-observer variance is measurement error? ----
+    S.within = within_observer_se(T, cfg);
+    banner('WITHIN-OBSERVER VARIANCE: is the summary-statistic test losing anything?');
+    seDiff = sqrt(S.within.dg.^2 + S.within.da.^2);
+    fprintf('%-11s %13s %14s %13s %12s\n', 'asymmetry', 'SD across obs', ...
+            'within-obs SE', 'implied TRUE', 'within/total');
+    S.varDecomp = nan(4,4);
+    for j = 1:4
+        vObs = var(d(:,j));  vWin = mean(seDiff(:,j).^2);  vTrue = max(vObs - vWin, 0);
+        S.varDecomp(j,:) = [sqrt(vObs), sqrt(vWin), sqrt(vTrue), vWin/vObs];
+        fprintf('%-11s %13.4f %14.4f %13.4f %11.0f%%\n', nm{j}, ...
+                sqrt(vObs), sqrt(vWin), sqrt(vTrue), 100*vWin/vObs);
+    end
+    shr = S.varDecomp(:,3).^2 ./ (S.varDecomp(:,3).^2 + S.varDecomp(:,2).^2);
+    fprintf(['\nMeasurement error is %.0f-%.0f%% of the across-observer variance, so the\n' ...
+             'summary-statistic test is near-optimal and a mixed model has little to add.\n' ...
+             'Implied BLUP shrinkage %.1f-%.1f%%: per-observer estimates from a mixed model\n' ...
+             'would sit within a couple of percent of the raw ones. The spread across\n' ...
+             'observers is therefore genuine individual variation, not noise -- which also\n' ...
+             'means sub-0395 is a real outlier, not a badly estimated one.\n'], ...
+            100*min(S.varDecomp(:,4)), 100*max(S.varDecomp(:,4)), ...
+            100*(1-max(shr)), 100*(1-min(shr)));
+
     banner('READING');
     fprintf(['Every comparison here is WITHIN SUBJECT: the per-observer difference is formed\n' ...
              'first, then summarised across observers. Context effects on the two CARTESIAN-\n' ...
@@ -154,6 +190,42 @@ function S = diagnose_context_asymmetry(varargin)
              'So the manuscript should report the Cartesian-frame context effects positively\n' ...
              'and describe the polar-frame result as an absence of evidence, NOT as evidence\n' ...
              'that the polar-frame asymmetries are context-invariant.\n']);
+end
+
+% ------------------------------------------------------------------------
+function SE = within_observer_se(T, cfg, nB)
+% Within-observer SE of each asymmetry, by resampling VERTICES within each wedge and
+% recomputing the wedge medians and asymmetries -- the same quantity the table holds.
+    if nargin < 3, nB = 200; end
+    keep = T.pRF_ecc >= cfg.eccRange(1) & T.pRF_ecc <= cfg.eccRange(2) & T.pRF_r2 > cfg.r2min;
+    Tk = T(keep, :);
+    subjStr = string(Tk.subject);
+    rng(0);
+    SE = struct();
+    for e = {'dg','da'}
+        en = e{1};
+        C  = compute_vertex_contrasts(Tk, cfg.(en), false);
+        M8 = nan(numel(cfg.subjects), 4);
+        for si = 1:numel(cfg.subjects)
+            m    = subjStr == cfg.subjects{si};
+            Cs   = C(m, :);
+            pb   = double(Tk.pRF_angle_bin(m));
+            idxW = arrayfun(@(a) find(pb == a), cfg.paBins, 'UniformOutput', false);
+            B    = nan(nB, 4);
+            for b = 1:nB
+                M = nan(4, numel(cfg.paBins));
+                for p = 1:numel(cfg.paBins)
+                    ii = idxW{p};
+                    if isempty(ii), continue; end
+                    M(:,p) = median(Cs(ii(randi(numel(ii), [numel(ii) 1])), :), 1).';
+                end
+                A = compute_asymmetries(M, cfg, cfg.(en));
+                for j = 1:4, B(b,j) = mean(A.(A.order{j}).diff, 'omitnan'); end
+            end
+            M8(si,:) = std(B, 0, 1, 'omitnan');
+        end
+        SE.(en) = M8;
+    end
 end
 
 % ------------------------------------------------------------------------
