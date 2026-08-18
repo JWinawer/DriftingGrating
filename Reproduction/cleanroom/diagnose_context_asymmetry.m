@@ -43,18 +43,32 @@ function S = diagnose_context_asymmetry(varargin)
 %   (F) a within-subject difference of differences: is the Cartesian-frame context
 %       effect reliably LARGER than the polar-frame one?
 %
-% (G) WITHIN-OBSERVER VARIANCE. The standard objection to a summary-statistic test is
-%     that it treats each observer's estimate as noiseless, so the across-observer
-%     variance it uses contains both true between-observer variability AND
-%     within-observer estimation error. That is what a mixed model is normally for.
-%     Here it is measured rather than argued: bootstrapping VERTICES within each wedge
-%     and recomputing the wedge medians and asymmetries gives the within-observer SE of
-%     exactly the quantity being tested. It is 0.02-0.03, against a between-observer SD
-%     of 0.13-0.27 -- measurement error is only 2-4% of the total variance. The
-%     two-stage test is therefore very close to optimal, and a mixed model has almost
-%     nothing left to recover. Two consequences: the implied BLUP shrinkage is under 2%,
-%     so per-observer estimates from a mixed model would be within 2% of the raw ones;
-%     and the spread across observers is genuine individual variation, not noise.
+% (G) WITHIN-OBSERVER VARIANCE -- NOT ESTIMATED. The standard objection to a
+%     summary-statistic test is that it treats each observer's effect as noiseless, so
+%     the across-observer variance carries within-observer estimation error as well as
+%     true between-observer variability. That is what a mixed model is normally for.
+%
+%     A previous version of this file tried to measure it by bootstrapping VERTICES
+%     within each wedge. That is invalid and the number it produced (0.02-0.03) has
+%     been withdrawn. Resampling vertices holds the GLM betas FIXED and merely
+%     reshuffles which of them enter the median: it estimates how much the answer
+%     depends on which patch of V1 was sampled, not how much it depends on the
+%     measurement. It also ignores spatial autocorrelation, so the effective n is far
+%     below the vertex count and the variance is understated by an unknown factor.
+%
+%     A valid estimate has to resample the MEASUREMENT: bootstrap or split-half over
+%     RUNS (there are 8 per experiment per observer, cf. R2run in the glm_*.mat files),
+%     refitting the GLM each time. The local extraction carries GLM diagnostics only
+%     -- R2, R2run, HRFindex, noisepool -- and no run-level or trial-level betas, so
+%     this cannot be done without a further pull from the server.
+%
+%     What does NOT depend on this: the paired test above is VALID either way. Its
+%     Type I error is correct whatever the within-observer error, because the
+%     across-observer variance is an unbiased estimate of the variance of the
+%     per-observer estimates, measurement error included. What is unresolved is
+%     (i) whether a mixed model would recover useful efficiency, and (ii) how much of
+%     the across-observer spread is genuine individual variation -- which bears on
+%     whether sub-0395 is a real outlier or a noisy one.
 %
 % Absence of evidence is not evidence of absence, and with n = 8 the distinction is
 % not academic here. See ../HARMONIC_MODEL.md and ../supplement/.
@@ -155,28 +169,21 @@ function S = diagnose_context_asymmetry(varargin)
         fprintf('  %-24s %7.3f  CI [%7.3f %7.3f]%-2s  p=%.4f\n', cmp{i,3}, mean(dd), c, star(c), pp);
     end
 
-    % ---- (G) how much of the across-observer variance is measurement error? ----
-    S.within = within_observer_se(T, cfg);
-    banner('WITHIN-OBSERVER VARIANCE: is the summary-statistic test losing anything?');
-    seDiff = sqrt(S.within.dg.^2 + S.within.da.^2);
-    fprintf('%-11s %13s %14s %13s %12s\n', 'asymmetry', 'SD across obs', ...
-            'within-obs SE', 'implied TRUE', 'within/total');
-    S.varDecomp = nan(4,4);
-    for j = 1:4
-        vObs = var(d(:,j));  vWin = mean(seDiff(:,j).^2);  vTrue = max(vObs - vWin, 0);
-        S.varDecomp(j,:) = [sqrt(vObs), sqrt(vWin), sqrt(vTrue), vWin/vObs];
-        fprintf('%-11s %13.4f %14.4f %13.4f %11.0f%%\n', nm{j}, ...
-                sqrt(vObs), sqrt(vWin), sqrt(vTrue), 100*vWin/vObs);
-    end
-    shr = S.varDecomp(:,3).^2 ./ (S.varDecomp(:,3).^2 + S.varDecomp(:,2).^2);
-    fprintf(['\nMeasurement error is %.0f-%.0f%% of the across-observer variance, so the\n' ...
-             'summary-statistic test is near-optimal and a mixed model has little to add.\n' ...
-             'Implied BLUP shrinkage %.1f-%.1f%%: per-observer estimates from a mixed model\n' ...
-             'would sit within a couple of percent of the raw ones. The spread across\n' ...
-             'observers is therefore genuine individual variation, not noise -- which also\n' ...
-             'means sub-0395 is a real outlier, not a badly estimated one.\n'], ...
-            100*min(S.varDecomp(:,4)), 100*max(S.varDecomp(:,4)), ...
-            100*(1-max(shr)), 100*(1-min(shr)));
+    % ---- (G) within-observer variance: not estimable from what is local -------
+    banner('WITHIN-OBSERVER VARIANCE -- NOT ESTIMATED (see the header)');
+    fprintf(['The vertex-resampling estimate previously reported here was invalid and is\n' ...
+             'withdrawn: resampling vertices holds the GLM betas fixed and only reshuffles\n' ...
+             'which enter the median, so it measures spatial sampling of V1, not measurement\n' ...
+             'error, and it ignores spatial autocorrelation.\n\n' ...
+             'A valid estimate must resample the measurement -- bootstrap or split-half over\n' ...
+             'the 8 RUNS per experiment per observer, refitting the GLM. The local glm_*.mat\n' ...
+             'files carry diagnostics only (R2, R2run, HRFindex, noisepool), no run- or\n' ...
+             'trial-level betas, so this needs a further server pull.\n\n' ...
+             'The paired test above is valid either way: its Type I error is correct whatever\n' ...
+             'the within-observer error, because the across-observer variance is an unbiased\n' ...
+             'estimate of the variance of the per-observer estimates, measurement error\n' ...
+             'included. Unresolved: whether a mixed model would gain efficiency, and how much\n' ...
+             'of the across-observer spread is genuine individual variation.\n']);
 
     banner('READING');
     fprintf(['Every comparison here is WITHIN SUBJECT: the per-observer difference is formed\n' ...
@@ -190,42 +197,6 @@ function S = diagnose_context_asymmetry(varargin)
              'So the manuscript should report the Cartesian-frame context effects positively\n' ...
              'and describe the polar-frame result as an absence of evidence, NOT as evidence\n' ...
              'that the polar-frame asymmetries are context-invariant.\n']);
-end
-
-% ------------------------------------------------------------------------
-function SE = within_observer_se(T, cfg, nB)
-% Within-observer SE of each asymmetry, by resampling VERTICES within each wedge and
-% recomputing the wedge medians and asymmetries -- the same quantity the table holds.
-    if nargin < 3, nB = 200; end
-    keep = T.pRF_ecc >= cfg.eccRange(1) & T.pRF_ecc <= cfg.eccRange(2) & T.pRF_r2 > cfg.r2min;
-    Tk = T(keep, :);
-    subjStr = string(Tk.subject);
-    rng(0);
-    SE = struct();
-    for e = {'dg','da'}
-        en = e{1};
-        C  = compute_vertex_contrasts(Tk, cfg.(en), false);
-        M8 = nan(numel(cfg.subjects), 4);
-        for si = 1:numel(cfg.subjects)
-            m    = subjStr == cfg.subjects{si};
-            Cs   = C(m, :);
-            pb   = double(Tk.pRF_angle_bin(m));
-            idxW = arrayfun(@(a) find(pb == a), cfg.paBins, 'UniformOutput', false);
-            B    = nan(nB, 4);
-            for b = 1:nB
-                M = nan(4, numel(cfg.paBins));
-                for p = 1:numel(cfg.paBins)
-                    ii = idxW{p};
-                    if isempty(ii), continue; end
-                    M(:,p) = median(Cs(ii(randi(numel(ii), [numel(ii) 1])), :), 1).';
-                end
-                A = compute_asymmetries(M, cfg, cfg.(en));
-                for j = 1:4, B(b,j) = mean(A.(A.order{j}).diff, 'omitnan'); end
-            end
-            M8(si,:) = std(B, 0, 1, 'omitnan');
-        end
-        SE.(en) = M8;
-    end
 end
 
 % ------------------------------------------------------------------------

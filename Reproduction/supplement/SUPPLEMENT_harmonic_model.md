@@ -321,14 +321,21 @@ test across observers — is the correct analysis, and it is what we report.
 
 The standard objection to a summary-statistic test is that it treats each observer's effect as
 noiseless, so the across-observer variance it uses contains within-observer estimation error as well
-as true between-observer variability — which is what a mixed model is normally for. We measured that
-error rather than assuming it negligible. Resampling vertices within each wedge and recomputing the
-wedge medians and asymmetries gives a within-observer SE of 0.02–0.03 for each asymmetry, against a
-between-observer SD of 0.13–0.27 for the context differences. **Measurement error is only 2–4% of
-the across-observer variance.** The two-stage test is therefore very close to optimal, the implied
-shrinkage of per-observer estimates is under 4%, and the spread across observers is genuine
-individual variation rather than noise — which also means sub-0395 is a real outlier, not a poorly
-estimated one.
+as true between-observer variability — which is what a mixed model is normally for. We do not have a
+valid estimate of that within-observer error. Estimating it requires resampling the *measurement* —
+a bootstrap or split-half over the eight runs per experiment per observer, refitting the GLM each
+time — and the beta estimates needed for that are not part of the present analysis. Resampling
+vertices instead, which we initially attempted, does not answer the question: it holds the GLM betas
+fixed and merely reshuffles which of them enter the wedge median, so it characterises the spatial
+sampling of V1 rather than the reliability of the measurement, and it ignores spatial
+autocorrelation.
+
+Two things follow. The paired test remains **valid** regardless: its Type I error is correct
+whatever the within-observer error, because the across-observer variance is an unbiased estimate of
+the variance of the per-observer estimates, measurement error included. What remains **unresolved**
+is whether a mixed model would recover useful efficiency, and how much of the across-observer spread
+is genuine individual variation rather than measurement noise — the latter bearing on how much
+weight to place on sub-0395's discrepant value.
 
 ### S5.4 Model adequacy
 
