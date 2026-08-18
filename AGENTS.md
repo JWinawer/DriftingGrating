@@ -229,10 +229,15 @@ Listed newest first — later documents supersede earlier ones where they overla
   the four predictors orthogonal. Findings: geometry accounts for only
   **5.6% / 7.6%** of the Cartesian-vs-polar gap in the horizontal/vertical and cardinal/oblique
   asymmetries, so **the context claim survives**; but in raw (% signal change) units the
-  **radial/tangential asymmetry does not differ between the two experiments** (dg 0.119, da 0.162), so it is the
-  Cartesian-frame asymmetries that are context-dependent, not the polar-frame ones — a sharper,
-  more asymmetric statement than the current framing. That last point reverses under z-scoring,
-  which is why it is stated for the raw analysis only. pRF polar-angle error was measured (not
+  **radial/tangential asymmetry shows no DETECTABLE difference between experiments** (dg 0.119,
+  da 0.162). Do NOT upgrade that to "the polar-frame asymmetries are context-invariant": the
+  interval admits an effect larger than the card-obl context effect, dropping sub-0395 makes it
+  significant, and the Cartesian-vs-polar difference of differences is n.s. (p=0.26). Absence of
+  evidence only. Also note the radial/tangential comparison reverses under z-scoring, which is why
+  it is stated for the raw analysis only. All context tests are WITHIN SUBJECT (per-observer
+  difference first); an LME with experiment x asymmetry interactions is anti-conservative here
+  (DF=502 not 7, p smaller by 5-25x) and must not be quoted — see
+  `Reproduction/cleanroom/diagnose_context_asymmetry.m`. pRF polar-angle error was measured (not
   assumed) from the two independent pRF fits at **σ = 3.9°**, against the ~39° that would be needed
   for measurement error to explain the result away. Code in `Reproduction/cleanroom/harmonic_*`
   and `run_harmonic_model.m`; `test_harmonic_model.m` asserts the convention against `lme_codes`.

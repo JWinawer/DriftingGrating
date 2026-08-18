@@ -21,10 +21,14 @@ This model removes the binning entirely and regresses on each vertex's own pRF p
 > Cartesian-vs-polar gap in the horizontal/vertical and cardinal/oblique asymmetries (5.6% and
 > 7.6% under the primary equal-coverage weighting; 7.6% and 8.4% at natural vertex density). The
 > remaining ~93% survives, and survives equalising overall response gain and tightening the pRF
-> quality floor. The manuscript's context claim stands on this test. One result does change:
-> in raw (% signal change) units the **radial/tangential asymmetry is statistically
-> indistinguishable between the two experiments** — it is the Cartesian-frame asymmetries that
-> are context-dependent, not the polar-frame ones.
+> quality floor. The manuscript's context claim stands on this test.
+>
+> **Corrected 2026-08-17c.** An earlier version of this document claimed that the radial/tangential
+> asymmetry is *not* context-dependent. That is not supported. It shows no DETECTABLE difference
+> between experiments, but the interval still admits an effect larger than the cardinal/oblique
+> context effect, one observer drives the null, and the Cartesian-frame effect is not reliably
+> larger than the polar-frame one. Report absence of evidence, not evidence of absence. See
+> `cleanroom/diagnose_context_asymmetry.m`.
 
 ---
 
@@ -309,13 +313,31 @@ after accounting for exact per-vertex local orientation and after equalising ove
 gain equalisation makes the difference *larger*, not smaller. This is the manuscript's claim, and
 it survives.
 
-**The two polar-frame asymmetries do not differ between experiments.** Radial−tangential is
-0.119 [0.061 0.194] for `dg` and 0.162 [0.025 0.264] for `da` — statistically indistinguishable, both
-clearly nonzero. Under this model, radial/tangential behaves as a stable local property present
-regardless of the global stimulus, while the Cartesian-frame asymmetries are the context-dependent
-ones. This is a sharper and more asymmetric statement than "each asymmetry is strong when its
-reference frame matches the global stimulus", and it is worth reflecting in the manuscript's
-framing.
+**The two polar-frame asymmetries show no DETECTABLE difference between experiments.**
+Radial−tangential is 0.119 [0.061 0.194] for `dg` and 0.162 [0.025 0.264] for `da`, difference
+−0.043 [−0.161 0.143]. **Do not upgrade this to "radial/tangential is context-invariant."**
+`diagnose_context_asymmetry.m` shows three reasons the null is not a result:
+
+- the interval admits an effect as large as |0.158|, which exceeds the card−obl context effect
+  (−0.175) that *is* significant, and is 59% of the horiz−vert one (−0.268);
+- 6 of 8 observers show `da` > `dg` (sign test p = 0.29), and dropping sub-0395 alone — the only
+  observer with a negative `da` radial−tangential value, −0.244 — makes the difference significant
+  (−0.113 [−0.182 −0.036]). No other leave-one-out does;
+- the within-subject difference of differences is n.s.: horiz−vert vs rad−tang 0.106 [−0.033 0.275],
+  p = 0.26; card−obl vs rad−tang −0.004, p = 0.92. So the Cartesian-frame context effect is *not*
+  reliably larger than the polar-frame one.
+
+Report absence of evidence, not evidence of absence. Separating a genuinely one-sided context effect
+from a two-sided one of unequal size needs more observers.
+
+**All context tests are within subject**, forming the per-observer difference first. An LME with
+experiment × asymmetry interactions is **anti-conservative here and must not be quoted**: only the
+intercept is random, so `fitlme` tests the interaction on DF = 502 (wedge-level observations) rather
+than 7, with no Satterthwaite/Kenward-Roger correction, giving p smaller by 5–25× (horiz−vert
+p = 0.0009 vs the paired 0.024). Adding random slopes, including on the interaction terms, leaves
+DF at 502. Because the 4 × 8 design is balanced and orthogonal, the LME fixed effect is *identical*
+to the mean of the per-observer contrasts (0.268459 either way), so the mixed model adds nothing to
+the estimate and only misstates its uncertainty.
 
 **This particular conclusion depends on the z-scoring decision.** In the z-scored variant the
 radial−tangential difference between experiments is −0.204 [−0.341 −0.031], i.e. significant, and
@@ -444,6 +466,7 @@ results struct in `cleanroom/_cache/harmonic_<variant>.mat`.
 | `cleanroom/harmonic_roi_roundtrip.m` | push per-vertex values through the published ROI pipeline |
 | `cleanroom/test_harmonic_model.m` | assertions — run first |
 | `cleanroom/diagnose_prf_angle_error.m` | measures pRF polar-angle σ from the two independent fits |
+| `cleanroom/diagnose_context_asymmetry.m` | within-subject context tests, leave-one-out, equivalence bound, and why the LME is not used |
 | `server_extract/collect_prf_replicate.m` | mirrors the second pRF solution to `~/dg_collect` (needs the mount, once) |
 | `cleanroom/run_harmonic_model.m` | driver, prints the full report |
 | `cleanroom/plot_harmonic.m` | the three figures |

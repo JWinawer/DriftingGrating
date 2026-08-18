@@ -263,20 +263,61 @@ computing local orientation exactly per vertex and after removing any overall di
 magnitude. Gain equalisation *increases* the difference rather than reducing it. This is the
 manuscript's central claim, and it survives the test the model was built to impose.
 
-**The two polar-frame asymmetries do not differ detectably between experiments.** Radial −
+**The two polar-frame asymmetries show no detectable difference between experiments.** Radial −
 tangential is 0.119 [0.061, 0.194] for Cartesian gratings and 0.162 [0.025, 0.264] for polar
-gratings — both clearly non-zero, and statistically indistinguishable from one another. Under this
-model, radial/tangential behaves as a stable local property present regardless of the global
-stimulus, whereas the Cartesian-frame asymmetries are the context-dependent ones.
+gratings — both clearly non-zero, with a difference of −0.043 [−0.161, 0.143].
 
-This is a sharper and more asymmetric statement than "each asymmetry is strong when its reference
-frame matches the global stimulus", and we note that it depends on the decision to analyse raw
-rather than z-scored beta weights: in the z-scored analysis the radial/tangential difference between
-experiments does reach significance. The raw analysis is the one adopted, for reasons independent of
-this model.
+**This absence of evidence should not be read as evidence of absence**, and we state that
+explicitly because the temptation to claim a one-sided context effect is strong. Because all eight
+observers completed both experiments, every comparison here is within-subject: the per-observer
+difference is formed first, then summarised across observers (§S5.5). But three checks show the
+polar-frame null is not a result:
+
+- **The interval is wide.** A radial/tangential context effect as large as |0.158| remains
+  compatible with these data — which is larger than the cardinal/oblique context effect (−0.175)
+  that we *do* report as significant, and 59% of the horizontal/vertical one (−0.268).
+- **It rests on one observer.** Six of eight observers show the polar experiment's radial/tangential
+  asymmetry exceeding the Cartesian one (sign test *p* = 0.29). Removing sub-0395 — whose polar
+  radial/tangential value, −0.244, is the only negative one in the sample — makes the difference
+  significant (−0.113 [−0.182, −0.036]). No other leave-one-out does so.
+- **The frames are not reliably different from each other.** A within-subject difference of
+  differences comparing the magnitude of the Cartesian-frame and polar-frame context effects is not
+  significant: horizontal/vertical vs radial/tangential 0.106 [−0.033, 0.275], *p* = 0.26;
+  cardinal/oblique vs radial/tangential −0.004, *p* = 0.92.
+
+The defensible statement is therefore the asymmetric one about *evidence*, not about *effects*: the
+Cartesian-frame asymmetries show robust context dependence, while for the polar-frame asymmetries
+these data are simply uninformative. Distinguishing a genuinely one-sided context effect from a
+two-sided one of unequal size would need more observers.
+
+We note separately that the radial/tangential comparison depends on the decision to analyse raw
+rather than z-scored beta weights: in the z-scored analysis the difference between experiments does
+reach significance. The raw analysis is the one adopted, for reasons independent of this model.
 
 The conclusions are unchanged under a stricter pRF quality threshold (R² > 0.3): horizontal −
 vertical −0.367 \*, cardinal − oblique −0.193 \*, radial − tangential −0.036 n.s.
+
+### S5.5 A note on the inferential test
+
+Every context-effect statistic reported above is formed **within observer**: the difference between
+experiments is computed for each of the eight observers first, and only then summarised. The
+per-vertex harmonic model and the published ROI route agree on the point estimate to three decimals.
+
+We did *not* use a linear mixed-effects model with experiment × asymmetry interactions, and the
+reason is worth recording because such a model is the natural thing to reach for. In
+`y ~ experiment*(asymmetries) + (1 | observer)` only the intercept varies by observer; every
+asymmetry slope and every interaction is a fixed effect assumed identical across observers. The
+interaction is then tested against the wedge-level observations rather than against the observers.
+In our data that means DF = 502 rather than 7, with no Satterthwaite or Kenward–Roger correction,
+and the resulting *p*-values are smaller by roughly 5–25× (horizontal/vertical: *p* = 0.0009 against
+the paired *p* = 0.024). Adding random slopes, including for the interaction terms themselves, does
+not change this — the denominator DF stays at 502.
+
+Because the 4 × 8 design is balanced and its four asymmetry codes are exactly orthogonal, the LME
+fixed effect is *identical* to the mean of the per-observer contrasts (0.268459 either way). The
+mixed model therefore adds nothing to the estimate and only misstates its uncertainty. For a
+balanced orthogonal within-subject design, the summary-statistic route — per-observer effect, then a
+test across observers — is the correct analysis, and it is what we report.
 
 ### S5.4 Model adequacy
 
@@ -364,12 +405,15 @@ remaining 39% is a genuine difference in the relative weighting of the four asym
 this component the context interpretation requires. Equalising gain makes the Cartesian-frame
 differences larger, not smaller.
 
-**The context dependence is asymmetric across reference frames.** In raw units the radial/tangential
-asymmetry is statistically indistinguishable between the two experiments and clearly non-zero in
-both, while the horizontal/vertical and cardinal/oblique asymmetries are roughly 2.5-fold and
-5-fold larger with Cartesian gratings. The natural reading is that the polar-frame asymmetry
-reflects a local property of V1 orientation tuning that is largely invariant to the global stimulus,
-whereas the Cartesian-frame asymmetries are modulated by it.
+**Whether the context dependence is confined to the Cartesian frame remains open.** The
+radial/tangential asymmetry is clearly non-zero in both experiments and shows no detectable
+difference between them, which invites the reading that it is a local property invariant to the
+global stimulus. We do not make that claim. The confidence interval on its context effect still
+admits a difference larger than the cardinal/oblique context effect we do report; removing one
+observer makes it significant; and the Cartesian-frame context effect is not reliably larger than
+the polar-frame one (§S5.3). What these data establish is context dependence of the Cartesian-frame
+asymmetries, not its absence for the polar-frame ones. Deciding between a genuinely one-sided
+context effect and a two-sided one of unequal size will require more observers.
 
 ---
 
@@ -383,7 +427,8 @@ with `run_harmonic_model.m` as the driver and `plot_harmonic.m` generating the f
 analysis's asymmetry codes at the eight wedge centres, and verifies the analytic identities and
 synthetic recovery; it must pass before results are interpreted. The pRF precision control is
 `diagnose_prf_angle_error.m`, with `server_extract/collect_prf_replicate.m` retrieving the second
-pRF solution. Coefficients for both weighting schemes and both scaling variants are tabulated in
+pRF solution. The within-subject context tests, the leave-one-observer-out and equivalence analyses,
+and the mixed-model comparison of §S5.5 are in `diagnose_context_asymmetry.m`. Coefficients for both weighting schemes and both scaling variants are tabulated in
 `harmonic_coefficients_raw.csv`. A fuller internal account, including the z-scored sensitivity
 analysis, is in `Reproduction/HARMONIC_MODEL.md`.
 
