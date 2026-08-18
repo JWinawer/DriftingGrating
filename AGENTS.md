@@ -155,6 +155,14 @@ the fMRI data itself is **not** in the repo. `projectName` selects the experimen
 
 ## The z-scoring question
 
+> **DECIDED 2026-07-24: use the raw, non-z-scored analyses.**
+> [`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) §4 settles it — the
+> "blank" is full-field pink noise rather than a mean-luminance baseline, so `beta_std` is not a
+> gain, and dividing the blank-independent raw asymmetries by it reintroduces a dependence on the
+> blank. The Methods language and the σ-unit in-text statistics go with it. The section below is
+> kept because the *mechanism* still matters: it is why Fig 7 changes, and the radial/tangential
+> context result in `HARMONIC_MODEL.md` is the one conclusion that still turns on this choice.
+
 Two versions of Figs 5–8 exist, differing only in whether each vertex's GLM betas were
 **z-scored across the 13 conditions before analysis** (applied at
 `01_process_singlesubjectGLM/main_singlesub.m` via the `normalize` flag).
