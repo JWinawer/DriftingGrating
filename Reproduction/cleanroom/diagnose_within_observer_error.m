@@ -35,6 +35,7 @@ function W = diagnose_within_observer_error(varargin)
     p = inputParser;
     p.addParameter('root', '/Users/jaw288/dg_collect', @ischar);
     p.addParameter('nBoot', 500, @isnumeric);
+    p.addParameter('quiet', false, @islogical);
     p.parse(varargin{:});
     opt = p.Results;
 
@@ -87,7 +88,7 @@ function W = diagnose_within_observer_error(varargin)
         end
     end
     W.subjects = cfg.subjects;
-    report(W, nm);
+    if ~opt.quiet, report(W, nm); end
 end
 
 % ------------------------------------------------------------------------
