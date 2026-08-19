@@ -5,29 +5,32 @@ manuscript *"Local orientation asymmetries in V1 depend on global stimulus prope
 (Ezzo, Carrasco, Rokers, Winawer) **without reading the manuscript**. The draft itself is
 in `Manuscript draft/` (git-ignored, not tracked).
 
-These four figures are the analyses of active interest. The open question driving the work
-is **whether each vertex's GLM beta weights should be z-scored before analysis** — two
-versions of every one of Figs 5–8 currently exist (z-scored vs. not), and we need to decide
-which to adopt. See [The z-scoring question](#the-z-scoring-question) below.
+These four figures are the analyses of active interest.
 
-> ## Read this first
-> **[`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) (2026-07-24) is the
-> current authority** on data quality and on the z-scoring decision. It supersedes parts of
-> this file, of `Reproduction/_archive/ZSCORE_FIG7.md`, `GLM_QUALITY.md`, and `_archive/NEXT_STEPS.md`, all of
-> which predate it. Two findings there change how everything else should be read:
->
-> 1. **The "blank" condition is full-field pink noise, not a mean-luminance baseline.** Pink
->    noise is on the screen for the entire run, so every reported response is
->    grating − pink-noise and **there is no true baseline anywhere**. A low GLM R² therefore
->    means weak *differentiation among* the stimuli, **not** an absent response. The
->    orientation asymmetries are unaffected — the common blank term cancels in each.
-> 2. **There are no bad observers and no processing errors.** The two observers previously
->    flagged as anomalous (sub-0037, sub-0201) show normal MT motion-selectivity and V4
->    grating preference in the same sessions. The exclusion argued for in `Reproduction/_archive/ZSCORE_FIG7.md` §8
->    is **withdrawn**.
->
-> Its recommendation: **use the non-z-scored analyses and remove z-scoring**, including the
-> "beta weights were standardized" Methods language and the σ-unit statistics.
+## Issues reviewed, and where each was resolved
+
+Six questions have been worked through. **All are resolved**; the documents below are the standing
+accounts, and the working documents they replace are in `Reproduction/_archive/`.
+
+| # | issue | question | resolution | document |
+|---|---|---|---|---|
+| 1 | **Z-scoring** | Should the per-vertex betas be z-scored before analysis? | **No.** The blank is pink noise, so `beta_std` is not a gain. | [`Reproduction/WHY_NOT_ZSCORE.md`](Reproduction/WHY_NOT_ZSCORE.md) |
+| 2 | **Data quality** | Are there outlier observers or datapoints to exclude? | **No.** No processing errors, no bad runs; all 8 observers retained. Measurement reliability quantified from runs. | [`Reproduction/GLM_QUALITY.md`](Reproduction/GLM_QUALITY.md), [`local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) |
+| 3 | **Angle conventions** | Are the absolute and location-dependent angle codings correct? | **Yes.** Code is consistent and correct; an earlier bug report is retracted. | [`AUDIT.md`](AUDIT.md) |
+| 4 | **Harmonic model** | Does ROI binning manufacture a context effect that is really local stimulus geometry relative to each vertex's pRF? | **No.** Geometry accounts for 6–8%; pRF angle error is an order of magnitude too small. | [`Reproduction/HARMONIC_MODEL.md`](Reproduction/HARMONIC_MODEL.md), [supplement](Reproduction/supplement/SUPPLEMENT_harmonic_model.md) |
+| 5 | **Context effects** | What does a within-subject assessment support? | **Cartesian-frame asymmetries yes; polar-frame uninformative** — absence of evidence, not evidence of absence. | [`Reproduction/HARMONIC_MODEL.md`](Reproduction/HARMONIC_MODEL.md) Result 3 |
+| 6 | **LME** | Does the Fig-7 mixed model add anything? | **No.** Identical estimates to the subtraction route; its SE is anti-conservative. Recommend omitting from the manuscript. | [`Reproduction/LME.md`](Reproduction/LME.md) |
+
+Two facts from issue 2 change how everything else should be read, and are worth stating up front:
+
+1. **The "blank" condition is full-field pink noise, not a mean-luminance baseline.** Pink noise is
+   on the screen for the entire run, so every reported response is grating − pink-noise and **there
+   is no true baseline anywhere**. A low GLM R² therefore means weak *differentiation among* the
+   stimuli, **not** an absent response. The orientation asymmetries are unaffected — the common
+   blank term cancels in each.
+2. **There are no bad observers and no processing errors.** The two observers previously flagged as
+   anomalous (sub-0037, sub-0201) show normal MT motion-selectivity and V4 grating preference in the
+   same sessions. The exclusion once argued for is **withdrawn**.
 
 ---
 
@@ -249,6 +252,9 @@ Listed newest first — later documents supersede earlier ones where they overla
 - `Reproduction/_archive/NEXT_STEPS.md` — the task setups those two audits came from. The z-scoring and
   fit-quality tasks are now closed; step 5 (a GLM-`R2` column in `allsubjectsTable.csv`) is the
   live remainder.
+- **`Reproduction/LME.md`** — issue 6. Why the Fig-7 mixed model returns the identical estimates to
+  the subtraction route, what a trial-level or precision-weighted version would and would not add,
+  and the recommendation to omit it from the manuscript.
 - **`Reproduction/WHY_NOT_ZSCORE.md`** — the standing account of why analyses are raw, not z-scored.
   Read this rather than the archived working documents; it carries the decision, its one live
   dependency (the radial/tangential context result), and pointers to the diagnostics that still run.

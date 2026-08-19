@@ -103,6 +103,9 @@ computed here; the direct asymmetries were unaffected.
       [supplement/](supplement/SUPPLEMENT_harmonic_model.md): within-ROI geometry explains only
       6–8%, pRF angle error is an order of magnitude too small, the Cartesian-frame context
       effect stands, the polar-frame one is uninformative (not absent)
+- [x] Fig-7 LME — identical estimates to the subtraction route, anti-conservative SE; recommend
+      omitting from the manuscript ([LME.md](LME.md))
+- [x] Normalization — decided against z-scoring ([WHY_NOT_ZSCORE.md](WHY_NOT_ZSCORE.md))
 - [ ] **Open:** add a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen
       on it alongside `pRF_r2` ([_archive/NEXT_STEPS.md](_archive/NEXT_STEPS.md) step 5)
 - [ ] **Open:** confirm the fixed stimulus `rng` seed was intended
