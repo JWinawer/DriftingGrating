@@ -6,7 +6,7 @@
 > subject bootstrap.
 >
 > **§6–§8 and Recommendations 0, 3, 5, 6a, 7, 8 do not.** They are superseded by
-> [`local_qc/REPORT.md`](local_qc/REPORT.md), which had data this document did not:
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md), which had data this document did not:
 >
 > - **The blank is full-field pink noise, not a mean-luminance baseline** (REPORT §1). Pink noise
 >   is on screen for the whole run, so there is no true baseline and no absolute response
@@ -276,7 +276,33 @@ There are really two orthogonal decisions:
 `beta_std` conflates them: it is a units choice that also happens to reweight, and it was never
 stated as either.
 
-### On precision, the answer is clear
+### On precision — conclusion stands, but the margin was overstated ~20×
+
+> **CORRECTED 2026-08-18.** The within-observer SEs below (0.015–0.033) came from **resampling
+> vertices**, which is invalid: it holds the GLM betas fixed and only reshuffles which vertices
+> enter the wedge median, so it measures which patch of V1 was sampled, not the reliability of the
+> measurement — and vertex responses are not independent. Within-observer reliability has to come
+> from resampling the **measurement**, i.e. across trials/runs. Re-measured properly by
+> `cleanroom/diagnose_within_observer_error.m` (split-half over the 35 balanced 4-vs-4 run splits,
+> plus a bootstrap over runs), the SEs are **3–6× larger**, and the variance ratios fall by ~20×:
+>
+> | | between-subject SD | within-subject SE (runs) | variance ratio |
+> |---|---|---|---|
+> | da radTan | 0.209 | 0.122 | **2.9×** (was 104×) |
+> | da H−V | 0.152 | 0.037 | 17× (was 52×) |
+> | dg H−V | 0.200 | 0.121 | 2.8× (was 64×) |
+> | dg radTan | 0.085 | 0.040 | 4.5× (was 14×) |
+>
+> Note the structure the old estimate concealed: the SE is ~3× larger for the asymmetry **matched**
+> to each experiment (dg H−V, da radTan) than for the derived one, because a matched contrast draws
+> on the same two conditions in every wedge and its noise does not average across wedges.
+>
+> **The conclusion survives** — between-observer variance still exceeds within-observer variance for
+> every asymmetry, so inverse-variance weighting still converges on near-equal weights and precision
+> is still not what is in dispute. But "one to two orders of magnitude" is wrong; it is roughly 3–17×,
+> and under 5× for two of the four. The superseded table is kept below for the record.
+
+### ~~On precision, the answer is clear~~ (superseded — see above)
 
 Within-observer bootstrap SEs are 0.015–0.033 in raw units, while observers disagree by far more:
 
@@ -367,7 +393,7 @@ that observers were weighted equally as a deliberate choice.
 > **Done, 2026-07-23 and 2026-07-24.** Steps 1–3 below were carried out: all 8 observers ×
 > both experiments were extracted from the server and audited (`GLM_QUALITY.md`), then
 > re-extracted with **no filtering at all** and reviewed in full
-> ([`local_qc/REPORT.md`](local_qc/REPORT.md)). Findings: **no coding or processing error**,
+> ([`local_qc/REPORT.md`](../local_qc/REPORT.md)). Findings: **no coding or processing error**,
 > uniform model parameters, no bad run, no dropout, correct co-registration — and **neither
 > sub-0201 nor sub-0037 is a bad-data case** (step 2's prediction of a bad run or motion
 > artefact was not confirmed for either). Step 3's inclusion decision resolved as **retain all
@@ -425,7 +451,7 @@ Recommended next step, in priority order:
 > **Withdrawn 2026-07-24.** This section's own closing caveat — *"provisional on the GLM audit
 > (§7). If the GLMsingle metrics show sub-0037 and sub-0201 are fine, the reasoning above needs
 > revisiting"* — is exactly what happened. They are fine
-> ([`local_qc/REPORT.md`](local_qc/REPORT.md) §2.5–2.6): in the same sessions, both observers'
+> ([`local_qc/REPORT.md`](../local_qc/REPORT.md) §2.5–2.6): in the same sessions, both observers'
 > MT is motion-selective and their V4 prefers gratings to pink noise, so the visual system
 > responded normally and there is no quality ground for exclusion.
 >
@@ -526,7 +552,8 @@ say.
    ordering — it restores H−V as the largest polar-grating asymmetry.
 6. **Separate the units question from the precision question, and settle precision first** (§6).
    Precision is not in dispute: between-observer variance exceeds within-observer measurement
-   variance by 14–104×, so inverse-variance weighting converges on equal weighting and changes
+   variance by 3–17× (corrected 2026-08-18 from runs, not vertices — see §6), so inverse-variance
+   weighting still converges on near-equal weighting and changes
    nothing. Units are the live question, and the case for normalizing per observer is sound in
    principle — percent BOLD is scanner-dependent. What fails is every divisor available in these
    13 conditions: none is simultaneously effect-independent, positive for all 8 observers, and

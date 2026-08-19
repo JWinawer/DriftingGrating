@@ -13,7 +13,7 @@ which to adopt. See [The z-scoring question](#the-z-scoring-question) below.
 > ## Read this first
 > **[`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) (2026-07-24) is the
 > current authority** on data quality and on the z-scoring decision. It supersedes parts of
-> this file, of `Reproduction/ZSCORE_FIG7.md`, `GLM_QUALITY.md`, and `NEXT_STEPS.md`, all of
+> this file, of `Reproduction/_archive/ZSCORE_FIG7.md`, `GLM_QUALITY.md`, and `_archive/NEXT_STEPS.md`, all of
 > which predate it. Two findings there change how everything else should be read:
 >
 > 1. **The "blank" condition is full-field pink noise, not a mean-luminance baseline.** Pink
@@ -23,7 +23,7 @@ which to adopt. See [The z-scoring question](#the-z-scoring-question) below.
 >    orientation asymmetries are unaffected — the common blank term cancels in each.
 > 2. **There are no bad observers and no processing errors.** The two observers previously
 >    flagged as anomalous (sub-0037, sub-0201) show normal MT motion-selectivity and V4
->    grating preference in the same sessions. The exclusion argued for in `ZSCORE_FIG7.md` §8
+>    grating preference in the same sessions. The exclusion argued for in `Reproduction/_archive/ZSCORE_FIG7.md` §8
 >    is **withdrawn**.
 >
 > Its recommendation: **use the non-z-scored analyses and remove z-scoring**, including the
@@ -153,68 +153,38 @@ the fMRI data itself is **not** in the repo. `projectName` selects the experimen
 
 ---
 
-## The z-scoring question
+## Normalization — we do not z-score (decided 2026-07-24)
 
-> **DECIDED 2026-07-24: use the raw, non-z-scored analyses.**
-> [`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) §4 settles it — the
-> "blank" is full-field pink noise rather than a mean-luminance baseline, so `beta_std` is not a
-> gain, and dividing the blank-independent raw asymmetries by it reintroduces a dependence on the
-> blank. The Methods language and the σ-unit in-text statistics go with it. The section below is
-> kept because the *mechanism* still matters: it is why Fig 7 changes, and the radial/tangential
-> context result in `HARMONIC_MODEL.md` is the one conclusion that still turns on this choice.
+All analyses use **raw beta weights in percent signal change**. The standing account is
+[`Reproduction/WHY_NOT_ZSCORE.md`](Reproduction/WHY_NOT_ZSCORE.md); the working documents it
+replaces are in `Reproduction/_archive/`.
 
-Two versions of Figs 5–8 exist, differing only in whether each vertex's GLM betas were
-**z-scored across the 13 conditions before analysis** (applied at
-`01_process_singlesubjectGLM/main_singlesub.m` via the `normalize` flag).
+One line of reasoning: the "blank" is full-field pink noise, not a mean-luminance baseline, so
+`beta_std` is not a gain — it conflates BOLD gain with tuning strength, and dividing the
+(blank-independent) asymmetries by it puts the blank back in. No valid substitute divisor exists in
+these 13 conditions.
 
-- The manuscript **Methods currently commit to z-scoring** ("beta weights for each vertex were
-  standardized"; the LME uses "the z-scored, blank-subtracted GLM coefficients"), and in-text
-  statistics are reported in σ units.
-- **Figs 5, 6, and 8** look qualitatively the same between the two versions (asymmetry shapes
-  and significance unchanged; only axis units/scale differ).
-- **Fig 7 differs substantively**: which asymmetries reach significance in the joint LME
-  changes between the z-scored and non-z-scored fits. This is the crux of the decision.
+Two things to carry forward:
 
-When working on these analyses, keep the two variants consistent across all four figures and
-across the Methods prose, and treat Fig 7 as the case where the choice actually matters.
+- **Do not frame Fig 7 around which asymmetry is largest.** Subject bootstraps run 0.10–0.31 at
+  n = 6 and 0.28–0.63 at n = 8 — unanimous in direction, never decisive. The cross-experiment
+  comparison is what the data support.
+- **The radial/tangential context effect is the one conclusion that turns on this choice** — it
+  reaches significance z-scored and does not raw (`Reproduction/HARMONIC_MODEL.md` Result 3). State
+  the dependence rather than burying it.
 
-> **Settled 2026-07-24 — use the raw (non-z-scored) analyses.**
-> [`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) §4 resolves this
-> against z-scoring, on grounds that were not available when the account below was written:
-> the blank is **pink noise, not a baseline**, so `beta_std` is the spread among
-> contrast-pattern responses rather than a gain. It conflates BOLD gain with orientation-tuning
-> strength and motion sensitivity, and dividing the (blank-independent) raw asymmetries by it
-> *reintroduces* a dependence on the blank. In the raw analysis the largest polar asymmetry is
-> horizontal−vertical — the same ordering the analysis below arrived at, but without needing to
-> exclude any observer. The account below remains a correct description of *how* z-scoring
-> changes Fig 7; its §7–§8 conclusions do not survive.
+The earlier argument for excluding sub-0037 and sub-0201 as having "no measurable gain" is
+**withdrawn**: `local_qc/REPORT.md` §2.5–2.6 clears both with positive evidence, and §1 removes the
+premise. All 8 observers are retained.
 
-**What the Fig 7 difference turned out to be** (2026-07-22, full account in
-`Reproduction/ZSCORE_FIG7.md`): z-scoring changes which polar-grating asymmetry is largest
-(radial−tangential z-scored, horizontal−vertical raw). The cause is **observer reweighting**, not
-vertex-level gain control — a single scalar per subject reproduces the whole effect. At the
-subject level `beta_std` is overall response amplitude (r = +0.94), *not* data quality, so
-z-scoring weights observers by 1/responsiveness; the two it up-weights most have anomalous polar
-data. Neither ordering survives a subject bootstrap (P = 0.69 z-scored, 0.28 raw, 0.43 under an
-uncontaminated divisor). Two consequences for anyone picking this up:
-
-- **~~Normalising observers is justified, but it has a precondition.~~ Withdrawn.** This bullet
-  argued for excluding sub-0037 and sub-0201 as having no measurable gain in the polar
-  experiment. `local_qc/REPORT.md` §2.5–2.6 rules that out with positive evidence — both
-  observers' MT is motion-selective and their V4 prefers gratings to pink noise in the same
-  sessions — and §1 removes the premise, since a "blank-referenced gain" measured against pink
-  noise is not a gain at all. **All 8 observers are retained.**
-- **Do not frame Fig 7 around which asymmetry is largest** (bootstraps 0.10–0.31 at n=6;
-  unanimous in direction, never decisive). The cross-experiment comparison is what the data
-  support. *(This bullet stands.)*
-- **The GLM fits have been quality-checked — twice, and they are sound.** All 8 observers ×
-  both experiments were extracted from the server (2026-07-23, then again unfiltered on
-  2026-07-24) and audited: no coding or processing error, uniform model parameters, no bad run,
-  no dropout, correct surface co-registration. See `Reproduction/local_qc/REPORT.md` §2 and
-  `Reproduction/GLM_QUALITY.md`. What remains genuinely open is that **no GLMsingle metric
-  enters the pipeline** — the only quality filter is still on the *pRF* fit (`pRF_r2 > 0.1`),
-  and neither `allsubjectsTable.csv` variant carries a GLM column. Adding one is step 5 of
-  `Reproduction/NEXT_STEPS.md`.
+## GLM fit quality — checked twice, sound
+All 8 observers × both experiments were extracted from the server (2026-07-23, then again
+unfiltered on 2026-07-24) and audited: no coding or processing error, uniform model parameters, no
+bad run, no dropout, correct surface co-registration. See `Reproduction/local_qc/REPORT.md` §2 and
+`Reproduction/GLM_QUALITY.md`. What remains genuinely open is that **no GLMsingle metric enters the
+pipeline** — the only quality filter is still on the *pRF* fit (`pRF_r2 > 0.1`), and neither
+`allsubjectsTable.csv` variant carries a GLM column. Adding one is step 5 of
+`Reproduction/_archive/NEXT_STEPS.md`.
 
 ---
 
@@ -276,15 +246,18 @@ Listed newest first — later documents supersede earlier ones where they overla
 - `Reproduction/GLM_QUALITY.md` (2026-07-23) — the first GLM fit-quality audit, on the 4–8°
   pRF-filtered extraction. Its R² tables stand; its §5 exclusion support and its §6/§6a open
   questions are answered by `local_qc/REPORT.md`.
-- `Reproduction/NEXT_STEPS.md` — the task setups those two audits came from. The z-scoring and
+- `Reproduction/_archive/NEXT_STEPS.md` — the task setups those two audits came from. The z-scoring and
   fit-quality tasks are now closed; step 5 (a GLM-`R2` column in `allsubjectsTable.csv`) is the
   live remainder.
-- `Reproduction/ZSCORE_FIG7.md` (2026-07-22) — why z-scoring reverses the radTan/H−V rank order
+- **`Reproduction/WHY_NOT_ZSCORE.md`** — the standing account of why analyses are raw, not z-scored.
+  Read this rather than the archived working documents; it carries the decision, its one live
+  dependency (the radial/tangential context result), and pointers to the diagnostics that still run.
+- `Reproduction/_archive/ZSCORE_FIG7.md` (2026-07-22) — why z-scoring reverses the radTan/H−V rank order
   in Fig 7B: observer reweighting, and the algebra of the reversal (§1–§5), which remains the
   best account of the mechanism. **Its §7–§8 conclusions — the missing GLM check and the
   two-observer exclusion — are superseded.** Scripts: `cleanroom/diagnose_zscore_fig7.m`,
   `diagnose_response_signs.m`, `compare_subject_weighting.m`.
-- `Reproduction/FINDINGS.md` — **fully retracted**; kept only as a record of the reproduction's
+- `Reproduction/_archive/FINDINGS.md` — **fully retracted**; kept only as a record of the reproduction's
   own two bugs. Do not act on it; `AUDIT.md` is the correct account.
 - `Reproduction/server_extract/` — the read-only server extraction (`collect_everything.m`) that
   produced the data behind `local_qc/REPORT.md`, plus `RUNME.md` for whoever has the volume

@@ -3,7 +3,7 @@
 % In the z-scored Fig 7 the largest polar-grating asymmetry is radial-vs-tangential
 % (0.603) and horizontal-vs-vertical is second (-0.446); without z-scoring the order
 % reverses (0.150 vs -0.211). This script produces the four pieces of evidence that
-% account for that, documented in ../ZSCORE_FIG7.md:
+% account for that, documented in ../_archive/ZSCORE_FIG7.md:
 %
 %   1. Divisor ladder     - at which level of beta_std variation the differential
 %                           amplification appears (global / subject / wedge / vertex).

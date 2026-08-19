@@ -10,7 +10,7 @@
 % observers for whom normalisation is undefined". This script crosses the two decisions
 % and reports whether the Fig 7B ordering is stable once they are made together.
 %
-% See ../ZSCORE_FIG7.md section 6 and section 8.
+% See ../_archive/_archive/ZSCORE_FIG7.md section 6 and section 8.
 
 cfg = config_repro();
 T   = load_allconditions(cfg);

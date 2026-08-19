@@ -24,7 +24,7 @@
 >
 > §7's step 5 — a GLM-`R2` column in `allsubjectsTable.csv` — is still open.
 
-Results of the audit set up in [`NEXT_STEPS.md`](NEXT_STEPS.md) ("per-subject GLM fit quality").
+Results of the audit set up in [`_archive/NEXT_STEPS.md`](_archive/NEXT_STEPS.md) ("per-subject GLM fit quality").
 Data extracted on the server 2026-07-23 with
 [`server_extract/extract_for_transfer.m`](server_extract/extract_for_transfer.m), returned in
 `Support/glm_qc_for_transfer/`, audited with `cleanroom/audit_glm_quality.m`.
@@ -44,7 +44,7 @@ is empty throughout. Files are ~50 kB rather than the ~10 MB fallback.
 
 One incompatibility, since fixed: `extract_glm_qc` writes the field `scope`, the standalone
 server script writes the same information as `patchNote`, and `audit_glm_quality` read only the
-former. It now accepts either. The claim at NEXT_STEPS.md that the audit "reads its output
+former. It now accepts either. The claim at _archive/NEXT_STEPS.md that the audit "reads its output
 directly" was not true as written.
 
 ## 2. Median GLM R² in the V1 patch
@@ -116,7 +116,7 @@ than non-visual cortex. That is a general weakness of this dataset, not a two-ob
 
 **sub-0037 — confirmed session-specific failure.** Its polar ratio of 0.92 is the only value below
 1.0 anywhere in the dataset: V1 was fit *worse* than the brain-wide baseline. Its cartesian
-session is 4.96, second-best in the set. This is exactly the prediction from ZSCORE_FIG7.md §3a
+session is 4.96, second-best in the set. This is exactly the prediction from _archive/ZSCORE_FIG7.md §3a
 (strong in `dg`, no differentiation in `da`), and it is independent of the beta analysis that
 generated the prediction. GLMsingle's own ridge fraction agrees: `FRACvalue` = 0.25 for the
 cartesian session, 0.05 — maximum shrinkage, the algorithm's verdict that there is little signal
@@ -169,11 +169,11 @@ exists. It is the flattest session in the dataset by a wide margin (next lowest 
 > [`local_qc/REPORT.md`](local_qc/REPORT.md) §2.5–2.6 removes the support for **both**: in the
 > same polar session sub-0037's MT is motion-selective and its V4 prefers gratings to pink noise,
 > so the data are good and the flat V1 fit is a real property of V1 under a pink-noise reference,
-> not a failed session. `ZSCORE_FIG7.md` §8 is withdrawn in full and **all 8 observers are
+> not a failed session. `_archive/ZSCORE_FIG7.md` §8 is withdrawn in full and **all 8 observers are
 > retained**. The "worth checking" question at the end of this section — does §8 survive
 > excluding sub-0037 only? — no longer needs answering.
 
-[`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §8 excludes sub-0037 and sub-0201 together, on the grounds that
+[`_archive/ZSCORE_FIG7.md`](_archive/ZSCORE_FIG7.md) §8 excludes sub-0037 and sub-0201 together, on the grounds that
 neither has a measurable gain in the polar experiment, and reports that all five normalisers then
 agree that H−V is the largest polar asymmetry. **This audit supports half of that.**
 
@@ -265,7 +265,7 @@ hand.
 
 ## 7. Also worth noting
 
-`prfvista_mov` saves no gain map — see the retinotopy section of [`NEXT_STEPS.md`](NEXT_STEPS.md),
+`prfvista_mov` saves no gain map — see the retinotopy section of [`_archive/NEXT_STEPS.md`](_archive/NEXT_STEPS.md),
 now closed negative. The inventory is identical for all 8 observers: `angle`, `angle_adj`,
 `eccen`, `sigma`, `vexpl`, `x`, `y`.
 

@@ -8,7 +8,7 @@ function A = audit_glm_quality(qcDir)
 % question in ../NEXT_STEPS.md: are the observers that per-vertex z-scoring up-weights
 % most also the ones with the worst GLM fits?
 %
-% Two specific predictions are worth checking, from ZSCORE_FIG7.md section 3a:
+% Two specific predictions are worth checking, from _archive/ZSCORE_FIG7.md section 3a:
 %   sub-0201  its blank beta exceeds all 12 stimulus betas in BOTH experiments, which is
 %             what a bad run or a motion artefact produces -> expect low R2, and expect
 %             R2run to single out one or more bad runs.
@@ -93,11 +93,11 @@ function A = audit_glm_quality(qcDir)
             end
         end
         fprintf(['(A large negative "da - dg" for sub-0037 would support a session-specific\n' ...
-                 ' failure in the polar experiment; see ZSCORE_FIG7.md section 3a.)\n']);
+                 ' failure in the polar experiment; see _archive/ZSCORE_FIG7.md section 3a.)\n']);
     end
 
     fprintf('\nReminder: this table informs an inclusion decision, it does not make one.\n');
-    fprintf('State whatever is decided in the Methods -- see ZSCORE_FIG7.md recommendation 7.\n\n');
+    fprintf('State whatever is decided in the Methods -- see _archive/ZSCORE_FIG7.md recommendation 7.\n\n');
 end
 
 % -------------------------------------------------------------------------

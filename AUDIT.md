@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-22 · **Scope:** Figures 5–8 · **Verdict: the manuscript is correct on all
 eight asymmetries. The original `AnalysisCode` pipeline is correct. The
-polar-angle-ordering "bug" reported in `Reproduction/FINDINGS.md` is not a bug — it was
+polar-angle-ordering "bug" reported in `Reproduction/_archive/FINDINGS.md` is not a bug — it was
 produced by two errors inside the reproduction itself.**
 
 This audit traces the orientation/polar-angle conventions along the whole chain. §§1–5 reach
@@ -170,10 +170,10 @@ that conventional order and hands it to the repo's Benson-expecting functions. T
 conventional↔Benson relation is a reflection about 45°, identity at 45°/225° and swapping
 0↔90 and 180↔270, so it flips exactly the four **cardinal** wedges. This is what collapsed
 `dg` radial−tangential from 0.226 to 0.003, and it is the "identical at the obliques,
-sign-flipped at the cardinals" signature reported in `FINDINGS.md` §4.
+sign-flipped at the cardinals" signature reported in `Reproduction/_archive/FINDINGS.md` §4.
 
 **Combined**, errors 1 and 2 flip all eight wedges, turning −0.446 into **+0.446** — the
-reproduction's "repo code" value, whose unexplained sign flip `FINDINGS.md` §2 noticed and
+reproduction's "repo code" value, whose unexplained sign flip `Reproduction/_archive/FINDINGS.md` §2 noticed and
 set aside as a "pro/con plotting-sign convention."
 
 Both errors originate in the reproduction. Neither exists in `AnalysisCode`.
@@ -255,7 +255,7 @@ is a place a reimplementation can go wrong — and two of them are where the rep
 
 ## 8. Open items and resolutions
 
-- **`Fig 7` LME — RESOLVED 2026-07-22.** `FINDINGS.md` §3 reported the manuscript's Fig 7B
+- **`Fig 7` LME — RESOLVED 2026-07-22.** `Reproduction/_archive/FINDINGS.md` §3 reported the manuscript's Fig 7B
   `da` H−V as ≈0.02 against the independent −0.45, and used that apparent contradiction as
   corroboration that −0.45 was an artifact. **The manuscript value has since been updated to
   −0.30** (JW, from the Google Drive draft), so the contradiction does not exist: Fig 6A
@@ -273,13 +273,13 @@ is a place a reimplementation can go wrong — and two of them are where the rep
   non-z-scored betas and different Fig 7 statistics. This flag should be made an explicit,
   recorded parameter rather than a hand-edited constant — and the manuscript Methods, which
   commit to z-scoring, match the *saved* files, not the current default.
-- **The z-scoring decision itself** (`Reproduction/NEXT_STEPS.md`) remains open; this audit
+- **The z-scoring decision itself** (`Reproduction/_archive/NEXT_STEPS.md`) remains open; this audit
   only establishes which variant the existing figures came from.
 
 ## 9. Recommendation
 
 **Do not "fix" `compute_derivativeDirections.m`.** Aligning its `polarAngles` with
-`[0 45 90 …]`, as `FINDINGS.md` currently suggests, would *introduce* the cardinal-meridian
+`[0 45 90 …]`, as `Reproduction/_archive/FINDINGS.md` currently suggests, would *introduce* the cardinal-meridian
 swap into working code and corrupt both first-harmonic derived asymmetries.
 
 The one substantive improvement worth making is defensive, not corrective: `meanWithinLabel.m`

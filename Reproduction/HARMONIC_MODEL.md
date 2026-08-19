@@ -396,7 +396,7 @@ inclusion criteria, but it would become one if a stricter filter emptied a wedge
 radial−tangential difference between experiments is −0.204 [−0.341 −0.031], i.e. significant, and
 the "polar asymmetries are stronger for polar gratings" reading returns. Since z-scoring has been
 dropped, the raw result above is the one that stands — but the dependence should be known, and it
-is the same mechanism `ZSCORE_FIG7.md` §1–§5 describes.
+is the same mechanism `_archive/ZSCORE_FIG7.md` §1–§5 describes.
 
 ## Result 4 — is the four-term model adequate?
 
@@ -495,7 +495,7 @@ matlab -batch "cd('Reproduction/cleanroom'); test_harmonic_model; run_harmonic_m
 
 `test_harmonic_model` must pass first — its §1 asserts that the four predictors reduce exactly to
 the repo's `lme_codes` at the eight wedge centres, which is the guard against the sign/frame slips
-that produced both retracted bugs in `FINDINGS.md`. `run_harmonic_model` §2 then asserts the
+that produced both retracted bugs in `_archive/FINDINGS.md`. `run_harmonic_model` §2 then asserts the
 weighting identities (see *Vertex weighting*) before printing any coefficients.
 `run_harmonic_model(true)` runs the z-scored sensitivity variant.
 

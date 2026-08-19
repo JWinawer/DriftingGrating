@@ -200,8 +200,8 @@ which is part of why the earlier "wrong design matrix" concern is ruled out.)
 
 ## 4. Recommendation: use the non-z-scored analyses; remove z-scoring
 
-The pink-noise reference (§1) settles the outstanding z-scoring question (`../NEXT_STEPS.md`,
-`../ZSCORE_FIG7.md`) **against** z-scoring:
+The pink-noise reference (§1) settles the outstanding z-scoring question (`../_archive/NEXT_STEPS.md`,
+`../_archive/ZSCORE_FIG7.md`) **against** z-scoring:
 
 - z-scoring divides each vertex by `beta_std` (the SD across its 13 conditions). This is a valid
   gain normalizer only if the responses are anchored to a true baseline. With no baseline,

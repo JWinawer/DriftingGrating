@@ -1,7 +1,7 @@
 # ~~Next step:~~ CLOSED — z-scored vs non-z-scored analysis
 
 > ## Decided 2026-07-24: use the raw (non-z-scored) analyses
-> [`local_qc/REPORT.md`](local_qc/REPORT.md) §4 settles this, on a ground unavailable to
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md) §4 settles this, on a ground unavailable to
 > everything below: the "blank" is **full-field pink noise, not a mean-luminance baseline**, so
 > `beta_std` is the spread among contrast-pattern responses rather than a gain. It conflates
 > BOLD gain with orientation-tuning strength and motion sensitivity, and dividing the
@@ -121,7 +121,7 @@ First-pass observations:
 
 ## Caveat — resolved, no derived-direction fix needed
 An earlier version of this file warned that the repo's `compute_derivativeDirections.m` carried a
-cardinal-meridian label-swap bug. **That was wrong** — see [`../AUDIT.md`](../AUDIT.md). The repo
+cardinal-meridian label-swap bug. **That was wrong** — see [`../AUDIT.md`](../../AUDIT.md). The repo
 function is correct and now reproduces the clean-room exactly (`bridge/resolve_da_HV` prints a
 per-polar-angle difference of 0.000e+00). The derived asymmetries above are trustworthy in both
 variants, and no change to `AnalysisCode` is required.
@@ -185,7 +185,7 @@ orientation conditions and does not collapse when V1 fails to respond to *these*
 > **Data received and audited (2026-07-23).** The extraction was run on the server and returned
 > in `Support/glm_qc_for_transfer/` — 16/16 files, all `ok`, V1 restriction working (the branch
 > flagged untested below), every QC field present. **Results and what they change are in
-> [`GLM_QUALITY.md`](GLM_QUALITY.md).**
+> [`GLM_QUALITY.md`](../GLM_QUALITY.md).**
 >
 > Headline: the two anomalous observers fail in *different* ways, and only one of them fails in a
 > way that supports the §8 exclusion. **sub-0037** has a genuine, session-specific polar failure —
@@ -262,16 +262,16 @@ pRF maps never need copying.
 ## ~~Ready to run~~ — superseded; both extractions have been done
 
 > **Historical.** This describes the *first* extraction route (a V1-restricted ~10 MB payload).
-> It ran on 2026-07-23 → [`GLM_QUALITY.md`](GLM_QUALITY.md). It was then **replaced** by
-> [`server_extract/collect_everything.m`](server_extract/), which deliberately filters
+> It ran on 2026-07-23 → [`GLM_QUALITY.md`](../GLM_QUALITY.md). It was then **replaced** by
+> [`server_extract/collect_everything.m`](../server_extract/), which deliberately filters
 > nothing — whole surface, every retinotopy map, every label, ~1.2 GB to `~/dg_collect/` — for
 > the reasons in `GLM_QUALITY.md` §6a (a filter applied before the data leaves the server makes
 > its own influence untestable). That ran on 2026-07-24 →
-> [`local_qc/REPORT.md`](local_qc/REPORT.md). **Use `server_extract/RUNME.md` if this ever
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md). **Use `server_extract/RUNME.md` if this ever
 > needs running again**, not the commands below.
 
 **If someone else is running this on the server**, send them
-[`server_extract/`](server_extract/) instead — one self-contained file plus a README, no
+[`server_extract/`](../server_extract/) instead — one self-contained file plus a README, no
 dependency on this repo, and it collects the retinotopy-gain inventory in the same pass so there
 is no second round trip. (`audit_glm_quality` needed a one-line fix to read its output — see
 `GLM_QUALITY.md` §1.)
@@ -298,7 +298,7 @@ branch is moot now in any case, since the current extraction applies no restrict
 ## Steps
 
 > **Status: 1–4 done, 5 open.** Steps 1–3 ran (`GLM_QUALITY.md`). Step 4's inclusion decision is
-> settled by [`local_qc/REPORT.md`](local_qc/REPORT.md) §2 — no genuine non-responders and no bad
+> settled by [`local_qc/REPORT.md`](../local_qc/REPORT.md) §2 — no genuine non-responders and no bad
 > data, so **all 8 observers are retained** and the z-scoring that was applying an implicit
 > inverse quality weighting is dropped instead (§4 there). **Step 5 is the live remainder.**
 

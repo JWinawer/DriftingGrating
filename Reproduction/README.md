@@ -92,8 +92,8 @@ computed here; the direct asymmetries were unaffected.
 - [x] Path A: Figs 5, 6, 7, 8 generated (z-scored + raw)
 - [x] Path B: CSV bridged into the existing pipeline; cross-path arrays identical (0.0 diff)
 - [x] Path B: Figs 5/6 regenerated through the real `plot1/plot2`; da H-V artifact resolved
-- [x] Finding documented in [FINDINGS.md](FINDINGS.md) — subsequently **retracted**, see AUDIT.md
-- [x] z-scored vs non-z-scored comparison — mechanism in [ZSCORE_FIG7.md](ZSCORE_FIG7.md),
+- [x] Finding documented in [_archive/FINDINGS.md](_archive/FINDINGS.md) — subsequently **retracted**, see AUDIT.md
+- [x] z-scored vs non-z-scored comparison — mechanism in [_archive/ZSCORE_FIG7.md](_archive/ZSCORE_FIG7.md),
       **decided** in [local_qc/REPORT.md](local_qc/REPORT.md) §4: use the raw variants
 - [x] GLM fit quality, all 8 observers × both experiments — [GLM_QUALITY.md](GLM_QUALITY.md),
       then the full unfiltered review in [local_qc/REPORT.md](local_qc/REPORT.md): no errors,
@@ -104,6 +104,6 @@ computed here; the direct asymmetries were unaffected.
       6–8%, pRF angle error is an order of magnitude too small, the Cartesian-frame context
       effect stands, the polar-frame one is uninformative (not absent)
 - [ ] **Open:** add a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen
-      on it alongside `pRF_r2` ([NEXT_STEPS.md](NEXT_STEPS.md) step 5)
+      on it alongside `pRF_r2` ([_archive/NEXT_STEPS.md](_archive/NEXT_STEPS.md) step 5)
 - [ ] **Open:** confirm the fixed stimulus `rng` seed was intended
       ([local_qc/REPORT.md](local_qc/REPORT.md) §3)
