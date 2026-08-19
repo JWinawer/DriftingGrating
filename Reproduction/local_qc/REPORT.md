@@ -178,6 +178,60 @@ noise, V1 responds similarly to both — and it establishes that for **both** pr
 observers the visual system responded normally. sub-0037's da/V1 result is therefore a genuine V1
 property (no differentiation of polar gratings from pink noise), not weak or bad data.
 
+### 2.7 Measurement reliability of the analysed quantities, from runs
+
+R² and response magnitude say how well the GLM fits. They do not say how reliable the **quantities
+actually analysed** are. That is measured directly by resampling the measurement:
+`../cleanroom/diagnose_within_observer_error.m` uses per-run condition betas
+(`../server_extract/collect_runwise_betas.m`) and takes both a split-half over all 35 balanced 4-vs-4
+run splits and a bootstrap over runs. The design is balanced — 8 runs, 4 trials per condition per
+run — so both estimators are balanced by construction.
+
+Within-observer SE of each asymmetry (% BOLD, bootstrap over runs):
+
+| asymmetry | dg | da |
+|---|---|---|
+| horiz−vert | 0.121 | 0.042 |
+| card−obl | 0.076 | 0.024 |
+| rad−tang | 0.042 | 0.121 |
+| polc−polo | 0.024 | 0.067 |
+
+Note the structure: the SE is ~3× larger for the asymmetry **matched** to each experiment (dg
+horiz−vert, da rad−tang) than for the derived one. A matched contrast uses the same two stimulus
+conditions in every wedge, so its noise does not average across wedges; a derived contrast rotates
+which stimuli it draws on and averages more effectively. Worth knowing when designing a similar
+comparison.
+
+Against the across-observer spread in the context difference:
+
+| asymmetry | mean diff | SD across observers | within-observer SE | within/total |
+|---|---|---|---|---|
+| horiz−vert | −0.268 | 0.265 | 0.128 | 23% |
+| card−obl | −0.175 | 0.126 | 0.079 | 39% |
+| rad−tang | −0.034 | 0.245 | 0.128 | 28% |
+| polc−polo | −0.004 | 0.137 | 0.071 | 27% |
+
+**Two things follow, and they are the reason this belongs in a data-quality section.**
+
+First, the measurements are good: measurement error is a minority of the observed spread for every
+asymmetry, so most of what separates observers is genuine individual variation, not noise.
+Disattenuating — removing the measurement variance and re-testing, the ceiling on what any mixed
+model could recover — changes no conclusion (horiz−vert p 0.024 → 0.014, card−obl 0.006 → 0.0015,
+rad−tang 0.70 → 0.66). **The binding limitation is between-observer variability at n = 8, not
+measurement noise.**
+
+Second, **precision weighting is not needed.** Weighting observers by 1/(τ² + σᵢ²) — where σᵢ² is
+observer *i*'s measurement variance and τ² the between-observer variance of the true effects —
+rather than equally shifts no group estimate materially and changes no *p*-value's interpretation.
+The weights spread by only ~3× despite a 14× spread in reliability, because τ² is common to every
+observer and dominates. Details and the full table are in [`../LME.md`](../LME.md) §5.
+
+> **An earlier estimate of this quantity was withdrawn.** It resampled *vertices*, which is invalid:
+> it holds the GLM betas fixed and only reshuffles which vertices enter the wedge median, so it
+> characterises which patch of V1 was sampled rather than the reliability of the measurement — and
+> vertex responses are not independent. It understated the error by 4–5×. Reliability has to come
+> from resampling the measurement, i.e. across runs.
+
 ---
 
 ## 3. The stimulus used a fixed random seed (all designs identical)

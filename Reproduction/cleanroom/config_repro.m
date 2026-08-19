@@ -38,7 +38,7 @@ function cfg = config_repro()
     % compute_derivativeDirections.m:48, plot1_experimentalCond.m:121 and lme1_fit.m:88
     % all assume exactly this. ANY array handed to a repo stage-04 function must be in
     % this order -- getting it wrong reflects the wedges about 45 deg, which swaps the
-    % four cardinal meridians. See ../../AUDIT.md sections 3 and 5.
+    % four cardinal meridians. See ../AUDIT.md sections 3 and 5.
     cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135];
 
     % --- bootstrap ---

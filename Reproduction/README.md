@@ -55,7 +55,7 @@ column (it is a superset of this set).
 This is the filter for the **figure/asymmetry** analysis, where the 4–8° band is a
 stimulus-matching constraint (Cartesian and polar gratings are spatial-frequency-matched only
 near 6°). It is *not* the right filter for **fit-quality** questions, and the server extraction
-deliberately applies neither restriction — see `GLM_QUALITY.md` §6a. Don't re-apply these when
+deliberately applies neither restriction — see `_archive/GLM_QUALITY.md` §6a. Don't re-apply these when
 asking whether a session produced a usable response.
 
 ## Subjects (fixed order, those who did both experiments)
@@ -84,7 +84,7 @@ code is correct and the manuscript reproduces exactly on all eight asymmetries. 
 discrepancy came from two bugs in this reproduction — swapped spirals in
 `cleanroom/config_repro.m` and a Benson/conventional frame mismatch in `bridge/`.
 
-See [`../AUDIT.md`](../AUDIT.md). Fix those two before trusting any *derived* asymmetry
+See [`AUDIT.md`](AUDIT.md). Fix those two before trusting any *derived* asymmetry
 computed here; the direct asymmetries were unaffected.
 
 ## Status
@@ -95,7 +95,7 @@ computed here; the direct asymmetries were unaffected.
 - [x] Finding documented in [_archive/FINDINGS.md](_archive/FINDINGS.md) — subsequently **retracted**, see AUDIT.md
 - [x] z-scored vs non-z-scored comparison — mechanism in [_archive/ZSCORE_FIG7.md](_archive/ZSCORE_FIG7.md),
       **decided** in [local_qc/REPORT.md](local_qc/REPORT.md) §4: use the raw variants
-- [x] GLM fit quality, all 8 observers × both experiments — [GLM_QUALITY.md](GLM_QUALITY.md),
+- [x] GLM fit quality, all 8 observers × both experiments — [_archive/GLM_QUALITY.md](_archive/GLM_QUALITY.md),
       then the full unfiltered review in [local_qc/REPORT.md](local_qc/REPORT.md): no errors,
       no bad data, all observers retained
 - [x] Geometry-vs-context test — per-vertex harmonic model in

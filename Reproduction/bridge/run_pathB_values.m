@@ -7,7 +7,7 @@
 % aggregated equally over the 8 wedges (as plot2_experimentalCond does). Prints a
 % table comparing existing-code vs clean-room (Path A) vs manuscript. All three
 % columns should agree for all eight asymmetries; any divergence now indicates a
-% regression in this reproduction, not in AnalysisCode. See ../../AUDIT.md.
+% regression in this reproduction, not in AnalysisCode. See ../AUDIT.md.
 
 clear; clc;
 here      = fileparts(mfilename('fullpath'));

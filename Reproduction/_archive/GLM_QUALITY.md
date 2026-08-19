@@ -3,7 +3,7 @@
 > ## ⚠️ Superseded where it interprets — 2026-07-24
 > This was the **first** audit, on the 4–8° / `vexpl > 0.1` extraction. The re-run it calls for
 > in §6a happened, and the full review is in
-> [`local_qc/REPORT.md`](local_qc/REPORT.md). What changes:
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md). What changes:
 >
 > - **The numbers below stand.** R² tables, `fracAbove`, run consistency, `FRACvalue` — all
 >   reproduced by the unfiltered re-extraction.
@@ -22,12 +22,15 @@
 > - **§6a is done.** `extract_for_transfer.m`'s unfiltered successor
 >   (`server_extract/collect_everything.m`) ran; ~1.2 GB is in `~/dg_collect/`.
 >
-> §7's step 5 — a GLM-`R2` column in `allsubjectsTable.csv` — is still open.
+> Its §8 notes that a GLM-`R2` column in `allsubjectsTable.csv` is still open. Its §7 (measurement
+> reliability from runs, added 2026-08-18) has been **moved** to `../local_qc/REPORT.md` §2.7, which
+> is the standing account of data quality; the copy below is retained only so this document reads
+> continuously.
 
-Results of the audit set up in [`_archive/NEXT_STEPS.md`](_archive/NEXT_STEPS.md) ("per-subject GLM fit quality").
+Results of the audit set up in [`NEXT_STEPS.md`](NEXT_STEPS.md) ("per-subject GLM fit quality").
 Data extracted on the server 2026-07-23 with
-[`server_extract/extract_for_transfer.m`](server_extract/extract_for_transfer.m), returned in
-`Support/glm_qc_for_transfer/`, audited with `cleanroom/audit_glm_quality.m`.
+[`server_extract/extract_for_transfer.m`](../server_extract/extract_for_transfer.m), returned in
+`Support/glm_qc_for_transfer/`, audited with `../cleanroom/audit_glm_quality.m`.
 
 ```matlab
 cd Reproduction/cleanroom
@@ -116,7 +119,7 @@ than non-visual cortex. That is a general weakness of this dataset, not a two-ob
 
 **sub-0037 — confirmed session-specific failure.** Its polar ratio of 0.92 is the only value below
 1.0 anywhere in the dataset: V1 was fit *worse* than the brain-wide baseline. Its cartesian
-session is 4.96, second-best in the set. This is exactly the prediction from _archive/ZSCORE_FIG7.md §3a
+session is 4.96, second-best in the set. This is exactly the prediction from ZSCORE_FIG7.md §3a
 (strong in `dg`, no differentiation in `da`), and it is independent of the beta analysis that
 generated the prediction. GLMsingle's own ridge fraction agrees: `FRACvalue` = 0.25 for the
 cartesian session, 0.05 — maximum shrinkage, the algorithm's verdict that there is little signal
@@ -166,14 +169,14 @@ exists. It is the flattest session in the dataset by a wide margin (next lowest 
 ## 5. What this changes — ⚠️ now moot: the exclusion is off entirely
 
 > **2026-07-24.** This section supports excluding sub-0037 while denying support for sub-0201.
-> [`local_qc/REPORT.md`](local_qc/REPORT.md) §2.5–2.6 removes the support for **both**: in the
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md) §2.5–2.6 removes the support for **both**: in the
 > same polar session sub-0037's MT is motion-selective and its V4 prefers gratings to pink noise,
 > so the data are good and the flat V1 fit is a real property of V1 under a pink-noise reference,
-> not a failed session. `_archive/ZSCORE_FIG7.md` §8 is withdrawn in full and **all 8 observers are
+> not a failed session. `ZSCORE_FIG7.md` §8 is withdrawn in full and **all 8 observers are
 > retained**. The "worth checking" question at the end of this section — does §8 survive
 > excluding sub-0037 only? — no longer needs answering.
 
-[`_archive/ZSCORE_FIG7.md`](_archive/ZSCORE_FIG7.md) §8 excludes sub-0037 and sub-0201 together, on the grounds that
+[`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §8 excludes sub-0037 and sub-0201 together, on the grounds that
 neither has a measurable gain in the polar experiment, and reports that all five normalisers then
 agree that H−V is the largest polar asymmetry. **This audit supports half of that.**
 
@@ -190,7 +193,7 @@ on an exclusion that this audit cannot independently justify, and that has to be
 
 ## 6. ~~Open:~~ ANSWERED — sub-0037's polar session is not a processing error
 
-> **Resolved 2026-07-24** ([`local_qc/REPORT.md`](local_qc/REPORT.md) §2, §3). The
+> **Resolved 2026-07-24** ([`local_qc/REPORT.md`](../local_qc/REPORT.md) §2, §3). The
 > discriminating check proposed below was run. The design matrices are **byte-identical across
 > every observer and both experiments** (fixed `rng` seed), so a wrong or swapped design matrix
 > is ruled out by construction — there is no other design it could have been given. Stimulus
@@ -215,7 +218,7 @@ recoverable it should be recovered rather than dropped.
 > **Completed 2026-07-24.** The re-run described below happened, via
 > `server_extract/collect_everything.m` (which filters nothing at all — whole surface, every
 > retinotopy map, every label): ~1.2 GB in `~/dg_collect/`, all 8 observers × both experiments.
-> Results in [`local_qc/REPORT.md`](local_qc/REPORT.md).
+> Results in [`local_qc/REPORT.md`](../local_qc/REPORT.md).
 >
 > **The question posed at the end of this section is answered.** sub-0037's polar session is
 > *not* flat only within 4–8° — the pattern holds across the stimulated range, and REPORT §2.1
@@ -267,7 +270,7 @@ hand.
 
 R² and response magnitude say how well the GLM fits. They do not say how reliable the **quantities
 actually analysed** are. That is measured directly by resampling the measurement:
-`cleanroom/diagnose_within_observer_error.m` uses per-run condition betas
+`../cleanroom/diagnose_within_observer_error.m` uses per-run condition betas
 (`server_extract/collect_runwise_betas.m`) and takes both a split-half over all 35 balanced 4-vs-4
 run splits and a bootstrap over runs. The design is balanced — 8 runs, 4 trials per condition per
 run — so both estimators are balanced by construction.
@@ -309,7 +312,7 @@ Second, **precision weighting is not needed.** Weighting observers by 1/(τ² + 
 observer *i*'s measurement variance and τ² the between-observer variance of the true effects —
 rather than equally shifts no group estimate materially and changes no *p*-value's interpretation.
 The weights spread by only ~3× despite a 14× spread in reliability, because τ² is common to every
-observer and dominates. Details and the full table are in [`LME.md`](LME.md) §5.
+observer and dominates. Details and the full table are in [`LME.md`](../LME.md) §5.
 
 > **An earlier estimate of this quantity was withdrawn.** It resampled *vertices*, which is invalid:
 > it holds the GLM betas fixed and only reshuffles which vertices enter the wedge median, so it
@@ -319,7 +322,7 @@ observer and dominates. Details and the full table are in [`LME.md`](LME.md) §5
 
 ## 8. Also worth noting
 
-`prfvista_mov` saves no gain map — see the retinotopy section of [`_archive/NEXT_STEPS.md`](_archive/NEXT_STEPS.md),
+`prfvista_mov` saves no gain map — see the retinotopy section of [`NEXT_STEPS.md`](NEXT_STEPS.md),
 now closed negative. The inventory is identical for all 8 observers: `angle`, `angle_adj`,
 `eccen`, `sigma`, `vexpl`, `x`, `y`.
 

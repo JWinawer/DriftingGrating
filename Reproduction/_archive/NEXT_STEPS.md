@@ -121,7 +121,7 @@ First-pass observations:
 
 ## Caveat — resolved, no derived-direction fix needed
 An earlier version of this file warned that the repo's `compute_derivativeDirections.m` carried a
-cardinal-meridian label-swap bug. **That was wrong** — see [`../AUDIT.md`](../../AUDIT.md). The repo
+cardinal-meridian label-swap bug. **That was wrong** — see [`../AUDIT.md`](../AUDIT.md). The repo
 function is correct and now reproduces the clean-room exactly (`bridge/resolve_da_HV` prints a
 per-polar-angle difference of 0.000e+00). The derived asymmetries above are trustworthy in both
 variants, and no change to `AnalysisCode` is required.
@@ -185,7 +185,7 @@ orientation conditions and does not collapse when V1 fails to respond to *these*
 > **Data received and audited (2026-07-23).** The extraction was run on the server and returned
 > in `Support/glm_qc_for_transfer/` — 16/16 files, all `ok`, V1 restriction working (the branch
 > flagged untested below), every QC field present. **Results and what they change are in
-> [`GLM_QUALITY.md`](../GLM_QUALITY.md).**
+> [`GLM_QUALITY.md`](GLM_QUALITY.md).**
 >
 > Headline: the two anomalous observers fail in *different* ways, and only one of them fails in a
 > way that supports the §8 exclusion. **sub-0037** has a genuine, session-specific polar failure —
@@ -262,7 +262,7 @@ pRF maps never need copying.
 ## ~~Ready to run~~ — superseded; both extractions have been done
 
 > **Historical.** This describes the *first* extraction route (a V1-restricted ~10 MB payload).
-> It ran on 2026-07-23 → [`GLM_QUALITY.md`](../GLM_QUALITY.md). It was then **replaced** by
+> It ran on 2026-07-23 → [`GLM_QUALITY.md`](GLM_QUALITY.md). It was then **replaced** by
 > [`server_extract/collect_everything.m`](../server_extract/), which deliberately filters
 > nothing — whole surface, every retinotopy map, every label, ~1.2 GB to `~/dg_collect/` — for
 > the reasons in `GLM_QUALITY.md` §6a (a filter applied before the data leaves the server makes

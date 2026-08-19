@@ -79,5 +79,5 @@ The script prints a line per subject × experiment. Worth a glance:
 
 The patch is built from the V1 label plus **eccentricity and `vexpl` only** — never polar angle.
 Polar angle in this project has a Benson-vs-conventional convention difference that has already
-caused one false-alarm bug report (see `../../AUDIT.md`). Nothing here needs polar angle, so it
+caused one false-alarm bug report (see `../AUDIT.md`). Nothing here needs polar angle, so it
 does not touch it.

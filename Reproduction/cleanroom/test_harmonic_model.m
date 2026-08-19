@@ -9,7 +9,7 @@ function test_harmonic_model()
 % Section 1 is the important one: it asserts that the four harmonic predictors reduce
 % EXACTLY to the repo's +1/0/-1 asymmetry codes at the eight wedge centres, for both
 % experiments. Sign/frame slips of precisely this kind produced both of the retracted
-% bugs recorded in ../FINDINGS.md and ../../AUDIT.md, so this is an assert, not an
+% bugs recorded in ../FINDINGS.md and ../AUDIT.md, so this is an assert, not an
 % eyeball check.
 
     cfg = config_repro();

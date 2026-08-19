@@ -9,7 +9,7 @@ function [X, info] = harmonic_predictors(thetaV, expCfg, opts)
 %   y_vk = b1*cos(2*theta) + b2*cos(4*theta)
 %        + b3*cos(2*(theta-thetaV)) + b4*cos(4*(theta-thetaV))
 %
-% ANGLE CONVENTION (settled; see ../../AUDIT.md section 2).
+% ANGLE CONVENTION (settled; see ../AUDIT.md section 2).
 %   theta  = orientation of the grating BARS, in conventional visual-field degrees
 %            (0 = rightward horizontal meridian, CCW positive), mod 180.
 %            So theta=0 is a HORIZONTAL grating and theta=90 a VERTICAL one.

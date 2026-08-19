@@ -9,7 +9,7 @@ T   = load_and_filter(cfg);
 % manuscript reported values (sigma units); LME entries are |reported| Fig 7.
 % da horiz-vert LME was updated in the manuscript from 0.02 to -0.30 (JW, 2026-07-22),
 % which removes the Fig 6A vs Fig 7B inconsistency the old FINDINGS.md leaned on: both
-% are now negative, agreeing with the clean-room. See ../../AUDIT.md section 8.
+% are now negative, agreeing with the clean-room. See ../AUDIT.md section 8.
 man.dg.ind = [-1.155 -0.40  0.23  0.06];
 man.dg.lme = [ 1.10   0.36  0.19  0.00];
 man.da.ind = [-0.45  -0.06  0.60  0.17];
@@ -37,4 +37,4 @@ fprintf('\nAll four independent asymmetries reproduce the manuscript for both ex
 fprintf('The clean-room LME delta equals the independent mean exactly, because the balanced\n');
 fprintf('design makes the four predictors orthogonal; the manuscript''s fitted LME weights are\n');
 fprintf('attenuated relative to that (da horiz-vert -0.30 vs -0.446), as expected when the\n');
-fprintf('predictors are not perfectly orthogonal. See ../../AUDIT.md section 8.\n');
+fprintf('predictors are not perfectly orthogonal. See ../AUDIT.md section 8.\n');

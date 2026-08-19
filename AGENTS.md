@@ -15,8 +15,8 @@ accounts, and the working documents they replace are in `Reproduction/_archive/`
 | # | issue | question | resolution | document |
 |---|---|---|---|---|
 | 1 | **Z-scoring** | Should the per-vertex betas be z-scored before analysis? | **No.** The blank is pink noise, so `beta_std` is not a gain. | [`Reproduction/WHY_NOT_ZSCORE.md`](Reproduction/WHY_NOT_ZSCORE.md) |
-| 2 | **Data quality** | Are there outlier observers or datapoints to exclude? | **No.** No processing errors, no bad runs; all 8 observers retained. Measurement reliability quantified from runs. | [`Reproduction/GLM_QUALITY.md`](Reproduction/GLM_QUALITY.md), [`local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) |
-| 3 | **Angle conventions** | Are the absolute and location-dependent angle codings correct? | **Yes.** Code is consistent and correct; an earlier bug report is retracted. | [`AUDIT.md`](AUDIT.md) |
+| 2 | **Data quality** | Are there outlier observers or datapoints to exclude? | **No.** No processing errors, no bad runs; all 8 observers retained. Measurement reliability of the analysed quantities quantified from runs (§2.7). | [`Reproduction/local_qc/REPORT.md`](Reproduction/local_qc/REPORT.md) |
+| 3 | **Angle conventions** | Are the absolute and location-dependent angle codings correct? | **Yes.** Code is consistent and correct; an earlier bug report is retracted. | [`Reproduction/AUDIT.md`](Reproduction/AUDIT.md) |
 | 4 | **Harmonic model** | Does ROI binning manufacture a context effect that is really local stimulus geometry relative to each vertex's pRF? | **No.** Geometry accounts for 6–8%; pRF angle error is an order of magnitude too small. | [`Reproduction/HARMONIC_MODEL.md`](Reproduction/HARMONIC_MODEL.md), [supplement](Reproduction/supplement/SUPPLEMENT_harmonic_model.md) |
 | 5 | **Context effects** | What does a within-subject assessment support? | **Cartesian-frame asymmetries yes; polar-frame uninformative** — absence of evidence, not evidence of absence. | [`Reproduction/HARMONIC_MODEL.md`](Reproduction/HARMONIC_MODEL.md) Result 3 |
 | 6 | **LME** | Does the Fig-7 mixed model add anything? | **No.** Identical estimates to the subtraction route; its SE is anti-conservative. Recommend omitting from the manuscript. | [`Reproduction/LME.md`](Reproduction/LME.md) |
@@ -184,7 +184,7 @@ premise. All 8 observers are retained.
 All 8 observers × both experiments were extracted from the server (2026-07-23, then again
 unfiltered on 2026-07-24) and audited: no coding or processing error, uniform model parameters, no
 bad run, no dropout, correct surface co-registration. See `Reproduction/local_qc/REPORT.md` §2 and
-`Reproduction/GLM_QUALITY.md`. What remains genuinely open is that **no GLMsingle metric enters the
+`Reproduction/_archive/GLM_QUALITY.md`. What remains genuinely open is that **no GLMsingle metric enters the
 pipeline** — the only quality filter is still on the *pRF* fit (`pRF_r2 > 0.1`), and neither
 `allsubjectsTable.csv` variant carries a GLM column. Adding one is step 5 of
 `Reproduction/_archive/NEXT_STEPS.md`.
@@ -195,7 +195,7 @@ pipeline** — the only quality filter is still on the *pRF* fit (`pRF_r2 > 0.1`
 `Reproduction/` reproduces Figs 5–8 from `Support/allsubjectsTable.csv` two ways (a clean-room
 MATLAB pipeline and a bridge into this repo's own code). It once reported a
 polar-angle-ordering bug in `compute_derivativeDirections.m`. **That report is retracted** —
-see `AUDIT.md`, a full experiment-code→figure audit of the stimulus conventions.
+see `Reproduction/AUDIT.md`, a full experiment-code→figure audit of the stimulus conventions.
 
 The original `AnalysisCode` pipeline is **correct**, and an independent recomputation from the
 CSV reproduces the manuscript on all eight asymmetries, including `da` horizontal−vertical
@@ -203,7 +203,7 @@ CSV reproduces the manuscript on all eight asymmetries, including `da` horizonta
 swapped c-/cc-spirals in `cleanroom/config_repro.m` (flipping the four oblique wedges) and a
 Benson-vs-conventional polar-angle frame mismatch in `bridge/` (flipping the four cardinals).
 
-**Key convention** (established in `AUDIT.md`): the shared condition index 26–29 is each
+**Key convention** (established in `Reproduction/AUDIT.md`): the shared condition index 26–29 is each
 stimulus's *local orientation at the upper vertical meridian* (0°/90°/45°/135°), and the wedge
 dimension of `medianBOLDpa` is in **Benson** order — conventional `[90 45 0 315 270 225 180 135]`.
 Do not "align" that array with `[0 45 90 …]`; that would introduce the bug into working code.
@@ -246,9 +246,10 @@ Listed newest first — later documents supersede earlier ones where they overla
   reference, the clearing of both flagged observers, the fixed-`rng` design finding, and the
   recommendation to drop z-scoring. Draft manuscript caveat text alongside it in
   `manuscript_caveat_paragraph.md`; scripts and `glm_summary.csv` in the same folder.
-- `Reproduction/GLM_QUALITY.md` (2026-07-23) — the first GLM fit-quality audit, on the 4–8°
-  pRF-filtered extraction. Its R² tables stand; its §5 exclusion support and its §6/§6a open
-  questions are answered by `local_qc/REPORT.md`.
+- `Reproduction/_archive/GLM_QUALITY.md` (2026-07-23) — **archived.** The first GLM fit-quality
+  audit, on the 4–8° pRF-filtered extraction, superseded by `local_qc/REPORT.md` (the unfiltered
+  re-extraction its own §6a called for, with a richer §2.1 table). Its measurement-reliability
+  section now lives at `local_qc/REPORT.md` §2.7.
 - `Reproduction/_archive/NEXT_STEPS.md` — the task setups those two audits came from. The z-scoring and
   fit-quality tasks are now closed; step 5 (a GLM-`R2` column in `allsubjectsTable.csv`) is the
   live remainder.
@@ -264,7 +265,7 @@ Listed newest first — later documents supersede earlier ones where they overla
   two-observer exclusion — are superseded.** Scripts: `cleanroom/diagnose_zscore_fig7.m`,
   `diagnose_response_signs.m`, `compare_subject_weighting.m`.
 - `Reproduction/_archive/FINDINGS.md` — **fully retracted**; kept only as a record of the reproduction's
-  own two bugs. Do not act on it; `AUDIT.md` is the correct account.
+  own two bugs. Do not act on it; `Reproduction/AUDIT.md` is the correct account.
 - `Reproduction/server_extract/` — the read-only server extraction (`collect_everything.m`) that
   produced the data behind `local_qc/REPORT.md`, plus `RUNME.md` for whoever has the volume
   mounted.

@@ -15,7 +15,7 @@
 > the manuscript to **−0.30**, so the two figures agree in sign and there is no inconsistency
 > to explain.
 >
-> See [`../AUDIT.md`](../../AUDIT.md) for the full stimulus→figure audit and the numerical
+> See [`../AUDIT.md`](../AUDIT.md) for the full stimulus→figure audit and the numerical
 > demonstration. **Do not apply the fix suggested in the Status section** — it would introduce
 > the bug into working code. The sections below are retained as a record of the earlier
 > analysis.
@@ -176,7 +176,7 @@ produced by the current code), while its Fig 6A `da` horizontal-vertical (−0.4
 ## Status — ⚠️ this checklist records the RETRACTED analysis
 
 **Nothing here is an open action.** See the banner at the top of this file and
-[`../AUDIT.md`](../../AUDIT.md). Kept verbatim only as a record of what was concluded before the
+[`../AUDIT.md`](../AUDIT.md). Kept verbatim only as a record of what was concluded before the
 audit.
 
 - [x] Path A data path validated (7/8 exact) — *this part holds; the 8th reproduces too once the

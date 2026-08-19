@@ -2,7 +2,7 @@
 
 **Resolution: the LME estimates nothing the beta-subtraction route does not, and its standard error
 is wrong in a known direction. Recommend omitting it from the manuscript, reporting the
-within-observer error summary instead (see [`GLM_QUALITY.md`](GLM_QUALITY.md)), and pointing to this
+within-observer error summary instead (see [`_archive/GLM_QUALITY.md`](_archive/GLM_QUALITY.md)), and pointing to this
 repository for the precision-weighted check.**
 
 ## 1. The estimates are identical, not merely similar
@@ -170,7 +170,7 @@ weight.
 Two caveats. **τ̂² is estimated from 7 df**, so the entire weighting scheme rests on a quantity this
 design cannot measure well; each σᵢ² comes from only 8 runs. At n = 8, estimated-weight GLS can add
 variance rather than remove it. And the disattenuation ceiling (p 0.024 → 0.014 for H−V, see
-`GLM_QUALITY.md`) bounds what any of this can achieve.
+`_archive/GLM_QUALITY.md`) bounds what any of this can achieve.
 
 Worth noting: precision weighting down-weights sub-0426 (SE 0.251) and sub-0395 (SE 0.158, and only
 6 runs), and sub-0395 is the observer the leave-one-out analysis singles out. So it is a principled
@@ -185,7 +185,7 @@ with a standard error that is wrong in a known direction; respecified correctly 
 numbers with a standard error that converges on the paired *t*. Report instead:
 
 - the within-observer error summary, in the data-quality section — it shows both that the GLM data
-  are good and that precision weighting is not needed (`GLM_QUALITY.md`);
+  are good and that precision weighting is not needed (`_archive/GLM_QUALITY.md`);
 - a one-line statement that a precision-weighted analysis changes no conclusion, pointing to this
   repository for the numbers above.
 ## 7. ⚠️ Bootstrap vs *t* intervals disagree on two polar asymmetries

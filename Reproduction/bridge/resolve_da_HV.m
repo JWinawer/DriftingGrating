@@ -9,7 +9,7 @@
 % compute_derivativeDirections.m. That was wrong. The repo function is correct; the
 % discrepancy came from two errors in this reproduction (swapped spirals in
 % config_repro.m, and this bridge emitting the PA dimension in ascending conventional
-% order instead of the repo's Benson order). Both are fixed. See ../../AUDIT.md.
+% order instead of the repo's Benson order). Both are fixed. See ../AUDIT.md.
 
 clear; clc;
 here      = fileparts(mfilename('fullpath'));
