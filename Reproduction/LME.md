@@ -125,18 +125,41 @@ And on the context differences the claims rest on:
 
 **No conclusion changes.**
 
-**Why the weights compress even though the reliabilities do not.** The weight is 1/(τ² + σᵢ²) and τ²
-is common to every observer. The per-observer SEs genuinely differ a great deal — da rad−tang runs
-0.067 to 0.251, a 14× spread in variance — but τ² sits underneath all of them as a floor. Since
-within-observer error is only 23–39% of the total, τ² is the larger term and the weights can spread
-by at most ~3×, not 14×. The general point: **precision weighting is bounded by the
-between-to-within variance ratio, not by how much the reliabilities differ.** An observer whose
-effect genuinely differs from the group cannot be down-weighted for being noisy, because most of why
-they differ is not noise.
+**Why the weights compress even though the reliabilities do not.** Notation, as in random-effects
+meta-analysis: **σᵢ²** is observer *i*'s within-observer measurement variance (how much their own
+estimate would move on re-measurement, here from resampling runs), and **τ²** is the
+between-observer variance of the *true* effects — the heterogeneity, i.e. the random-effect variance
+component, a single number shared by the whole sample. It is obtained by subtraction,
+τ̂² = var(yᵢ) − mean(σᵢ²).
 
-Two caveats. τ² is estimated from 7 df and each σᵢ² from 8 runs, so the weights are themselves
-noisy; at n = 8, estimated-weight GLS can add variance rather than remove it. And the disattenuation
-ceiling (p 0.024 → 0.014 for H−V, see `GLM_QUALITY.md`) bounds what any of this can achieve.
+An observer's measured value is not a noisy reading of the group mean; it is a noisy reading of
+*their own* true effect, which is itself a draw from a population that genuinely varies. So its
+variance as an estimator of the group mean is τ² + σᵢ², which is where the weight comes from.
+
+Worked, for da rad−tang (the most heterogeneous case): τ̂² = 0.0256 (τ = 0.160), mean σᵢ² = 0.0179.
+
+```
+sigma_i^2       ranges 0.0045 -> 0.0630     ratio 14.1x
+tau^2 + sigma_i^2  ranges 0.0300 -> 0.0886     ratio  2.95x
+```
+
+Adding a constant to every term shrinks the ratios toward 1, and here that constant is larger than
+the mean σᵢ². So a 14× spread in reliability becomes a 3× spread in weight. Were τ² zero — every
+observer sharing one true effect, all disagreement being noise — the weights would spread the full
+14.1×, and the noisiest observer would drop from 5.5% to 1.8%.
+
+Two consequences. A perfectly measured observer still has a weight ceiling of 1/τ², because one
+exact draw from a varying population still does not pin down its mean. And a noisy observer is not
+worthless: sub-0426 falls from 12.5% under equal weighting to 5.5%, real down-weighting, but bounded.
+**You can only discount the part of an observer's deviation that is noise, and here most of it is
+not.** Note this is compression, not a fixed cap — the ratio is (τ² + σ²ₘₐₓ)/(τ² + σ²ₘᵢₙ), always
+smaller than σ²ₘₐₓ/σ²ₘᵢₙ when τ² > 0, but an arbitrarily noisy observer would still approach zero
+weight.
+
+Two caveats. **τ̂² is estimated from 7 df**, so the entire weighting scheme rests on a quantity this
+design cannot measure well; each σᵢ² comes from only 8 runs. At n = 8, estimated-weight GLS can add
+variance rather than remove it. And the disattenuation ceiling (p 0.024 → 0.014 for H−V, see
+`GLM_QUALITY.md`) bounds what any of this can achieve.
 
 Worth noting: precision weighting down-weights sub-0426 (SE 0.251) and sub-0395 (SE 0.158, and only
 6 runs), and sub-0395 is the observer the leave-one-out analysis singles out. So it is a principled

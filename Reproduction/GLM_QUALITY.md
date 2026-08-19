@@ -305,10 +305,11 @@ model could recover — changes no conclusion (horiz−vert p 0.024 → 0.014, c
 rad−tang 0.70 → 0.66). **The binding limitation is between-observer variability at n = 8, not
 measurement noise.**
 
-Second, **precision weighting is not needed.** Weighting observers by 1/(τ² + σᵢ²) rather than
-equally shifts no group estimate materially and changes no *p*-value's interpretation; the weights
-can spread by at most ~3× because τ² is a floor common to every observer. Details and the full
-table are in [`LME.md`](LME.md) §5.
+Second, **precision weighting is not needed.** Weighting observers by 1/(τ² + σᵢ²) — where σᵢ² is
+observer *i*'s measurement variance and τ² the between-observer variance of the true effects —
+rather than equally shifts no group estimate materially and changes no *p*-value's interpretation.
+The weights spread by only ~3× despite a 14× spread in reliability, because τ² is common to every
+observer and dominates. Details and the full table are in [`LME.md`](LME.md) §5.
 
 > **An earlier estimate of this quantity was withdrawn.** It resampled *vertices*, which is invalid:
 > it holds the GLM betas fixed and only reshuffles which vertices enter the wedge median, so it
