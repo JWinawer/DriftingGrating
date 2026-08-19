@@ -177,6 +177,38 @@ Worth noting: precision weighting down-weights sub-0426 (SE 0.251) and sub-0395 
 version of that probe — it moves in the same direction and still does not approach significance
 (p = 0.54 vs 0.70), which strengthens the "uninformative, not null" reading of the polar-frame
 result rather than undermining it.
+### How it is computed, and why not with `fitlme`
+
+The precision-weighted estimate is computed **in closed form** in
+`cleanroom/precision_weighted_table.m`, not through MATLAB's mixed-model functions. This is forced,
+not a shortcut: `fitlme` has no mechanism for **known, per-observer** measurement variances. It
+estimates a single shared residual variance, and its `'Weights'` argument supplies *relative*
+precisions that are then multiplied by that estimated variance — so the σᵢ² measured from runs
+cannot enter as fixed quantities. On da rad−tang:
+
+| route | estimate | |
+|---|---|---|
+| closed form (random-effects, σᵢ² known) | **0.1756** | the correct estimator |
+| `fitlme y~1+(1\|obs)`, `Weights` = 1/σᵢ² | 0.1995 | the τ² = 0 case — over-weights clean observers |
+| `fitlme y~1+(1\|obs)`, no weights | 0.1501 | equal weighting |
+
+`fitlme` returns either extreme but not the correct intermediate. (With one row per observer the
+random intercept is also not separable from the residual, so that formulation is degenerate
+regardless — it simply returns the weighted least-squares answer, and reports an estimated residual
+variance of 2.06 where the meta-analytic model fixes the scale at 1.)
+
+What the closed form implements is the standard **random-effects meta-analysis** estimator: observed
+effects with known sampling variances, plus a between-study variance. R has it as `metafor::rma`;
+MATLAB has no built-in equivalent. This matters for how the analysis is described — it is not
+"we declined to fit a mixed model", it is "the mixed model that can use measured within-observer
+error is a random-effects meta-analysis, which MATLAB's LME functions cannot express."
+
+**The τ² estimator barely matters.** The table uses a simple method-of-moments estimate,
+τ̂² = max(0, var(yᵢ) − mean(σᵢ²)). The classic DerSimonian–Laird form uses a weighted *Q* statistic
+and gives noticeably different τ̂² in places (da rad−tang: 0.160 vs 0.116) but almost identical
+weighted means (0.1756 vs 0.1825; largest discrepancy across all eight asymmetries is 0.007). The
+conclusion does not depend on the choice.
+
 
 ## 6. Recommendation
 
