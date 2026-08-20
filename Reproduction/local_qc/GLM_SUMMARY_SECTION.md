@@ -472,12 +472,30 @@ Tested directly (V1 median GLM R² by eccentricity, dg, all 8 observers):
 | median R² | 4.1 | 3.9 | 4.0 | 4.6 | 5.4 | 5.3 | 4.5 | 4.5 | 4.2 | 3.6 | 6.5 | 5.8 |
 
 **The group profile is essentially flat** (3.6–6.5) with no drop beyond 12°, so the map does not
-support a spatial-specificity claim either. Only the two high-R² observers show the expected
+support a spatial-specificity claim either — and on reflection **a flat profile is what should be
+expected here**, for three reasons (JW, 2026-08-19):
+
+1. **R² is sign-blind.** A vertex *suppressed* by the stimulus has as much cross-condition variance
+   as a driven one and earns the same R². Variance explained therefore cannot localise the
+   stimulus even in principle.
+2. **pRF extent, not just centre.** A pRF whose centre lies beyond the stimulus can still overlap
+   it. Measured: at 14–18°, median σ = 2.17 and **59%** of V1 vertices have (ecc − 2σ) < 12°; at
+   18–25°, σ = 2.98 but only **18%** do. So extent accounts for the near periphery, not the far.
+3. **Surround suppression, with no way to see it.** Vertices well outside the stimulus would
+   normally show a *negative* response, and with a sparser design carrying occasional long blanks
+   one would see a positive→negative transition with eccentricity. The rapid event-related design
+   plus the absence of any true blank makes that transition essentially invisible. Measured:
+   median stationary−blank stays **positive at every eccentricity** and rises rather than falls
+   (+0.17 at 4–8°, +0.32 at 14–18°, +0.42 at 18–25°) — no crossing at all.
+
+So the flat profile is a property of the measure and the design, not evidence about the model. Only the two high-R² observers show the expected
 shape — sub-0037 and sub-0395 rise to 16–32% across ~3–12° — while the other six sit near 4%
 everywhere, which is what the pink-noise reference predicts (little cross-condition variance to
 explain). The far-periphery bins rest on few vertices (median n ≈ 100–120 beyond 14°, against
-≈1350 at 4–8°), so their elevation is not reliable, though pRF fit quality there is adequate
-(median pRF R² 0.52–0.56).
+≈1350 at 4–8°), so their elevation is not reliable. pRF *fit quality* there is adequate (median pRF
+R² 0.52–0.56), but median σ is non-monotonic across the outer bins (0.91 → 0.20 → 2.17 → 2.98),
+which points to poorly-constrained fits at the V1 label edge rather than a real size progression —
+another reason not to lean on 14–25°.
 
 So: present Fig 4C as an **illustration for an example observer**, with no quantitative claim about
 either how well or where the model fits. The claims in this section should rest on the reliability
