@@ -294,9 +294,72 @@ alone. An earlier version of `run_mismatch_local.m` scaled its ROI estimate by t
 per-vertex `R2run` (≈0.05 where ≈0.42 was needed, an ~8× error); that column has been removed and
 only the scale-free ratio is reported at ROI level.
 
-**Calibration pull (in progress).** `../server_extract/collect_timeseries.m` fetches one session
-(sub-0037, dg; 8 runs, 2.35 GB) to measure the per-vertex→ROI R² relationship, ⟨e, ŷ_m⟩ over 56 run
-pairs rather than 2, and actual R²_m for 8 runs. Measured mount throughput has ranged 0.8–1.6 MB/s
+### Calibration result (sub-0037, dg, 8 runs — 56 run pairs)
+
+Fetched and analysed 2026-08-19 ([`../cleanroom/calibrate_run_mismatch.m`](../cleanroom/calibrate_run_mismatch.m)).
+Predictions use the **overall** condition betas (mean across runs), not a run's own, to avoid
+overfitting the run being predicted.
+
+**The sign claim is confirmed: measured R²_m is negative in 56 of 56 run pairs**, at both the
+per-vertex and ROI-mean level. That is the claim the manuscript needs, and it is now measured
+rather than inferred.
+
+**The failing assumption is the other one.** Decomposing the gap (per vertex, normalised by ‖y‖²):
+
+| term | measured | the formula assumes |
+|---|--:|---|
+| 2⟨e, ŷ_m⟩ / ‖y‖² | **−0.010** (SD 0.037) | 0 |
+| 2⟨e, ŷ_c⟩ / ‖y‖² | **−0.079** | 0 |
+
+⟨e, ŷ_m⟩ — the term flagged as the risk — is genuinely negligible. The whole bias comes from
+⟨e, ŷ_c⟩, dismissed above as a minor "exact for OLS, approximate for ridge" caveat. **That was
+backwards.**
+
+**The fix is to rewrite the formula.** Using *Q* = ‖ŷ_c‖²/‖y‖² in place of R²_c,
+
+> R²_m = *Q* · (2ρ*k* − *k*²)
+
+needs only ⟨e, ŷ_m⟩ = 0, with no assumption about ⟨e, ŷ_c⟩. Here *Q* = 0.131 against
+R²_c = 0.051 (ratio 2.54), and substituting it cuts the mean gap from −0.087 to **−0.014** — which
+matches the measured ⟨e, ŷ_m⟩ term of −0.010. The accounting closes.
+
+**But the estimator predicts the average, not individual pairs.** Correlation between measured and
+predicted R²_m across the 56 pairs is only 0.15 (per vertex) / 0.12 (ROI), and the *Q* rescaling
+increases per-pair scatter (gap SD 0.081 → 0.177) even as it fixes the mean. Use it for a group
+statement, never to predict a specific run pair. *Q* is also not locally available — it needs
+‖y‖² — so the 2.54 ratio is itself a calibration constant that may not transfer across observers.
+
+### What averaging over vertices buys — the blocked quantity, now measured
+
+| quantity | value |
+|---|--:|
+| measured R²_c, per-vertex median | 0.051 |
+| measured R²_c, ROI mean (single observer) | 0.181 |
+| **ratio** | **3.52×** |
+| mean cross-vertex residual correlation | **0.273** |
+
+Averaging 1232 vertices buys only **3.5×** in R², nowhere near what independent noise would give,
+because the residuals are strongly correlated across vertices. This is the quantity that blocks
+converting the scale-free ratio into an absolute ROI-level R², and it cannot be derived from
+predictions — it had to be measured.
+
+> **Note on comparability.** Measured per-vertex R²_c (0.051) is well below GLMsingle's own
+> `R2run` (0.174) for two reasons, neither a bug: GLMsingle fits 52 **single-trial** betas per run
+> where this uses 13 condition betas fit across runs, and the extraction projects out only
+> polynomials (following `createTTaveTable.m`) while GLMsingle also projects noise-pool PCs. The
+> calibration is internally consistent because it uses the measured R²_c throughout, but these
+> values are not interchangeable with `R2run`.
+
+**Bottom line for the manuscript.** State the run-mismatch control as the qualitative claim — the
+mismatched-design prediction fits worse than the mean in every run pair — which is now measured on
+56 pairs plus the 2 in Fig 4A. Quote exact magnitudes only from measured data, for whatever subset
+is reported, not from the local estimator.
+
+### Original pull note
+
+**Calibration pull.** `../server_extract/collect_timeseries.m` fetches one session
+(sub-0037, dg; 8 runs, 2.35 GB). Completed in ~10 min; per-run times 52–172 s, i.e. an effective
+1.7–3.4 MB/s. Measured mount throughput has ranged 0.8–3.4 MB/s
 within one session of testing (Abu Dhabi → New York, and a recent router change in the building), so
 treat any single throughput measurement as unreliable for planning.
 
