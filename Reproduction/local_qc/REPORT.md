@@ -294,6 +294,11 @@ A draft manuscript paragraph capturing the pink-noise-baseline caveat is in
 ## Files (in `Reproduction/local_qc/`)
 
 - `REPORT.md` — this document.
+- `GLM_SUMMARY_SECTION.md` — split-half (over runs) reliability of the analysed profile and of each
+  asymmetry, plus draft manuscript text for the Results section "GLM summary". Extends §2.7 from
+  the asymmetries to the profile itself; written 2026-08-19.
+- `splithalf_reliability.csv` / `.mat` — per-observer split-half reliabilities behind that document
+  (`../cleanroom/splithalf_reliability.m`).
 - `glm_summary.csv` — per-observer table: R², and raw and blank-subtracted responses (stationary,
   moving, blank) for V1/V2/V3 (4–8°), V4 and MT (whole ROI), and whole surface. Also at
   `~/Downloads/`.
