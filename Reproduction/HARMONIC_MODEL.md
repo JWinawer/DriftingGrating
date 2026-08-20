@@ -216,6 +216,19 @@ re-expression of the published analysis before any of its departures.
 
 ### A note on units
 
+> **Correction, 2026-08-19 — the recommended column has changed from `ref`/`pubMed` to
+> `rtMean`.** The paragraph below recommended the `ref` (= `pubMed`, across-vertex **median**)
+> column as "the values a non-z-scored manuscript should carry". That recommendation is
+> withdrawn. The across-vertex **mean** is the manuscript's aggregate (JW, 2026-08-19), and the
+> mean route plus the observer pRF-gain rescaling reproduces all eight published asymmetries to
+> ±0.003, whereas the median route misses dg horiz−vert by 0.07. `lme1_fit.m` (Fig 7) was
+> already reading `meanBOLDpa`; only `plot_NeuralAsymmetries.m` (Figs 5/6) passed the median,
+> and it has been switched. **Read `rtMean`, not `ref`, in the table above**, and see
+> [`local_qc/GLM_SUMMARY_SECTION.md`](local_qc/GLM_SUMMARY_SECTION.md) for the route comparison
+> and the gain-rescaled values (which differ from `rtMean` by ~1–6% per asymmetry). The
+> superseded paragraph is kept below.
+
+
 The four constants per experiment transcribed in `cleanroom/validate_against_manuscript.m`
 (`[-1.155 -0.40 0.23 0.06]`, `[-0.45 -0.06 0.60 0.17]`) are reproduced to three decimals by the
 **z-scored** pipeline and not by the raw one, so as transcribed they are in σ units. Z-scoring

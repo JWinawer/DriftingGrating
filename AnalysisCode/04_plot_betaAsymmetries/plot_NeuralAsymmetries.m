@@ -30,8 +30,13 @@ contrasts_dict = projectSettings.contrasts_dict;
 
 %% Load and remove subject with extreme motion
 
-load(fullfile(glmResultsfolder, 'medianBOLDpa')) % contrasts x polarAngles x ROIs x subjects
-load(fullfile(glmResultsfolder, 'medianBOLD')) % contrasts x ROIs x subjects
+% Use the across-vertex MEAN, not the median (JW, 2026-08-19). meanWithinLabel.m saves
+% both; lme1_fit.m (Fig 7) already reads meanBOLDpa, so Figs 5/6 were on a different
+% aggregate from Fig 7 until now. The mean is what the Methods describe and what
+% reproduces the reported asymmetries; see
+% Reproduction/local_qc/GLM_SUMMARY_SECTION.md ("Which route the manuscript uses").
+load(fullfile(glmResultsfolder, 'meanBOLDpa')) % contrasts x polarAngles x ROIs x subjects
+load(fullfile(glmResultsfolder, 'meanBOLD')) % contrasts x ROIs x subjects
 
 figureDir = [strrep(bidsDir, 'data_bids', 'figures'), projectName];
 
@@ -40,13 +45,13 @@ if ~isfolder(figureDir)
 end
 
 if strcmp(projectName, 'dg')
-    medianBOLDpa = medianBOLDpa(:,:,:,[1,2,3,4,5,6,7,8]); % trying to match subjects across
-    medianBOLD = medianBOLD(:,:,[1,2,3,4,5,6,7,8]);
+    meanBOLDpa = meanBOLDpa(:,:,:,[1,2,3,4,5,6,7,8]); % trying to match subjects across
+    meanBOLD = meanBOLD(:,:,[1,2,3,4,5,6,7,8]);
     % to leave out one subject
     subjects = {'sub-0037', 'sub-0201', 'sub-0255', 'sub-wlsubj123', 'sub-wlsubj124', ...
         'sub-0395', 'sub-0426', 'sub-0250'};
-    %medianBOLDpa = medianBOLDpa(:,:,:,[1,2,3,4,5,6,7,8,9,10,11,13]); % leave out 12 and include 13 instead
-    %medianBOLD = medianBOLD(:,:,[1,2,3,4,5,6,7,8,9,10,11,13]);
+    %meanBOLDpa = meanBOLDpa(:,:,:,[1,2,3,4,5,6,7,8,9,10,11,13]); % leave out 12 and include 13 instead
+    %meanBOLD = meanBOLD(:,:,[1,2,3,4,5,6,7,8,9,10,11,13]);
     %subjects = {'sub-0037', 'sub-0201', 'sub-0255', 'sub-0397', ...
     %    'sub-0442', 'sub-wlsubj121', ...
     %    'sub-wlsubj123', 'sub-wlsubj124', 'sub-wlsubj127', 'sub-0395', 'sub-0426', ...
@@ -105,7 +110,7 @@ projectSettings.figureDir = figureDir;
 condIdx1 = [27]; %[26,27]; %[9,11];   
 condIdx2 = [26]; %[28,29]; %[8, 10];
 
-plot0_experimentalCond(condIdx1, condIdx2, medianBOLD, projectSettings)
+plot0_experimentalCond(condIdx1, condIdx2, meanBOLD, projectSettings)
 
 %% MAIN CONDITION: Plot polor plots
 
@@ -132,20 +137,20 @@ for ci=1:numel(is_mainsubset) %isradial)
     
     % this depends on retinotopy to isolate each direction with respect to its
     % location, but still only plots the main conditions
-    plot1_experimentalCond(medianBOLDpa, 'mainCardinalVsMainOblique', projectSettings, subset) %radialvstang)
+    plot1_experimentalCond(meanBOLDpa, 'mainCardinalVsMainOblique', projectSettings, subset) %radialvstang)
 
     % plot each absolute directions (only needed 1x)
     if strcmp(projectName, 'dg') && subset==0
-        plotSepDirs(medianBOLDpa, 'mainCardinalVsMainOblique', 'Abs', projectSettings, subset) %radialvstang)
+        plotSepDirs(meanBOLDpa, 'mainCardinalVsMainOblique', 'Abs', projectSettings, subset) %radialvstang)
     elseif (strcmp(projectName, 'da') || strcmp(projectName, 'dots')) && subset==0
-        plotSepDirs(medianBOLDpa, 'mainCardinalVsMainOblique', 'Rel', projectSettings, subset) %radialvstang)
+        plotSepDirs(meanBOLDpa, 'mainCardinalVsMainOblique', 'Rel', projectSettings, subset) %radialvstang)
     end
 
     % MAIN CONDITION: Plot pairwise plots (EQUALLY WEIGHING POLAR ANGLE)
     % this section will average these values to equally weigh each of the 8
     % visual field locations
     
-    plot2_experimentalCond(medianBOLDpa, 'mainCardinalVsMainOblique', projectSettings, subset) %radialvstang)
+    plot2_experimentalCond(meanBOLDpa, 'mainCardinalVsMainOblique', projectSettings, subset) %radialvstang)
     
     counter = counter+1;
 end
@@ -179,7 +184,7 @@ for ci=1:numel(n_derivedConditions)
     % estimates with/without curvature (closer to the locations 0-315 in 45
     % degree increments are more exact).
 
-    newMatrix = compute_derivativeDirections(medianBOLDpa, projectSettings, subset);
+    newMatrix = compute_derivativeDirections(meanBOLDpa, projectSettings, subset);
 
     % Average the values in the first two rows along the first dimension
     % (contrast)
@@ -197,10 +202,10 @@ for ci=1:numel(n_derivedConditions)
     
     % plot each absolute directions
     if (strcmp(projectName, 'da') || strcmp(projectName, 'dots')) && subset==0 %~radialvstang
-        newMatrix = compute_derivativeEachAbsDirection(medianBOLDpa, projectSettings);
+        newMatrix = compute_derivativeEachAbsDirection(meanBOLDpa, projectSettings);
         plotSepDirs(newMatrix, 'derivedCardinalVsDerivedOblique', 'Abs', projectSettings, subset)
     elseif strcmp(projectName, 'dg') && subset==0 %~radialvstang
-        newMatrix = compute_derivativeEachRelDirection(medianBOLDpa, projectSettings);
+        newMatrix = compute_derivativeEachRelDirection(meanBOLDpa, projectSettings);
         plotSepDirs(newMatrix, 'derivedCardinalVsDerivedOblique', 'Rel', projectSettings, subset)
     end
 

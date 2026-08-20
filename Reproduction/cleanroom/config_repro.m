@@ -41,6 +41,19 @@ function cfg = config_repro()
     % four cardinal meridians. See ../AUDIT.md sections 3 and 5.
     cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135];
 
+    % --- across-vertex aggregator, and observer gain rescaling ------------------
+    % MEAN, not median (JW, 2026-08-19). The repo's meanWithinLabel.m saves both
+    % meanBOLDpa and medianBOLDpa; lme1_fit.m (Fig 7) already reads meanBOLDpa, while
+    % plot_NeuralAsymmetries.m (Figs 5/6) passed medianBOLDpa. Mean + gain rescaling
+    % reproduces all eight published asymmetries to +-0.003; the median route does not
+    % (it misses dg horiz-vert by 0.07). See ../local_qc/GLM_SUMMARY_SECTION.md.
+    cfg.aggregator = 'mean';        % 'mean' | 'median'
+
+    % Per-observer pRF gain rescaling, as applied in lme1_fit.m/plot1_/plot2_.
+    % Set cfg.gainFile = '' to disable. See OBSERVER_GAIN_WEIGHTS.
+    cfg.gainFile = '/Users/jaw288/dg_collect/gainSummary.csv';
+    cfg.gainMean = 'geometric';     % 'geometric' (manuscript) | 'arithmetic' (repo code)
+
     % --- bootstrap ---
     cfg.nBoot   = 1000;
     cfg.ciLevel = 95;           % for Figs 5/6 pairwise difference CIs

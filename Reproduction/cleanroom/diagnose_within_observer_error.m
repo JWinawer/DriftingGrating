@@ -40,6 +40,7 @@ function W = diagnose_within_observer_error(varargin)
     opt = p.Results;
 
     cfg = config_repro();
+    gscale = observer_gain_weights(cfg);   % per-observer pRF-gain rescaling
     nm  = {'horiz-vert','card-obl','rad-tang','polc-polo'};
     nS  = numel(cfg.subjects);
     W   = struct('names', {nm});
@@ -59,7 +60,7 @@ function W = diagnose_within_observer_error(varargin)
             [A, ok] = prep(S, cfg, expn{ei}, opt.root);
             if ~ok, continue; end
 
-            W.full(si,:,ei) = asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
+            W.full(si,:,ei) = gscale(si) * asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
 
             % Split-half over all balanced splits. Only defined for an even number of
             % runs: two observers depart from 8 (sub-0255 dg has 9, sub-0395 da has 6),
@@ -76,7 +77,7 @@ function W = diagnose_within_observer_error(varargin)
                                - asym_from_runs(A, h2, cfg, expn{ei});
                 end
                 % SD of a half-estimate = SD(diff)/sqrt(2); full-data SE = that/sqrt(2)
-                W.seSplit(si,:,ei) = std(dHalf, 0, 1, 'omitnan') / 2;
+                W.seSplit(si,:,ei) = gscale(si) * std(dHalf, 0, 1, 'omitnan') / 2;
             end
 
             % bootstrap over runs
@@ -84,7 +85,7 @@ function W = diagnose_within_observer_error(varargin)
             for b = 1:opt.nBoot
                 Bb(b,:) = asym_from_runs(A, randi(S.nRun, [1 S.nRun]), cfg, expn{ei});
             end
-            W.seBoot(si,:,ei) = std(Bb, 0, 1, 'omitnan');
+            W.seBoot(si,:,ei) = gscale(si) * std(Bb, 0, 1, 'omitnan');
         end
     end
     W.subjects = cfg.subjects;
@@ -110,7 +111,7 @@ end
 
 % ------------------------------------------------------------------------
 function a = asym_from_runs(A, runs, cfg, en)
-% Mean beta over the given runs -> wedge medians -> the four asymmetries.
+% Mean beta over the given runs -> wedge aggregate (cfg.aggregator) -> the 4 asymmetries.
     B = mean(A.runBeta(:, :, runs), 3, 'omitnan');          % nVert x nCond
     idx = cfg.(en).oriIdx;                                  % CONTRASTS.json 26..29
     col = idx - 25 + 8;                                     % -> betamap cols 9..12
@@ -119,7 +120,11 @@ function a = asym_from_runs(A, runs, cfg, en)
     M   = nan(numel(col), nP);
     for p = 1:nP
         m = A.wedge == p;
-        if any(m), M(:,p) = median(C(m,:), 1).'; end
+        if any(m)
+            if strcmpi(cfg.aggregator, 'median'), M(:,p) = median(C(m,:), 1).';
+            else,                                 M(:,p) = mean(C(m,:), 1).';
+            end
+        end
     end
     Asy = compute_asymmetries(M, cfg, cfg.(en));
     a = nan(1,4);

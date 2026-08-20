@@ -105,7 +105,37 @@ Done properly, with per-observer reliabilities measured across runs and weights
 `cleanroom/precision_weighted_table.m` and written to
 `supplement/precision_weighted.csv`. Intervals are 95% on 7 df.
 
-**The four asymmetries, per experiment** (% signal change):
+> **Regenerated 2026-08-19 on the published route (across-vertex MEAN + observer pRF-gain
+> rescaling).** The two tables below were computed with the across-vertex *median* and no gain
+> rescaling. Both inputs have since changed (see
+> [`local_qc/GLM_SUMMARY_SECTION.md`](local_qc/GLM_SUMMARY_SECTION.md)), so the current numbers
+> are those in `supplement/precision_weighted.csv`, reproduced here; the superseded tables are
+> kept below. **The conclusion is unchanged**: precision weighting moves no context effect and no
+> Cartesian-frame asymmetry, and da rad−tang remains the one cell whose *status* it changes.
+>
+> | exp | asymmetry | equal-weighted [95% CI] | precision-weighted [95% CI] | τ | mean σᵢ | *w* max/min |
+> |---|---|---|---|---|---|---|
+> | dg | horiz−vert | −0.547 [−0.679, −0.416] | −0.549 [−0.669, −0.428] | 0.086 | 0.132 | 3.63× |
+> | dg | card−obl | −0.221 [−0.354, −0.089] | −0.213 [−0.345, −0.082] | 0.138 | 0.078 | 1.39× |
+> | dg | rad−tang | 0.104 [0.037, 0.171] | 0.112 [0.047, 0.178] | 0.070 | 0.040 | 1.89× |
+> | dg | polc−polo | 0.039 [0.002, 0.076] | 0.040 [0.004, 0.077] | 0.040 | 0.019 | 1.38× |
+> | da | horiz−vert | −0.218 [−0.365, −0.071] | −0.214 [−0.361, −0.068] | 0.170 | 0.046 | 1.23× |
+> | da | card−obl | −0.029 [−0.066, 0.009] | −0.032 [−0.068, 0.005] | 0.039 | 0.021 | 1.80× |
+> | da | rad−tang | 0.150 [0.007, 0.292] | **0.176 [0.065, 0.286]** | 0.072 | 0.154 | 9.89× |
+> | da | polc−polo | 0.040 [−0.048, 0.127] | 0.040 [−0.044, 0.124] | 0.077 | 0.071 | 2.69× |
+>
+> | asymmetry | equal-weighted [95% CI] | *p* | precision-weighted [95% CI] | *p* | *w* max/min |
+> |---|---|---|---|---|---|
+> | horiz−vert | −0.329 [−0.528, −0.130] | 0.0058 | −0.335 [−0.530, −0.140] | 0.0048 | 1.71× |
+> | card−obl | −0.193 [−0.314, −0.071] | 0.0073 | −0.183 [−0.303, −0.062] | 0.0089 | 1.49× |
+> | rad−tang | −0.046 [−0.224, 0.132] | 0.56 | −0.061 [−0.219, 0.097] | 0.39 | 4.84× |
+> | polc−polo | −0.001 [−0.103, 0.102] | 0.99 | −0.001 [−0.102, 0.099] | 0.97 | 2.14× |
+>
+> Note `w` max/min for da rad−tang rises from 2.95× to 9.89×: the gain rescaling and the
+> precision weighting interact (see the "double weighting" note in
+> [`local_qc/GLM_SUMMARY_SECTION.md`](local_qc/GLM_SUMMARY_SECTION.md)).
+
+**The four asymmetries, per experiment** (% signal change) — *superseded, median route:*
 
 | exp | asymmetry | equal-weighted [95% CI] | precision-weighted [95% CI] | τ | mean σᵢ | *w* max/min |
 |---|---|---|---|---|---|---|
@@ -118,7 +148,7 @@ Done properly, with per-observer reliabilities measured across runs and weights
 | da | rad−tang | 0.150 [−0.024, 0.324] | **0.176 [0.011, 0.340]** | 0.160 | 0.134 | 2.95× |
 | da | polc−polo | 0.034 [−0.062, 0.129] | 0.031 [−0.062, 0.125] | 0.090 | 0.070 | 1.83× |
 
-**The four context effects** (dg − da):
+**The four context effects** (dg − da) — *superseded, median route:*
 
 | asymmetry | equal-weighted [95% CI] | *p* | precision-weighted [95% CI] | *p* | *w* max/min |
 |---|---|---|---|---|---|
