@@ -107,10 +107,18 @@ full machine-readable values incl. motion and un-subtracted responses are in `gl
 | sub-0426 | 4.6 | 9.9 | −0.096 | 0.575 | 4.5 | 4.6 | −0.085 | 0.103 | 3.9 | 4.2 | 0.159 | 0.342 | 3.2 | 4.3 | 0.011 | 0.042 |
 | sub-0250 | 6.3 | 3.6 | 0.353 | 0.378 | 8.1 | 3.7 | 0.421 | 0.265 | 4.9 | 3.6 | 0.504 | 0.455 | 4.0 | 3.2 | 0.087 | 0.050 |
 
-*R² = median % variance explained; β = mean % signal change, stationary − blank. V1 responses are
-concentrated in the stimulated 4–8° band: over the whole V1 label sub-0037's dg R² is only 5.4,
-but within 4–8° it is 16.6 — the eccentricity restriction, not any variance threshold, is what
-isolates the responsive patch.*
+*R² = median % variance explained; β = mean % signal change, stationary − blank.*
+
+> **Correction, 2026-08-19 (JW).** This caption previously read "V1 responses are concentrated in
+> the stimulated 4–8° band … the eccentricity restriction is what isolates the responsive patch."
+> That mis-states why 4–8° is used: it is the band where **spatial frequency is most closely
+> matched between the two experiments**, not the stimulated extent. The stimulus spanned roughly
+> **0.5–12°**. The individual numbers are unchanged and correct — over the whole V1 label
+> sub-0037's dg R² is 5.4 against 16.6 within 4–8° — but they do not show that 4–8° is "the
+> responsive patch", since the whole V1 label also includes eccentricities the stimulus never
+> reached. Measured directly, the group-median R²-by-eccentricity profile across V1 is roughly
+> flat, so no spatial-specificity claim should be drawn from it. See
+> [`GLM_SUMMARY_SECTION.md`](GLM_SUMMARY_SECTION.md), "Still outstanding".*
 
 ### 2.2 Model parameters — uniform (`group_models.m`)
 

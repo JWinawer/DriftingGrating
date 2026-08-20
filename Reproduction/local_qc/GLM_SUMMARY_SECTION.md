@@ -458,7 +458,27 @@ expanded from 1 to 8, a new `01_calculate_observer_gain/` module, `02_ttave/crea
 `cart_MotvStat`/`pol_MotvStat` a normalised index (m−s)/(m+s) — that last affects only those two
 summary columns, not the per-orientation betas, so nothing above is affected.
 
-**Soften the Fig 4C claim.** The V1-versus-whole-surface R² gap is small (4.7% vs 3.3%), so the map
-does not support a claim about how *well* the model fits. It does support spatial specificity — for
-sub-0037, whole-V1 R² is 5.4 but 16.6 within the stimulated 4–8° band — so phrase 4C as showing
-*where* the model fits, concentrated in the stimulated eccentricity range, rather than how well.
+**Attach no quantitative claim to Fig 4C** (corrected 2026-08-19, JW). An earlier version of this
+document said the map shows R² "concentrated in the stimulated 4–8° band". That is wrong on the
+premise: **4–8° is the window where spatial frequency is most closely matched between the two
+experiments, not the stimulated extent.** The stimulus spanned roughly **0.5–12°**, so the model
+should fit across that whole range and fall off only beyond it — 4–8° is not expected to be
+diagnostic of where the model fits better.
+
+Tested directly (V1 median GLM R² by eccentricity, dg, all 8 observers):
+
+| ecc (°) | 0–0.5 | 0.5–1 | 1–2 | 2–3 | 3–4 | 4–6 | 6–8 | 8–10 | 10–12 | 12–14 | 14–18 | 18–25 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| median R² | 4.1 | 3.9 | 4.0 | 4.6 | 5.4 | 5.3 | 4.5 | 4.5 | 4.2 | 3.6 | 6.5 | 5.8 |
+
+**The group profile is essentially flat** (3.6–6.5) with no drop beyond 12°, so the map does not
+support a spatial-specificity claim either. Only the two high-R² observers show the expected
+shape — sub-0037 and sub-0395 rise to 16–32% across ~3–12° — while the other six sit near 4%
+everywhere, which is what the pink-noise reference predicts (little cross-condition variance to
+explain). The far-periphery bins rest on few vertices (median n ≈ 100–120 beyond 14°, against
+≈1350 at 4–8°), so their elevation is not reliable, though pRF fit quality there is adequate
+(median pRF R² 0.52–0.56).
+
+So: present Fig 4C as an **illustration for an example observer**, with no quantitative claim about
+either how well or where the model fits. The claims in this section should rest on the reliability
+statistics instead.
