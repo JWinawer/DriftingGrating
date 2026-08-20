@@ -491,12 +491,61 @@ expected here**, for three reasons (JW, 2026-08-19):
 So the flat profile is a property of the measure and the design, not evidence about the model. Only the two high-R² observers show the expected
 shape — sub-0037 and sub-0395 rise to 16–32% across ~3–12° — while the other six sit near 4%
 everywhere, which is what the pink-noise reference predicts (little cross-condition variance to
-explain). The far-periphery bins rest on few vertices (median n ≈ 100–120 beyond 14°, against
+explain). **A further reason not to read anything into the outer bins** (JW, 2026-08-19): the pRF *mapping*
+stimulus itself only extended to ~12°. So a vertex with an estimated pRF centre beyond 12° must
+nonetheless have responded to the mapping stimulus, which filled the same aperture as the gratings —
+it is an extrapolated fit from a vertex that *did* respond, not evidence of a receptive field
+outside the stimulated region. Vertices with pRF centres > 12° are therefore **not an unstimulated
+control**, and no eccentricity contrast built from them can be. A valid comparison would be against
+the rest of the brain with no pRF screener applied at all.
+
+The far-periphery bins also rest on few vertices (median n ≈ 100–120 beyond 14°, against
 ≈1350 at 4–8°), so their elevation is not reliable. pRF *fit quality* there is adequate (median pRF
 R² 0.52–0.56), but median σ is non-monotonic across the outer bins (0.91 → 0.20 → 2.17 → 2.98),
 which points to poorly-constrained fits at the V1 label edge rather than a real size progression —
 another reason not to lean on 14–25°.
 
-So: present Fig 4C as an **illustration for an example observer**, with no quantitative claim about
-either how well or where the model fits. The claims in this section should rest on the reliability
-statistics instead.
+### Would a split-half reliability map do better than the R² map?
+
+Tested per vertex over all V1 vertices, 35 balanced splits, Fisher-z averaged, Spearman–Brown
+corrected:
+
+| observer | GLM R² (4–8° / >12°) | split-half reliability (4–8° / >12°) |
+|---|---|---|
+| sub-0037 | 16.6 / 6.9 — 2.41× | 0.862 / 0.643 — 1.34× |
+| sub-0395 | 26.4 / 23.3 — 1.13× | 0.918 / 0.785 — 1.17× |
+| sub-0201 | 3.5 / 3.4 — 1.02× | 0.426 / 0.424 — 1.00× |
+
+> **These ratios are not a valid test and should not be quoted** — see the pRF-mapping caveat
+> above. The >12° group is not an unstimulated control. They are recorded only to show that
+> nothing here motivates building the map.
+
+**As a localiser, reliability is no better than R².** That is expected once the earlier reasoning is
+applied to it: reliability is *also* sign-blind, so a reliably *suppressed* vertex scores as high as
+a reliably driven one. Restricting to the 4 stimuli of interest does not help, because the problem
+was never which conditions were included.
+
+**Where reliability does win is interpretability of magnitude.** In the responsive patch it reads
+0.86 and 0.92 — numbers a reader can evaluate directly — where R² reads 16.6% and 26.4%, which look
+poor to anyone unaware of the pink-noise reference; and it correctly flags sub-0201 at 0.43. It
+answers "are these estimates trustworthy?" rather than "where is the stimulus?", and
+trustworthiness is what this section needs to establish. But that is an argument for the reliability
+**statistic** (Result 1), not for rendering it on a surface.
+
+**Two practical reasons not to build the map.** `collect_runwise_betas.m` saved **V1 only**
+(`v1Index`, 5158–7546 vertices per observer), so a whole-surface reliability map needs `modelmd`
+re-pulled — 425 MB × 16 ≈ 6.8 GB. And per-vertex reliability over just 4 orientation values is
+intrinsically noisy (raw half-vs-half *r* ranges 0.27–0.85 across observers); it behaves far better
+as the ROI-level statistic already reported.
+
+### Recommendation
+
+Either **drop Fig 4C**, or present it as an **illustration for an example observer** with no
+quantitative claim attached about how well or where the model fits. Do not spend a pull on a
+reliability map. The section's claims rest on the ROI-level reliability statistics (Results 1–2).
+
+A moving-vs-stationary map (`allmValls`, already local for all 16 sessions) *would* be a genuinely
+diagnostic surface figure — MT+ positive in 8/8 observers, hV4 near zero, whole-surface median
+0.000, and the pink-noise reference cancels exactly since both conditions share it. It is set aside
+because **this paper analyses only the stationary conditions**, so a motion figure would be off-topic
+here. Worth remembering for a paper where it is not.
