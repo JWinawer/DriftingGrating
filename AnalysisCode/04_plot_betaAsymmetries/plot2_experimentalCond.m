@@ -89,7 +89,28 @@ function plot2_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         avgConditions2 = nanmean(conditions2, 1);
         avgConditions1 = squeeze(avgConditions1);
         avgConditions2 = squeeze(avgConditions2);
-        
+
+        % Gain-weight each observer: divide their value (irrespective of
+        % polar angle) by their own mean pRF gain (prfvista_mov/prfvista
+        % average), BEFORE any averaging across observers. This down-weights
+        % high-gain observers and up-weights low-gain observers; the
+        % displayed statistics, plotted per-subject lines/scatter points,
+        % and bootstrapped error bars below all inherit the adjustment
+        % automatically since they are computed from these arrays. See
+        % projectSettings.observerGain / retrieveObserverGainWeights.m
+        %
+        % The across-observer average gain is then multiplied back in, so
+        % the plotted scale/units resemble the original (unweighted) data.
+        % Dividing by gain_i and then multiplying by groupGain is the same
+        % as dividing by gain_i normalized to the group mean (gain_i /
+        % groupGain), so the relative weighting -- and therefore the
+        % relative pattern across per-subject lines, group markers, and
+        % error bars -- is unchanged; only the overall scale shifts.
+        gainWeights = projectSettings.observerGain;
+        groupGain = mean(gainWeights);
+        avgConditions1 = avgConditions1 .* (groupGain ./ gainWeights);
+        avgConditions2 = avgConditions2 .* (groupGain ./ gainWeights);
+
         % Already averaged across the conditions within subjects < -- already did this in
         % the loop above
         

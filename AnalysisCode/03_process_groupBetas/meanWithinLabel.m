@@ -267,4 +267,20 @@ for si=1:numel(subjects)
 
 end
 
+%% Save outputs
+
+saveFolder = fullfile(bidsDir, 'derivatives', strcat(projectName, 'GLM'), strcat('hRF_', hRF_setting));
+if ~isfolder(saveFolder)
+    mkdir(saveFolder)
+end
+
+save(fullfile(saveFolder, 'allparamsBOLDpa.mat'), 'allparamsBOLDpa');
+save(fullfile(saveFolder, 'allvoxelsBOLDpa.mat'), 'allvoxelsBOLDpa');
+save(fullfile(saveFolder, 'meanBOLD.mat'), 'meanBOLD');
+save(fullfile(saveFolder, 'meanBOLDpa.mat'), 'meanBOLDpa');
+save(fullfile(saveFolder, 'medianBOLD.mat'), 'medianBOLD');
+save(fullfile(saveFolder, 'medianBOLDpa.mat'), 'medianBOLDpa');
+
+fprintf('saved allparamsBOLDpa, allvoxelsBOLDpa, meanBOLD, meanBOLDpa, medianBOLD, medianBOLDpa to:\n  %s\n', saveFolder);
+
 
