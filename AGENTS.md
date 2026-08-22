@@ -33,6 +33,100 @@ decisions — it explains *why* the pipeline is structured the way it is (e.g.
 why there's a subject-wise gain correction, why V1 is binned into 8 polar-angle
 sectors, why four specific asymmetries were chosen).
 
+### Methods, summarized
+
+- **Observers:** 13 recruited (NYU / NYUAD); 8 completed both the Cartesian
+  and polar experiments and are the only ones used in the main-text analyses
+  (so contextual comparisons aren't confounded by sample differences) — this
+  is the source of the hardcoded `[1:8]` subject subset noted below.
+- **Stimuli:** each experiment (`dg`=Cartesian, `da`=polar) had an
+  event-related design — 4 stationary-grating conditions, 8 drifting
+  conditions, 1 pink-noise condition, 3 s stimulus + 2 s ITI, 52 trials/run,
+  50% Michelson contrast, 12.2° aperture radius. **Only the stationary
+  conditions are analyzed in this paper**; drifting-stimulus results are left
+  for a future study (but drifting trials are still included when fitting the
+  GLM, to improve model fit). Cartesian and polar spatial frequency are
+  matched only at 6° eccentricity (mid-aperture) — matching breaks down at
+  other eccentricities because polar spatial frequency scales with radius.
+- **fMRI acquisition/preprocessing:** 3T Siemens Prisma, multiband EPI (TR=1s,
+  2mm iso); fMRIPrep + FreeSurfer surface-based pipeline (all analysis is
+  vertex-wise on the cortical surface, not voxel-wise).
+- **pRF mapping & ROI definition:** a separate retinotopy protocol (bar +
+  wedge/ring apertures, stationary- and moving-carrier variants) gives each
+  vertex a pRF (x, y, σ) and R² via `vistasoft`. V1 is drawn manually per
+  hemisphere, then subdivided into **8 polar-angle sectors** (centered
+  0/45/90/.../315°, ±22.5° wide, restricted to 4-8° eccentricity) — this
+  "annulus sector" binning is what lets the same local patch be described in
+  either Cartesian (e.g. vertical) or polar (e.g. radial) terms, and is the
+  origin of the `meanBOLD(pa)` / 8-ROI-column structure everywhere downstream.
+  Only vertices with pRF R² ≥ 0.1 are included. Other ROIs (V2, V3, V3A, V3B,
+  hV4, MT, MST) are defined the same way but used only in supplementary
+  analysis.
+- **GLM:** GLMsingle's `GLMestimatesingletrial` (HRF library + noise-pool
+  denoising + fractional ridge regression) gives one beta per condition per
+  vertex; the pink-noise condition's beta is subtracted from each orientation
+  condition's beta as a baseline throughout the paper.
+- **Observer gain correction:** each observer's pRF-model amplitude, averaged
+  across all 12 retinotopy runs and the same V1 vertices used in the main
+  analysis, is used as a single per-observer gain scalar (see *Observer gain
+  correction* below for the exact `subjectScale` formula used in code).
+- **Two ways the four asymmetries are quantified**, both implemented in
+  `04_plot_betaAsymmetries/`:
+  1. **Independently** — median % signal change per observer/ROI/condition,
+     then bootstrapped (1,000 resamples) confidence intervals on each
+     pairwise difference (`plot1_experimentalCond.m`/`plot2_experimentalCond.m`).
+  2. **Jointly** — a linear mixed-effects model (`lme1_fit.m`) fits all four
+     asymmetries simultaneously (256 datapoints = 8 observers × 4 orientations
+     × 8 polar angles per experiment), with each asymmetry coded as a ±1 (or
+     0, for the two orientations not in that pairing) predictor, an
+     observer-level random intercept, fit by ML, with bootstrapped CIs.
+- **Normalization models** (`Models/`): steerable-pyramid energy responses
+  (4 orientations × 6 spatial-frequency scales, via `plenoptic`) to the same
+  Cartesian/polar stimuli, with cardinal-channel energy artificially doubled
+  to simulate V1's cardinal overrepresentation, then passed through 4 divisive
+  normalization variants — see `Models/` section below for which succeed.
+
+### Results, summarized
+
+Magnitudes below are the jointly-fit LME estimates (Δ = % signal change,
+95% CI), which are what the main text emphasizes:
+
+| Asymmetry | Cartesian (`dg`) experiment | Polar (`da`) experiment |
+|---|---|---|
+| horizontal − vertical | **−0.55%** [−0.65, −0.44] | −0.22% [−0.34, −0.11] (<half the size) |
+| cardinal − oblique | **−0.22%** [−0.32, −0.12] | −0.03% [−0.06, 0.00] (essentially gone) |
+| radial − tangential | 0.10% [0.05, 0.17] | **0.15%** [0.03, 0.25] (~1.5x larger) |
+| polar cardinal − polar oblique | 0.04% [0.01, 0.07] | 0.04% [−0.03, 0.11] (same magnitude, not reliable here) |
+
+The pattern (bolded = the larger/more reliable of the pair): **Cartesian
+asymmetries are largest for Cartesian stimuli; the radial asymmetry is larger
+for polar stimuli; the polar-cardinal asymmetry is unaffected by context but
+also weak/unreliable in both.** In short, an asymmetry is strongest when its
+own reference frame matches the global stimulus's reference frame.
+
+The more surprising/counterintuitive result is the **sign** of the Cartesian
+effects: horizontal and cardinal orientations are known to have *more*
+V1 neural representation, natural-scene frequency, and (for cardinal)
+behavioral sensitivity than vertical/oblique — yet BOLD is **lower**, not
+higher, for horizontal and cardinal. Polar asymmetries go the other way:
+radial and polar-cardinal orientations, which are also neurally
+overrepresented/behaviorally advantaged, show **higher** BOLD. The paper's
+interpretation is that Cartesian-preferred orientations, being more
+numerous/more mutually-similar in the surround of a spatially coherent
+Cartesian grating, are suppressed via context-dependent normalization more
+than they're boosted by their raw overrepresentation — an effect that a
+plain "more neurons → more BOLD" model would get backwards.
+
+This is what the `Models/` normalization simulation is testing: whether
+divisive normalization can turn overrepresentation into net suppression.
+Untuned and orientation-tuned normalization (models 1-2) fail — cardinal
+responses stay elevated in the model regardless of context. Superlinear
+(squared-suppression) and anisotropy-based normalization (models 3-4)
+succeed: cardinal responses are suppressed relative to oblique specifically
+for Cartesian, not polar, stimuli — mirroring the fMRI asymmetry reversal.
+As of this draft, this is presented only as a candidate mechanism (Fig. 9 in
+the draft is still a placeholder), not a settled explanation.
+
 ## Repository layout
 
 ```
@@ -109,15 +203,27 @@ commit `e37e1be` and earlier).
 Each subject's BOLD values get multiplied by `subjectScale(i) = groupGain /
 gain_i`, where `gain_i` is that subject's mean pRF gain (from
 `retrieveObserverGainWeights.m` / `gainSummary.mat`) and `groupGain =
-mean(gainWeights)` (arithmetic mean of the whole subject set). This:
+exp(mean(log(gainWeights)))` (**geometric**, not arithmetic, mean of the
+whole subject set — implemented via `exp(mean(log(.)))` rather than
+`geomean()` to avoid a Statistics/ML Toolbox dependency). This:
 - **down-weights high-gain subjects, up-weights low-gain subjects** — the
   substantive correction.
 - multiplying back by `groupGain` afterward is a **pure unit-restoration
   step** — mathematically inert for every inferential statistic (t/F-stats,
-  p-values); it only rescales the reported effect sizes back toward original
-  BOLD-like units. Swapping arithmetic mean for geometric mean (or any other
-  positive constant) would rescale every number by the same tiny constant
-  factor and change nothing about significance.
+  p-values, CIs); any positive constant here rescales every number by the
+  same factor and changes no significance conclusion.
+- **why geometric mean specifically**: `subjectScale` is itself a
+  multiplicative scale factor (a ratio), not an additive quantity. The
+  *geometric* mean of the resulting `subjectScale` values across observers
+  is exactly 1 only when `groupGain` is the geometric mean of `gainWeights`
+  — i.e. this is the choice under which the restoration step is
+  magnitude-neutral in the sense that matches what `subjectScale` actually
+  is. (Arithmetic mean of `gainWeights` is the corresponding exact choice if
+  you instead judge neutrality via the *arithmetic* mean of `subjectScale`;
+  neither is more "correct" in the abstract, but geometric mean is the
+  natural fit given `subjectScale` is a ratio.) This only affects the
+  reported magnitude of the numbers, never any inferential conclusion — see
+  previous bullet.
 - For `dg` (13 subjects total), only the **first 8** are used in the main
   analysis scripts (`lme1_fit.m`, `plot_NeuralAsymmetries.m`) — hardcoded
   index `[1:8]` — to match the 8 subjects who completed the `da` experiment.
@@ -134,6 +240,40 @@ directory. Scripts that don't call `setup_user()` (e.g. `lme1_fit.m`) still
 rely on `addpath(genpath(pwd))`, so make sure `AnalysisCode/` (and all
 subfolders) are on the MATLAB path before running anything, regardless of
 which tool/method is used to launch the script.
+
+### da/sub-wlsubj124: runs 1 and 2 share a duplicated trial sequence
+
+Confirmed 2026-08-17: for **da / sub-wlsubj124 only**, `S02_design_Run1.mat`
+and `S02_design_Run2.mat` in `experimentalOutput/da/02/` have byte-identical
+`expDes.trialMat` content (52 trials, multiple randomized conditions —
+confirmed not a coincidence), and this is already baked into
+`matrices_onset{1}`/`matrices_onset{2}` in that subject's `rawInfo.mat`. No
+other subject/project combination has this issue (checked all 16
+subject×project combos pairwise).
+
+**This is already correctly resolved at the GLM level — do not re-run
+GLMsingle or "fix" `modelOutput.mat`/`derivedModelFit.mat` for this.** A
+cross-run data-vs-model correlation check (real BOLD data for both runs
+correlates best with their own run's model, and both runs correlate with
+each other's model/data well above the cross-run baseline) shows the same
+trial sequence really was presented twice in the scanner and captured
+correctly — this is a repeated-stimulus quirk in the experiment itself, not
+a mislabeling/misalignment bug. `format_desmats.m` reads each run strictly
+by index (`Run<i>` design paired with BIDS `run-<i>` BOLD), and that
+index-for-index correspondence is intact; the two runs are just not
+independent trials of each other.
+
+**It only matters for pipelines that average across runs/subjects as if
+every run were an independent repeat** (e.g. the cross-subject group-average
+run time series) — averaging both runs in as independent would double-count
+that one trial sequence relative to every other (genuinely unique) run.
+`findDuplicateDesignRuns.m` (`AnalysisCode/02_ttave/`) detects this
+generically (pairwise `isequaln` on `matrices_onset` per subject) and is
+wired into `run_groupAverageRunTimeseries.m`, which excludes the later run
+of any duplicate pair from the group average. Per-run/per-subject-only
+outputs (e.g. `run_runTimeseries.m` / `plot_runTimeseries.m`, which plot
+each run separately and never average across runs) are unaffected and need
+no changes.
 
 ### Figure-export loops need `drawnow` before `print()`
 `lme1_fit.m` previously had a real bug where two figures generated back-to-back

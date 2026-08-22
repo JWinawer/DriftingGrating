@@ -66,10 +66,35 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     figureDir = projectSettings.figureDir;
 
 
-    colors = {colors_data.conditions.(projectName).(asymmetryName).color_pro', ...
-        colors_data.conditions.(projectName).(asymmetryName).color_con'};
+    styleInfo = colors_data.conditions.(projectName).(asymmetryName);
+    colors = {styleInfo.color_pro', styleInfo.color_con'};
 
-    markerC = colors_data.conditions.(projectName).plotSettings.markerC;
+    % pro = filled marker, solid line; con = unfilled marker, solid line
+    % at 50% opacity -- see COLORS.json's pro_filled/con_filled/
+    % pro_lineWidth/con_lineWidth/errorbar_lineWidth fields for this
+    % asymmetry (color_pro == color_con by design: pro/con are now
+    % distinguished by fill state and line weight, not by hue).
+    %
+    % con's "50% opacity" is implemented as a flat 50%-white-blended
+    % color, not true alpha: these figures are saved with the painters
+    % renderer for true vector PDF output, and painters does not support
+    % line transparency (only the OpenGL renderer does, which would force
+    % a rasterized rather than vector PDF). Blending toward white gives
+    % the same visual result as 50% alpha over this figure's white
+    % background, while keeping the export fully vector.
+    proFaceColor = colors{1};
+    conFaceColor = [1 1 1]; % white fill (not unfilled)
+    proEdgeColor = colors{1};
+    conEdgeColor = 0.5*colors{2} + 0.5*[1 1 1]; % 50%-white-blended = visual equivalent of 50% alpha on white, applied to both con's marker edge and connecting line
+    proLineStyle = '-';
+    conLineStyle = '-';
+    proLineWidth = styleInfo.pro_lineWidth;
+    conLineWidth = styleInfo.con_lineWidth;
+    errorbarLineWidth = styleInfo.errorbar_lineWidth;
+    markerSize = 6 * 0.8; % previous (half-of-original) size, now 20% smaller
+    axisLineWidth = 1; % matches plot2_experimentalCond.m's pairwise-plot axis lines
+    axisFontSize = 10 * 0.8; % 20% smaller than MATLAB's default axes FontSize (10) -- no explicit size was set before
+    showTitleLegend = false;
 
     % retrieve the indices for specific asymmetries (e.g., motion -
     % orientation for main cardinal v main oblique)
@@ -78,6 +103,14 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     else
         proConditions = 1; conConditions = 2;
     end
+
+    % Accumulates the exact numbers underlying this figure (one row per
+    % ROI x polar-angle location) across the ROI loop below, so a full
+    % top-to-bottom run leaves a persistent, inspectable record of the
+    % plotted values -- not just console output that scrolls away, and
+    % not something you have to re-run (with its own fresh bootstrap
+    % draws) to see again.
+    statsRows = {};
 
     figure
 %     gap = [.04 .01]; % spacing between the subplots vertical gap - horizontal gap
@@ -131,8 +164,21 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         % groupGain), so the relative weighting -- and therefore the
         % relative pattern across data points/error bars -- is unchanged;
         % only the overall scale shifts.
+        %
+        % groupGain uses the geometric, not arithmetic, mean: the applied
+        % factor (groupGain ./ gainWeights) is itself a multiplicative
+        % scale factor, and geometric mean is the choice under which the
+        % *geometric* mean of that factor across observers is exactly 1
+        % (magnitude-neutral in the multiplicative sense, matching what
+        % the factor actually is) -- arithmetic mean does not have this
+        % property. Implemented via exp(mean(log(.))) to avoid a
+        % dependency on the Statistics and Machine Learning Toolbox.
         gainWeights = projectSettings.observerGain;
-        groupGain = mean(gainWeights);
+        if any(gainWeights <= 0)
+            error('gainWeights must be strictly positive to take log() for the geometric mean (found %d non-positive value(s))', ...
+                sum(gainWeights <= 0));
+        end
+        groupGain = exp(mean(log(gainWeights)));
         avgConditions1 = avgConditions1 .* (groupGain ./ gainWeights);
         avgConditions2 = avgConditions2 .* (groupGain ./ gainWeights);
 
@@ -184,21 +230,18 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         
             end
         
-            % Bootstrap estimate of the standard error of the paired difference
-            STD(loc) = std(bootDiff);
-
             % 95% percentile confidence interval
             CI = prctile(bootDiff,[2.5 97.5]);
-        
+
             CI_95_lower(loc) = CI(1);
             CI_95_upper(loc) = CI(2);
 
-            % 95% percentile confidence interval
+            % 68% percentile confidence interval
             CI_68 = prctile(bootDiff,[16 84]);
-        
-            CI_68_lower(loc) = CI(1);
-            CI_68_upper(loc) = CI(2);
-        
+
+            CI_68_lower(loc) = CI_68(1);
+            CI_68_upper(loc) = CI_68(2);
+
         end
 
         CI_95_lower
@@ -234,25 +277,52 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         % using this method instead of subplot for TIGHT AXES
 %         axes(ha(ri)); 
         
-        std1 = STD;
-        std2 = STD;
-        
-        % plot average (connecting the last line)
-        polarplot([deg2rad(anglevals(end)), deg2rad(anglevals(1))],[vals_1(end), vals_1(1)], 'o-', 'Color', colors{1}, 'MarkerSize', 12, 'LineWidth',1.75,  'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', markerC)
+        % Half-width of the 68% percentile CI of the bootstrapped (pro-con)
+        % difference, applied symmetrically to both markers -- same
+        % simplification the previous std(bootDiff)-based error bar used
+        % (a single per-location spread applied to both conditions), but
+        % now driven by the actual percentile CI rather than the SD.
+        ci68_halfwidth = (CI_68_upper - CI_68_lower) / 2;
+
+        % record this ROI's per-location values for the stats export below
+        for loc = 1:nLoc
+            statsRows(end+1,:) = {rois{ri}, anglevals(loc), vals_1(loc), vals_2(loc), D_obs(loc), ...
+                CI_95_lower(loc), CI_95_upper(loc), CI_68_lower(loc), CI_68_upper(loc), mean_diff}; %#ok<SAGROW>
+        end
+
+        % Draw order (bottom to top): connecting lines, then markers, then
+        % error bars on top. Lines and markers are deliberately drawn in
+        % SEPARATE calls (lines with no marker; markers with no line) --
+        % the previous combined 'o'+line calls drew a marker at both the
+        % "closing segment" endpoints AND again at those same points in
+        % the "all data" call, double-stroking the outline at those 2 of
+        % 8 locations only (fill looked fine since a flat opaque fill
+        % drawn twice looks identical to once, but the outline stroke
+        % rendered visibly heavier there than at the other 6 points).
+        % Drawing each marker exactly once fixes that.
+
+        % connecting lines only (no markers)
+        polarplot([deg2rad(anglevals(end)), deg2rad(anglevals(1))],[vals_1(end), vals_1(1)], 'LineStyle', proLineStyle, 'Color', proEdgeColor, 'LineWidth',proLineWidth)
         hold on
-        polarplot([deg2rad(anglevals(end)), deg2rad(anglevals(1))],[vals_2(end), vals_2(1)], 'o-', 'Color', colors{2}, 'MarkerSize', 12, 'LineWidth',1.75,  'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', markerC)
+        polarplot([deg2rad(anglevals(end)), deg2rad(anglevals(1))],[vals_2(end), vals_2(1)], 'LineStyle', conLineStyle, 'Color', conEdgeColor, 'LineWidth',conLineWidth)
         hold on
-        
-        % plot average (all the data)
-        polarplot(deg2rad(anglevals),vals_1, 'o-', 'Color', colors{1},  'MarkerSize', 12, 'MarkerFaceColor', colors{1}, 'MarkerEdgeColor', markerC,'LineWidth',1.75)
+        polarplot(deg2rad(anglevals),vals_1, 'LineStyle', proLineStyle, 'Color', proEdgeColor, 'LineWidth',proLineWidth)
         hold on
-        polarplot(deg2rad(anglevals),vals_2, 'o-', 'Color', colors{2},  'MarkerSize', 12, 'MarkerFaceColor', colors{2}, 'MarkerEdgeColor', markerC,'LineWidth',1.75)
+        polarplot(deg2rad(anglevals),vals_2, 'LineStyle', conLineStyle, 'Color', conEdgeColor, 'LineWidth',conLineWidth)
         hold on
 
-        % Plot SEM per point
-        p1 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_1 - std1; vals_1 + std1], '-', 'Color', colors{1}, 'LineWidth',1.75);
+        % markers only, exactly once per location (no line)
+        polarplot(deg2rad(anglevals),vals_1, 'o', 'LineStyle', 'none', 'MarkerSize', markerSize, 'MarkerFaceColor', proFaceColor, 'MarkerEdgeColor', proEdgeColor, 'LineWidth',proLineWidth)
         hold on
-        p2 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_2 - std2; vals_2 + std2], '-', 'Color', colors{2}, 'LineWidth',1.75);
+        polarplot(deg2rad(anglevals),vals_2, 'o', 'LineStyle', 'none', 'MarkerSize', markerSize, 'MarkerFaceColor', conFaceColor, 'MarkerEdgeColor', conEdgeColor, 'LineWidth',conLineWidth)
+        hold on
+
+        % Plot 68% CI per point -- top layer. Error bar color/alpha
+        % matches its own condition (pro = full color, con = same
+        % 50%-white-blended color used for con's marker/line).
+        p1 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_1 - ci68_halfwidth; vals_1 + ci68_halfwidth], '-', 'Color', proEdgeColor, 'LineWidth',errorbarLineWidth);
+        hold on
+        p2 = polarplot([deg2rad(anglevals); deg2rad(anglevals)], [vals_2 - ci68_halfwidth; vals_2 + ci68_halfwidth], '-', 'Color', conEdgeColor, 'LineWidth',errorbarLineWidth);
         hold on
 
 %        for subjectIndex = 1:size(medianBOLDpa, 4)
@@ -271,7 +341,7 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         thetaticks(0:45:315);
     
     
-        if ri==1
+        if ri==1 && showTitleLegend
             if strcmp(asymmetryName, 'radialVsTangential')
                 hLegend = legend('Radial', 'Tangential', 'Location', 'northwest', 'Box', 'off', 'FontSize', 18);
             elseif strcmp(asymmetryName, 'verticalVsHorizontal')
@@ -344,16 +414,29 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         end
 
         ax = gca;
-        ax.LineWidth = 3;  % Set the line width (adjust as needed)
+        ax.LineWidth = axisLineWidth;
+        ax.FontSize = axisFontSize; % axis (tick) label size
         ax.GridColor = [0.25 0.25 0.25];
+        ax.ThetaColor = [0.25 0.25 0.25]; % theta-axis line/tick/label color -- matched in plot2_experimentalCond.m's XColor/YColor
+        ax.RColor = [0.25 0.25 0.25]; % r-axis line/tick/label color
+        % ax.Layer left at its default ('bottom') -- 'top' drew grid/spoke
+        % lines over solid data points. The rho-label overlap this was
+        % originally meant to fix is instead solved by RAxisLocation
+        % above, which moves the labels into an empty wedge with no data.
         ax.ThetaTickLabel = {};
+        ax.RTick = [-0.5 0 0.5 1]; % explicit rho values, rather than relying on auto ticks matching these
+        ax.RAxisLocation = 67.5; % midway between 45 and 90 deg -- an empty wedge, away from the 8 datapoint locations, so rho labels don't overlap data
         ax.Box = 0;
         %ax.RTickLabel = [];
-        title(rois{ri}, 'FontSize', 18)
+        if showTitleLegend
+            title(rois{ri}, 'FontSize', 18)
+        end
     end
-    
+
     fig1 = gcf;
-    sgtitle(sprintf('%s: %s', projectName, strrep(comparisonName, "_", " ")), 'FontSize', 40)
+    if showTitleLegend
+        sgtitle(sprintf('%s: %s', projectName, strrep(comparisonName, "_", " ")), 'FontSize', 40)
+    end
     fig1.Position = [34 228 1210 924]; %[152 569 2143 619];
     fig1.Color = 'w';
     hold off;
@@ -363,9 +446,45 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     else
         filename = fullfile(figureDir,sprintf('polarangle_%s_%s_%s', comparisonName, projectName, asymmetryName));
     end
- 
-    gcf_edit = fitFig2Page(gcf);
-    
+
+    % Save the exact values underlying this figure alongside the PDF, so
+    % a full top-to-bottom run leaves a persistent, reproducible record
+    % (diffable across runs) rather than requiring a re-run -- with its
+    % own fresh bootstrap draws -- to see the numbers again.
+    statsTable = cell2table(statsRows, 'VariableNames', ...
+        {'roi','polarAngle','pro_mean','con_mean','diff','ci95_lower','ci95_upper','ci68_lower','ci68_upper','meanDiff_acrossLocations'});
+    writetable(statsTable, [filename, '_stats.csv']);
+
+    % The axis (plot) box itself is the sized element (4 x 4 cm) -- the
+    % PDF page is padded larger around it (padding_cm each side) so the
+    % axis box is guaranteed exactly this size regardless of how much
+    % room MATLAB's auto layout would otherwise reserve for tick labels.
+    % NOT fitFig2Page, which scales the figure to fill a full
+    % letter-landscape page and would override any custom size set here.
+    polarPlotWidth_cm = 4;
+    polarPlotHeight_cm = 4;
+    basePadding_cm = 0.5; % previous padding, on each side
+    areaScale = 1.25; % total figure area, not just padding, should grow by this factor
+    % Solve for the (still-uniform, all 4 sides) padding p that gives
+    % (axisW+2p)*(axisH+2p) = areaScale * (axisW+2*basePadding)*(axisH+2*basePadding),
+    % i.e. a quadratic in p: 4p^2 + 2p(axisW+axisH) + axisW*axisH - targetArea = 0
+    targetArea = areaScale * (polarPlotWidth_cm + 2*basePadding_cm) * (polarPlotHeight_cm + 2*basePadding_cm);
+    qa = 4; qb = 2*(polarPlotWidth_cm + polarPlotHeight_cm); qc = polarPlotWidth_cm*polarPlotHeight_cm - targetArea;
+    padding_cm = (-qb + sqrt(qb^2 - 4*qa*qc)) / (2*qa);
+    figWidth_cm = polarPlotWidth_cm + 2*padding_cm;
+    figHeight_cm = polarPlotHeight_cm + 2*padding_cm;
+
+    gcf_edit = gcf;
+    gcf_edit.Units = 'centimeters';
+    gcf_edit.Position(3:4) = [figWidth_cm, figHeight_cm];
+    gcf_edit.PaperUnits = 'centimeters';
+    gcf_edit.PaperPositionMode = 'manual'; % otherwise 'auto' ignores PaperPosition below
+    gcf_edit.PaperSize = [figWidth_cm, figHeight_cm];
+    gcf_edit.PaperPosition = [0, 0, figWidth_cm, figHeight_cm];
+
+    ax.Units = 'centimeters';
+    ax.Position = [padding_cm, padding_cm, polarPlotWidth_cm, polarPlotHeight_cm];
+
     % Save as PDF
     set(gcf_edit,'Renderer','painters'); % new
     print(gcf_edit, filename, '-dpdf', '-vector'); %'-painters');
