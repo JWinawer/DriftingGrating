@@ -1,0 +1,321 @@
+# ~~Next step:~~ CLOSED — z-scored vs non-z-scored analysis
+
+> ## Decided 2026-07-24: use the raw (non-z-scored) analyses
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md) §4 settles this, on a ground unavailable to
+> everything below: the "blank" is **full-field pink noise, not a mean-luminance baseline**, so
+> `beta_std` is the spread among contrast-pattern responses rather than a gain. It conflates
+> BOLD gain with orientation-tuning strength and motion sensitivity, and dividing the
+> (blank-independent) raw asymmetries by it *reintroduces* a dependence on the blank. Two
+> observers with equal gain but different tuning are forced to match. The recommendation is to
+> **remove z-scoring**, including the "beta weights were standardized" Methods language and the
+> σ-unit in-text statistics; Figures 5–8 use the raw variants, which already exist.
+>
+> **The exclusion of sub-0037 and sub-0201 recorded in the §8 summary below is withdrawn** —
+> REPORT §2.5–2.6 clears both observers with positive evidence (normal MT motion-selectivity,
+> normal V4 grating preference in the same sessions). All 8 observers are retained; the raw
+> analysis puts H−V first without needing any exclusion.
+>
+> The material below is kept for the mechanism (why z-scoring changes Fig 7) and as a record.
+
+> **Partly answered (2026-07-22).** The Fig 7B question — why z-scoring makes radial−tangential
+> rather than horizontal−vertical the largest polar-grating asymmetry — is resolved in
+> [`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) (diagnostics: `cleanroom/diagnose_zscore_fig7.m`).
+> Short version: it is a **between-subject reweighting** (a per-subject scalar reproduces the
+> whole effect), `beta_std` at the subject level is overall response amplitude (r = +0.94, and
+> *not* pRF R²), and one positive covariance inflates radTan while shrinking H−V because the two
+> effects have opposite sign. The ordering flips back if sub-0037 is dropped, and a subject
+> bootstrap gives P(radTan > |H−V|) = 0.69 z-scored / 0.28 raw — so neither ordering is
+> established. Follow-up (same doc, §3a–3b): the two most up-weighted observers have anomalous
+> polar-grating data (sub-0201's blank beta exceeds all 12 stimulus conditions in *both*
+> experiments; sub-0037 shows no condition differentiation at all in the polar experiment), and
+> rebuilding the divisor from the 8 motion conditions — no blank, independent of the analysed
+> conditions — restores H−V as the largest polar asymmetry (bootstrap 0.43).
+> Units vs precision (§6): these are separate decisions. **Precision** is settled — between-observer
+> variance exceeds within-observer measurement variance by 14–104×, so inverse-variance weighting
+> converges on equal weighting and changes nothing. **Units** are the live question, and
+> normalizing per observer is legitimate in principle since percent BOLD is scanner-dependent —
+> but no divisor available in these 13 conditions is simultaneously effect-independent, positive
+> for all 8 observers, and stable across sessions. Blank-referenced gain estimates are ≤ 0 for
+> sub-0037 and sub-0201 in the polar experiment; std-based ones stay positive only because a
+> standard deviation always is, substituting the noise level for a gain. Gain also transfers
+> across experiments at only r = 0.45–0.68 Pearson (0.17–0.38 Spearman), i.e. it is substantially
+> session-specific rather than an observer trait.
+> **Resolved, provisionally (§8).** Normalising is justified but requires a measurable gain, which
+> sub-0037 and sub-0201 lack in the polar experiment. Excluding them makes every normaliser
+> well-defined (five instead of three) and **all five then agree that H−V is the largest polar
+> asymmetry** — including the manuscript's own `beta_std`, which flips from radTan 0.681 to 0.460
+> against H−V −0.625. Bootstraps 0.10–0.31: unanimous in direction, moderate in strength.
+> Remaining open: **the GLM quality check below**, which is the independent test of that
+> exclusion, and the retinotopy-derived gain estimate described next.
+
+**Task (for a fresh session):** determine whether there are *large* discrepancies between the
+z-scored and the non-z-scored (raw) analyses of Figs 5–8; if so, find where they come from and
+judge which analysis is more defensible.
+
+## Why this matters
+The manuscript's Methods commit to per-vertex z-scoring (each vertex's betas standardized across
+its 13 conditions before analysis), and two versions of Figs 5–8 exist (z-scored vs not). The
+manuscript itself notes the **Fig 7 LME significance differs between the two versions**, so the
+choice is not purely cosmetic. The only mechanical difference is a per-vertex divide:
+`z-scored contrast = (orientation − blank)/beta_std`, `raw = (orientation − blank)` — the
+per-vertex mean cancels, so `beta_std` is the entire story.
+
+## What's already built — reuse it
+The reproduction already computes **both variants** for every figure:
+- `cleanroom/bin_and_aggregate(T, cfg, expCfg, doZscore)` — pass `true`/`false`.
+- `cleanroom/run_fig5_6`, `run_fig7`, `run_fig8` loop over `{zscored, raw}` and write
+  `figures/cleanroom/fig*_<exp>_zscored.png` and `..._raw.png` — so a side-by-side already exists.
+- `cleanroom/validate_against_manuscript.m` currently prints the z-scored table only; extend it to
+  also run `doZ=false` for a numeric z-vs-raw table.
+
+## Starting data (already computed, correct convention)
+Group-mean asymmetry differences, z-scored vs raw (σ-units vs raw % change):
+
+| asymmetry | dg z | dg raw | da z | da raw |
+|---|---|---|---|---|
+| horiz − vert   | −1.155 | −0.480 | −0.446 | −0.211 |
+| card − obl     | −0.398 | −0.204 | −0.064 | −0.030 |
+| rad − tang     |  0.226 |  0.116 |  0.603 |  0.150 |
+| polc − polo    |  0.056 |  0.029 |  0.173 |  0.034 |
+
+(Regenerated 2026-07-22 after the two reproduction bugs were fixed; `run_pathB_values` now
+gives identical values through the repo's own functions. The `da horiz − vert` row previously
+read ≈0 in both variants — that was the spiral-swap artifact.)
+
+First-pass observations:
+- **Signs are preserved** everywhere; the qualitative story (which asymmetries are present/absent)
+  looks the same in both variants at the group-mean level.
+- **Raw magnitudes are ~2–5× smaller** (z-scoring divides by `beta_std` ≈ 0.2).
+- **The z/raw ratio is ≈2 for six of the eight asymmetries, and 4–5 for exactly two.** Ratios:
+  dg horiz−vert 2.41, dg card−obl 1.95, dg rad−tang 1.95, dg polc−polo 1.93; da horiz−vert 2.11,
+  da card−obl 2.13; but **da rad−tang 4.02** and **da polc−polo 5.09**. The two outliers are the
+  polar-frame asymmetries *in the polar experiment* — i.e. precisely the asymmetries whose
+  reference frame matches the global stimulus, which are also the paper's positive findings.
+  So z-scoring selectively inflates the effects the paper rests on. Why it does so — whether
+  low-`beta_std` vertices are genuinely low-gain or just noisy — is the crux of the decision.
+
+## Where to look for real discrepancies
+1. **Fig 7 significance** (the flagged case): compare the 68% CIs / asterisks between
+   `fig7_LME_zscored` and `fig7_LME_raw` (both already generated by `run_fig7`). Which asymmetries
+   cross significance in one variant but not the other?
+2. **Per-subject spread**: z-scoring reweights vertices, which can change between-subject
+   variability (the pairwise plots), even when the mean is similar.
+
+## How to assess the source
+- z-scoring up-weights vertices with **small `beta_std`** (little response variation across the 13
+  conditions). Check what those vertices are: correlate `dg_beta_std`/`da_beta_std` with `pRF_r2`,
+  eccentricity, and mean response. If low-`beta_std` vertices are low-`r2`/noisy, z-scoring may be
+  *amplifying noise*; if they are clean low-gain vertices, z-scoring is doing legitimate gain
+  control. The differential da amplification suggests `beta_std` differs systematically between the
+  two experiments — quantify `median(beta_std)` per experiment/vertex-set.
+- Watch the **median-of-ratios vs ratio-of-medians** subtlety: aggregation takes the median across
+  vertices *after* the per-vertex divide, so z-scored ≠ (raw result)/(some scalar).
+
+## Framing the "which makes more sense" call
+- **For z-scoring:** removes per-vertex response-scale (gain) differences, so asymmetries reflect
+  relative tuning rather than absolute amplitude; standard when pooling heterogeneous vertices.
+- **Against:** `beta_std` from only 13 conditions is a noisy divisor and can inflate/deweight
+  vertices unpredictably; raw % signal change is directly interpretable and comparable across the
+  literature.
+- **Deliverable:** a short recommendation backed by the `beta_std` diagnostics above.
+
+## Caveat — resolved, no derived-direction fix needed
+An earlier version of this file warned that the repo's `compute_derivativeDirections.m` carried a
+cardinal-meridian label-swap bug. **That was wrong** — see [`../AUDIT.md`](../AUDIT.md). The repo
+function is correct and now reproduces the clean-room exactly (`bridge/resolve_da_HV` prints a
+per-polar-angle difference of 0.000e+00). The derived asymmetries above are trustworthy in both
+variants, and no change to `AnalysisCode` is required.
+
+Two things to keep in mind while doing the z-scoring work:
+- The saved `results.mat` files were produced with `normalize = 1` (verified for sub-0255: the
+  stored contrasts equal `(orientation − blank)/beta_std` to 8.9e-16), but
+  `main_singlesub.m:131` now reads `normalize = 0`. So the existing figures are z-scored while a
+  fresh stage-01 run would not be. Settle which variant the paper adopts *and* set that flag
+  explicitly before regenerating anything.
+- Any array handed to a repo stage-04 function must have its polar-angle dimension in
+  `cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135]`, not ascending conventional order.
+
+---
+
+# Next step: an observer gain estimate from the retinotopy scan
+
+> **Closed — negative (2026-07-23).** `prfvista_mov` does not save a gain/amplitude map. The
+> server inventory came back identical for all 8 observers: `angle`, `angle_adj`, `eccen`,
+> `sigma`, `vexpl`, `x`, `y` — position and size parameters plus goodness of fit, and nothing
+> else. The pRF gain is fit and then discarded, so it cannot be read off the stored maps;
+> recovering it would require **refitting the pRF models**, which is a far larger job than
+> step 1 below assumed. Unless someone is willing to refit, the retinotopy route to a
+> principled per-observer normaliser is not available, and the units question in
+> [`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §6 stands unresolved by this route.
+>
+> The rest of this section is kept for the reasoning, which is still correct.
+
+**Task:** test whether `prfvista_mov` can supply a per-observer BOLD gain that the 13 GLM
+conditions cannot. This is the one route that could make a principled normalization possible, and
+it should be tried before the z-scoring question is settled either way — see
+[`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §6.
+
+**Why it might work.** A defensible gain divisor has to be (a) independent of the effect being
+measured, (b) positive and stably estimable for every observer, and (c) a property of the observer
+rather than the session. Every divisor derivable from the 13 conditions fails at least one: they
+either contain the analysed conditions and the blank, or go non-positive for sub-0037 and
+sub-0201, or transfer across experiments at only r ≈ 0.5. The retinotopy scan is a **separate
+session with its own stimulus**, so a gain estimated from it is contaminated by none of the
+orientation conditions and does not collapse when V1 fails to respond to *these* stimuli.
+
+**Steps**
+1. Extract a per-observer response-amplitude measure from `prfvista_mov` within the same V1 4–8°
+   patch — pRF gain/beta if stored, otherwise the model's predicted response amplitude. The mgz
+   files are already being read by `meanWithinLabel.m:118-121` (`angle_adj`, `eccen`, `vexpl`,
+   `sigma`), so check what else that directory holds.
+2. Check criterion (b): is it positive for all 8 observers, including sub-0037 and sub-0201? If
+   those two are also flat in the retinotopy scan, that is strong independent evidence for
+   excluding them rather than normalizing them.
+3. Check criterion (c): does it correlate with the within-experiment gain estimates? A retinotopy
+   gain that predicts both `dg` and `da` amplitude would be the observer trait the normalization
+   assumes exists.
+4. If it survives, renormalize and recompute Fig 7 for both experiments; report the ordering and
+   a subject bootstrap alongside the three existing variants (0.28 raw, 0.69 published, 0.43
+   motion-only).
+
+---
+
+# Next step: per-subject GLM fit quality
+
+> **Data received and audited (2026-07-23).** The extraction was run on the server and returned
+> in `Support/glm_qc_for_transfer/` — 16/16 files, all `ok`, V1 restriction working (the branch
+> flagged untested below), every QC field present. **Results and what they change are in
+> [`GLM_QUALITY.md`](GLM_QUALITY.md).**
+>
+> Headline: the two anomalous observers fail in *different* ways, and only one of them fails in a
+> way that supports the §8 exclusion. **sub-0037** has a genuine, session-specific polar failure —
+> V1 fit *worse* than the whole-surface baseline (ratio 0.92, the only sub-1.0 value in the
+> dataset) in `da` against 4.96 in `dg`. **sub-0201** does not: it is 1.15 / 1.16, uniformly weak
+> in *both* experiments, with no bad run and no session-specific drop. So the ZSCORE_FIG7.md §8
+> exclusion has independent support for sub-0037 and **none for sub-0201**, whose blank-beta
+> anomaly still needs an explanation. §8 needs revising accordingly.
+>
+> Steps 1–3 below are done. Steps 4–5 remain open.
+
+**Task:** assess GLMsingle fit quality for all 8 subjects × both experiments, and decide
+inclusion on that basis. This should be settled *before* the z-scoring call, because z-scoring is
+currently acting as an implicit **inverse** quality weighting — it up-weights exactly the
+observers whose polar-grating data look worst (see [`ZSCORE_FIG7.md`](ZSCORE_FIG7.md) §3a, §7).
+
+## The gap
+`Support/allsubjectsTable.csv` has exactly one quality column, **`pRF_r2`**, which is the
+**retinotopy** model fit. The vertex filter (`pRF_r2 > 0.1`) is built on it. **No GLMsingle
+fit-quality metric enters the pipeline at any stage**, so a vertex can pass the filter on a good
+pRF fit while its 13 condition betas are barely constrained.
+
+## What is available — and what is only assumed
+
+**Verified:** `Support/sub-0255/{dg,da}/results.mat` contain the full GLMsingle TYPED output.
+These are the **only** GLM outputs anywhere in the repository (a full `find` for `results.mat`
+returns just these two). Neither `Support/allsubjectsTable.csv` nor the second copy under
+`Support/summaryTables_wleftV2d/` carries any GLM metric — the two tables have identical column
+sets, and `pRF_r2` is the only quality column in either.
+
+**Assumed, not observed:** that the other seven subjects have the same fields. This follows from
+`main_singlesub.m`, which under `hRF_setting = 'glmsingle'` assigns
+`results.allevents = modelOut{1,4}` (the TYPED model) and saves it unconditionally at the end.
+It has not been checked against an actual file, and requires `/Volumes/Vision` mounted.
+
+Where they should live (`main_singlesub.m:37`):
+
+```
+<bidsDir>/derivatives/<projectName>GLM/hRF_glmsingle/<subj>/<ses>/results.mat
+   bidsDir = /Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/
+   projectName = dg | da
+```
+
+Two wrinkles for a batch extraction:
+- **The session ID differs per subject** and is set by hand at the top of `main_singlesub.m`
+  (`ses-05`, `ses-01`, `ses-nyu3t02`, … are all in the file as commented alternatives), so the
+  session has to be discovered per subject rather than assumed.
+- The same folder should also hold **`modelOutput.mat`** — stage 02's
+  `computeMetrics4PSCScale.m:42` loads that instead and re-derives `modelOut{1,4}` itself. Either
+  file is a valid source; `modelOutput.mat` is the rawer one.
+
+Fields in sub-0255's `results.allevents`:
+
+| field | size (sub-0255) | use |
+|---|---|---|
+| `R2` | 270291 × 1 | per-vertex variance explained — the direct quality measure |
+| `R2run` | 270291 × 1 × 1 × 8 | per-run R²; exposes a single bad run |
+| `FRACvalue` | 270291 × 1 | ridge fraction; low = heavy shrinkage = poorly constrained |
+| `noisepool` | 270291 × 1 | GLMsingle's own noise classification (~61% of the surface here) |
+| `HRFindex`, `xvaltrend` | — | HRF selection and its cross-validation trend |
+| `meanvol` | 270291 × 1 | mean EPI intensity; flags dropout |
+
+## Do NOT copy the results.mat files
+
+Each is **~500 MB** (sub-0255: 528 MB `dg`, 481 MB `da`), so all 16 come to roughly **8 GB**.
+Almost all of that is `modelmd` (nVertices × 416 single), which this audit does not need. They
+are also **v7, not v7.3**, so nothing can be loaded selectively — each file is read whole.
+
+Instead, run the extraction **on the machine where the volume is mounted** and copy back only its
+output (~10 MB per subject × experiment for whole-surface metrics, well under 1 MB once
+restricted to the V1 patch). Doing the V1 restriction there also means the FreeSurfer labels and
+pRF maps never need copying.
+
+## ~~Ready to run~~ — superseded; both extractions have been done
+
+> **Historical.** This describes the *first* extraction route (a V1-restricted ~10 MB payload).
+> It ran on 2026-07-23 → [`GLM_QUALITY.md`](GLM_QUALITY.md). It was then **replaced** by
+> [`server_extract/collect_everything.m`](../server_extract/), which deliberately filters
+> nothing — whole surface, every retinotopy map, every label, ~1.2 GB to `~/dg_collect/` — for
+> the reasons in `GLM_QUALITY.md` §6a (a filter applied before the data leaves the server makes
+> its own influence untestable). That ran on 2026-07-24 →
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md). **Use `server_extract/RUNME.md` if this ever
+> needs running again**, not the commands below.
+
+**If someone else is running this on the server**, send them
+[`server_extract/`](../server_extract/) instead — one self-contained file plus a README, no
+dependency on this repo, and it collects the retinotopy-gain inventory in the same pass so there
+is no second round trip. (`audit_glm_quality` needed a one-line fix to read its output — see
+`GLM_QUALITY.md` §1.)
+
+```matlab
+% On the machine with /Volumes/Vision mounted:
+cd Reproduction/cleanroom
+extract_glm_qc          % writes Reproduction/_glmqc/glmqc_<subj>_<proj>.mat + manifest.csv
+
+% Then, anywhere (copy the _glmqc folder across first):
+audit_glm_quality       % per-subject quality table, outlier flags, dg-vs-da comparison
+```
+
+`extract_glm_qc` discovers session IDs by globbing for `results.mat` (the way
+`meanWithinLabel.m:100` does), so the hand-set `ses` in `main_singlesub.m` is not a problem. It
+reports missing files and unexpected struct layouts rather than failing, and if the V1
+restriction cannot run it still writes the whole-surface metrics and warns.
+
+**Tested:** the `results.mat` extraction and the whole audit, against `Support/sub-0255`.
+~~**Untested:** the V1-restriction branch~~ — **it worked** on the 2026-07-23 server run: every
+observer got a real patch of 1126–1786 vertices, no missing fields (`GLM_QUALITY.md` §1). The
+branch is moot now in any case, since the current extraction applies no restriction at all.
+
+## Steps
+
+> **Status: 1–4 done, 5 open.** Steps 1–3 ran (`GLM_QUALITY.md`). Step 4's inclusion decision is
+> settled by [`local_qc/REPORT.md`](../local_qc/REPORT.md) §2 — no genuine non-responders and no bad
+> data, so **all 8 observers are retained** and the z-scoring that was applying an implicit
+> inverse quality weighting is dropped instead (§4 there). **Step 5 is the live remainder.**
+
+1. Run `extract_glm_qc`, and check `manifest.csv`: all 16 rows should read `ok`. A
+   `bad-structure` row means that subject was run under a different `hRF_setting` and has no
+   TYPED fields — it would need re-running before the rest of this is possible.
+2. Copy `Reproduction/_glmqc/` back and run `audit_glm_quality`.
+3. Test whether **sub-0201** and **sub-0037** are outliers in the polar experiment specifically.
+   Predictions worth checking: sub-0201 has a bad run or motion artefact (which `R2run` and the
+   `worstRun`/`runSpread` columns should expose) given that its blank beta exceeds all 12 stimulus
+   betas in *both* experiments; sub-0037 has a session-specific failure in `da` only, given it
+   responds strongly in `dg` — look for a large negative `da − dg` in the within-subject table.
+4. Decide inclusion on those grounds and state it, rather than letting the normalizer apply an
+   implicit and inverted version of the same judgement.
+5. Consider adding a GLM-`R2` column to `allsubjectsTable.csv` so the vertex filter can screen it
+   alongside `pRF_r2`. Note this is a real change of data source, not a one-line addition:
+   `createTables.m:175` builds the table from `betas_nonzscored.mat` and never opens
+   `results.mat`, so the quality fields would have to be loaded alongside. A vertex-index column
+   would be worth adding at the same time — its absence is why the V1 mapping has to be done at
+   extraction rather than afterwards.
