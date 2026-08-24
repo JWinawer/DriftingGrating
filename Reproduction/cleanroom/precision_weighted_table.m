@@ -37,13 +37,15 @@ function P = precision_weighted_table(varargin)
     p.addParameter('area', 'V1', @ischar);
     p.addParameter('route', 'roi', @ischar);
     p.addParameter('thetaV', 'binned', @ischar);
+    p.addParameter('gain', false, @(x) islogical(x) || isnumeric(x));
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.parse(varargin{:});
     opt = p.Results;
 
     W    = diagnose_within_observer_error('root', opt.root, 'area', opt.area, ...
                                           'eccRange', opt.eccRange, 'route', opt.route, ...
-                                          'thetaV', opt.thetaV, 'quiet', true);
+                                          'thetaV', opt.thetaV, 'gain', opt.gain, ...
+                                          'quiet', true);
     expn = {'dg','da'};
     nS   = numel(W.subjects);
 

@@ -35,6 +35,8 @@ function W = diagnose_within_observer_error(varargin)
 %             runs, so their sampling errors are correlated, and FIT_CELL_META needs the
 %             whole matrix rather than the diagonal.
 %   W.nVert   nSubj x nPA x 2       vertices contributing to each cell
+%   W.gainScale   nSubj x 1  the pRF-gain factors, whether or not they were applied
+%   W.gainApplied logical    whether they were
 %
 % ROUTE. 'roi' (default) bins vertices into the eight polar-angle ROIs and contrasts
 % within each, which is the published route. 'harmonic' instead fits the four-term
@@ -60,6 +62,7 @@ function W = diagnose_within_observer_error(varargin)
     p.addParameter('area', 'V1', @ischar);
     p.addParameter('route', 'roi', @(x) any(strcmpi(x, {'roi','harmonic'})));
     p.addParameter('thetaV', 'binned', @(x) any(strcmpi(x, {'binned','continuous'})));
+    p.addParameter('gain', false, @(x) islogical(x) || isnumeric(x));
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.addParameter('nBoot', 500, @isnumeric);
     p.addParameter('quiet', false, @islogical);
@@ -68,7 +71,23 @@ function W = diagnose_within_observer_error(varargin)
 
     cfg = config_repro();
     if ~isempty(opt.eccRange), cfg.eccRange = opt.eccRange; end
-    gscale = observer_gain_weights(cfg);   % per-observer pRF-gain rescaling
+
+    % GAIN IS OFF BY DEFAULT. The pRF-gain rescaling is a per-observer SCALAR applied
+    % before observers are combined, so it touches no within-observer quantity and is
+    % separable from everything else in the pipeline. It is left out of the core
+    % computation for two reasons. It is derived in V1 only (DG_GAININV1: V1_REmanual,
+    % 4-8 deg, R2 > 0.1), so applying it to V2/V3/hV4 special-cases V1 as the source --
+    % the opposite of one analysis for every map. And it does not commute with the
+    % precision weighting downstream: scaling y_i and sigma_i by c_i changes tau^2 and
+    % therefore the weights, so it cannot be applied to a finished group estimate.
+    %
+    % Apply it later instead, at the observer level, to W.full and W.seBoot together --
+    % those are returned per observer for exactly this purpose, and W.gainScale carries
+    % the factors. 'gain', true restores the in-line rescaling, which is what reproduces
+    % the manuscript's V1 numbers.
+    if opt.gain, gscale = observer_gain_weights(cfg);
+    else,        gscale = ones(numel(cfg.subjects), 1);
+    end
     nm  = {'horiz-vert','card-obl','rad-tang','polc-polo'};
     nS  = numel(cfg.subjects);
     W   = struct('names', {nm});
@@ -159,7 +178,9 @@ function W = diagnose_within_observer_error(varargin)
             end
         end
     end
-    W.subjects = cfg.subjects;
+    W.subjects  = cfg.subjects;
+    W.gainScale = observer_gain_weights(cfg);   % for later application; NOT applied
+    W.gainApplied = logical(opt.gain);
     if ~opt.quiet, report(W, nm); end
 end
 
