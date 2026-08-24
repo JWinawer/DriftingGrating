@@ -51,12 +51,15 @@ function P = precision_weighted_cells(varargin)
     p.addParameter('csv', '', @ischar);
     p.addParameter('root', dg_collect_dir(), @ischar);
     p.addParameter('area', 'V1', @ischar);
+    p.addParameter('route', 'roi', @ischar);
+    p.addParameter('thetaV', 'binned', @ischar);
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.parse(varargin{:});
     opt = p.Results;
 
     W    = diagnose_within_observer_error('root', opt.root, 'area', opt.area, ...
-                                          'eccRange', opt.eccRange, 'quiet', true);
+                                          'eccRange', opt.eccRange, 'route', opt.route, ...
+                                          'thetaV', opt.thetaV, 'quiet', true);
     expn = {'dg','da'};
     nS   = numel(W.subjects);
     nP   = size(W.cell, 2);

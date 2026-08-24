@@ -35,6 +35,16 @@ function W = diagnose_within_observer_error(varargin)
 %             runs, so their sampling errors are correlated, and FIT_CELL_META needs the
 %             whole matrix rather than the diagonal.
 %   W.nVert   nSubj x nPA x 2       vertices contributing to each cell
+%
+% ROUTE. 'roi' (default) bins vertices into the eight polar-angle ROIs and contrasts
+% within each, which is the published route. 'harmonic' instead fits the four-term
+% per-vertex model of FIT_HARMONIC_VERTEX to the same run-resampled betas, with polar
+% angle CONTINUOUS, and reads the four asymmetries off the fitted coefficients
+% evaluated at the eight canonical ROI centres. The two agree exactly on complete data
+% (they are the same estimator re-parameterised) but diverge as cells go empty, because
+% the harmonic route never bins and so has no cells to lose. W.full and W.seBoot have
+% the same shape either way, so PRECISION_WEIGHTED_TABLE consumes both unchanged; the
+% per-cell outputs above are only produced by the 'roi' route.
 % In V1 every cell is populated and W.full is just the wedge mean of W.cell. In the
 % extrastriate maps cells go empty, the wedge mean stops being comparable across
 % observers, and FIT_CELL_META fits the wedge profile instead. See ../LME.md section 5.
@@ -48,6 +58,8 @@ function W = diagnose_within_observer_error(varargin)
     p = inputParser;
     p.addParameter('root', dg_collect_dir(), @ischar);
     p.addParameter('area', 'V1', @ischar);
+    p.addParameter('route', 'roi', @(x) any(strcmpi(x, {'roi','harmonic'})));
+    p.addParameter('thetaV', 'binned', @(x) any(strcmpi(x, {'binned','continuous'})));
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.addParameter('nBoot', 500, @isnumeric);
     p.addParameter('quiet', false, @islogical);
@@ -87,9 +99,14 @@ function W = diagnose_within_observer_error(varargin)
                 continue
             end
 
-            [aFull, awFull]  = asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
-            W.full(si,:,ei)  = gscale(si) * aFull;
-            W.cell(si,:,:,ei) = gscale(si) * awFull;
+            harm = strcmpi(opt.route, 'harmonic');
+            if harm
+                W.full(si,:,ei) = gscale(si) * asym_from_runs_h(A, 1:S.nRun, cfg, expn{ei}, opt.thetaV);
+            else
+                [aFull, awFull]  = asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
+                W.full(si,:,ei)  = gscale(si) * aFull;
+                W.cell(si,:,:,ei) = gscale(si) * awFull;
+            end
             W.nVert(si,:,ei) = accumarray(A.wedge(:), 1, [nP 1]).';
 
             % Split-half over all balanced splits. Only defined for an even number of
@@ -114,12 +131,25 @@ function W = diagnose_within_observer_error(varargin)
             % within-observer covariance across wedges, so the two are guaranteed
             % consistent: sum(sum(cellCov))/nP^2 is exactly seBoot^2 wherever every
             % wedge is populated.
-            rng(si); Bb = nan(opt.nBoot, 4); Bw = nan(opt.nBoot, nP, 4);
+            % Draws are generated UP FRONT: the fitting path calls into code that
+            % reseeds the global stream, which would otherwise silently repeat one draw.
+            % Drawn one row at a time, NOT randi(nRun,[nBoot nRun]): the matrix form
+            % fills column-major and so consumes the stream in a different order,
+            % which silently changes every bootstrap SE in the repository.
+            rng(si);
+            draws = zeros(opt.nBoot, S.nRun);
+            for b = 1:opt.nBoot, draws(b,:) = randi(S.nRun, [1 S.nRun]); end
+            Bb = nan(opt.nBoot, 4); Bw = nan(opt.nBoot, nP, 4);
             for b = 1:opt.nBoot
-                [Bb(b,:), aw] = asym_from_runs(A, randi(S.nRun, [1 S.nRun]), cfg, expn{ei});
-                Bw(b,:,:) = aw;
+                if harm
+                    Bb(b,:) = asym_from_runs_h(A, draws(b,:), cfg, expn{ei}, opt.thetaV);
+                else
+                    [Bb(b,:), aw] = asym_from_runs(A, draws(b,:), cfg, expn{ei});
+                    Bw(b,:,:) = aw;
+                end
             end
             W.seBoot(si,:,ei) = gscale(si) * std(Bb, 0, 1, 'omitnan');
+            if harm, continue; end
             for j = 1:4
                 okW = ~all(isnan(Bw(:,:,j)), 1);
                 if ~any(okW), continue; end
@@ -169,6 +199,7 @@ function [A, ok] = prep(S, cfg, en, root, area)
     ang  = double(R.angle_adj(v(good)));            % Benson deg, as meanWithinLabel bins
     conv = mod(90 - ang, 360);                      % conventional, matches cfg.paBins
     [~, A.wedge] = min(abs(mod(conv - cfg.paBins(:).' + 180, 360) - 180), [], 2);
+    A.thetaV = conv(:);                             % continuous, for the harmonic route
     A.expn = en;
     ok = true;
 end
@@ -199,6 +230,48 @@ function [a, aw] = asym_from_runs(A, runs, cfg, en)
         aw(:,j) = Asy.(Asy.order{j}).diff;
         a(j)    = mean(aw(:,j), 'omitnan');
     end
+end
+
+% ------------------------------------------------------------------------
+function a = asym_from_runs_h(A, runs, cfg, en, tvSrc)
+% Harmonic route. Mean beta over the given runs -> per-vertex demeaned responses ->
+% weighted least squares on the four-term harmonic basis -> the four asymmetries, read
+% off by evaluating the fit at the eight canonical ROI centres and pushing that through
+% the UNMODIFIED COMPUTE_ASYMMETRIES, so the units match the ROI route exactly.
+%
+% This mirrors FIT_HARMONIC_VERTEX's per-subject inner loop rather than calling it:
+% that function loops over all of cfg.subjects and reseeds the global RNG for its own
+% bootstrap, neither of which is wanted inside a run resample. VALIDATE_HARMONIC_ROUTE
+% checks the two agree to machine precision on full data.
+    expCfg = cfg.(en);
+    B   = mean(A.runBeta(:, :, runs), 3, 'omitnan');
+    col = expCfg.oriIdx - 25 + 8;                        % -> betamap cols 9..12
+    C   = double(B(:, col));                             % blank cancels in the demeaning
+    Y   = C - mean(C, 2);                                % nVertex x nOri
+
+    % thetaV BINNED by default. Quantising the regressor to the eight ROI centres makes
+    % the fit algebraically the published ROI analysis, so V1 does not move on adoption;
+    % it does NOT reintroduce the empty-cell problem, because binning the predictor
+    % creates no cell that can go empty -- the fit simply uses whatever vertices exist.
+    % 'continuous' is the scientifically preferable model (each vertex's own pRF angle),
+    % and differs by the within-wedge local-orientation term quantified in
+    % ../HARMONIC_MODEL.md; it is offered so the two can be compared, not defaulted to.
+    if strcmpi(tvSrc, 'continuous'), tv = A.thetaV;
+    else,                            tv = cfg.paBins(A.wedge).';
+    end
+    opts = struct('expanded', false, 'weighting', 'equalcoverage');
+    X    = harmonic_predictors(tv, expCfg, opts);
+    wV   = harmonic_weights(tv, opts.weighting);
+    sw   = repmat(sqrt(wV(:)), size(Y, 2), 1);
+
+    keepCol = ~all(abs(X) < 1e-12, 1);                   % sin columns vanish by design
+    b = nan(1, size(X, 2));
+    b(keepCol) = ((X(:,keepCol) .* sw) \ (Y(:) .* sw)).';
+
+    Yh  = predict_harmonic(b, cfg.paBins(:), expCfg, opts);   % nPA x nOri
+    Asy = compute_asymmetries(Yh.', cfg, expCfg);
+    a   = nan(1,4);
+    for j = 1:4, a(j) = mean(Asy.(Asy.order{j}).diff, 'omitnan'); end
 end
 
 % ------------------------------------------------------------------------
