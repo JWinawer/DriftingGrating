@@ -51,8 +51,10 @@ function P = precision_weighted_cells(varargin)
     p.addParameter('csv', '', @ischar);
     p.addParameter('root', dg_collect_dir(), @ischar);
     p.addParameter('area', 'V1', @ischar);
-    p.addParameter('route', 'roi', @ischar);
-    p.addParameter('thetaV', 'binned', @ischar);
+    % PINNED to the ROI route: this function IS the ROI-space cross-check, and it
+    % needs the per-cell values and covariance that only that route produces.
+    route = 'roi';
+    p.addParameter('thetaV', 'continuous', @ischar);
     p.addParameter('gain', true, @(x) islogical(x) || isnumeric(x));
     p.addParameter('weighting', 'equalcoverage', @ischar);
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
@@ -60,7 +62,7 @@ function P = precision_weighted_cells(varargin)
     opt = p.Results;
 
     W    = diagnose_within_observer_error('root', opt.root, 'area', opt.area, ...
-                                          'eccRange', opt.eccRange, 'route', opt.route, ...
+                                          'eccRange', opt.eccRange, 'route', route, ...
                                           'thetaV', opt.thetaV, 'gain', opt.gain, ...
                                           'weighting', opt.weighting, 'quiet', true);
     expn = {'dg','da'};

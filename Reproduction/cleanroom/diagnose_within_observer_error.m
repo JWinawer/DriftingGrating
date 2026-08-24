@@ -38,7 +38,8 @@ function W = diagnose_within_observer_error(varargin)
 %   W.gainScale   nSubj x 1  the pRF-gain factors, whether or not they were applied
 %   W.gainApplied logical    whether they were
 %
-% ROUTE. 'roi' (default) bins vertices into the eight polar-angle ROIs and contrasts
+% ROUTE. 'harmonic' (default) fits the per-vertex model; 'roi' bins vertices into the
+% eight polar-angle ROIs and contrasts
 % within each, which is the published route. 'harmonic' instead fits the four-term
 % per-vertex model of FIT_HARMONIC_VERTEX to the same run-resampled betas, with polar
 % angle CONTINUOUS, and reads the four asymmetries off the fitted coefficients
@@ -60,8 +61,8 @@ function W = diagnose_within_observer_error(varargin)
     p = inputParser;
     p.addParameter('root', dg_collect_dir(), @ischar);
     p.addParameter('area', 'V1', @ischar);
-    p.addParameter('route', 'roi', @(x) any(strcmpi(x, {'roi','harmonic'})));
-    p.addParameter('thetaV', 'binned', @(x) any(strcmpi(x, {'binned','continuous'})));
+    p.addParameter('route', 'harmonic', @(x) any(strcmpi(x, {'roi','harmonic'})));
+    p.addParameter('thetaV', 'continuous', @(x) any(strcmpi(x, {'binned','continuous'})));
     p.addParameter('gain', true, @(x) islogical(x) || isnumeric(x));
     p.addParameter('weighting', 'equalcoverage', ...
                    @(x) any(strcmpi(x, {'equalcoverage','natural'})));
@@ -289,13 +290,20 @@ function a = asym_from_runs_h(A, runs, cfg, en, tvSrc, wMode, wBins)
     C   = double(B(:, col));                             % blank cancels in the demeaning
     Y   = C - mean(C, 2);                                % nVertex x nOri
 
-    % thetaV BINNED by default. Quantising the regressor to the eight ROI centres makes
-    % the fit algebraically the published ROI analysis, so V1 does not move on adoption;
-    % it does NOT reintroduce the empty-cell problem, because binning the predictor
-    % creates no cell that can go empty -- the fit simply uses whatever vertices exist.
-    % 'continuous' is the scientifically preferable model (each vertex's own pRF angle),
-    % and differs by the within-wedge local-orientation term quantified in
-    % ../HARMONIC_MODEL.md; it is offered so the two can be compared, not defaulted to.
+    % thetaV CONTINUOUS by default: each vertex's own pRF polar angle, no binning of
+    % the design anywhere. 'binned' quantises the regressor to the eight ROI centres,
+    % which makes the fit algebraically the published ROI analysis and so leaves V1
+    % unchanged -- but it puts cos(4*thetaV) at only two values (+1 at cardinals, -1 at
+    % obliques), so the second-harmonic pair b4 = b2 * cos(4*thetaV) is a TWO-POINT
+    % design: exactly orthogonal at full coverage, and exactly degenerate (VIF = Inf) as
+    % soon as one ROI class is lost. Continuous thetaV spreads cos(4*thetaV) over a
+    % continuum and never degenerates -- VIF 4.12 even with all four cardinal ROIs
+    % removed. Binning was the thing this whole review set out to remove; keeping it
+    % only to preserve legacy numbers would be the customisation being eliminated.
+    %
+    % The difference is not error: it is the within-wedge local-orientation term that
+    % ../HARMONIC_MODEL.md isolates as Fit A minus Fit B. It moves V1 by up to 0.037,
+    % most of it in polc-polo, whose coefficient has least redundancy under binning.
     if strcmpi(tvSrc, 'continuous'), tv = A.thetaV;
     else,                            tv = cfg.paBins(A.wedge).';
     end

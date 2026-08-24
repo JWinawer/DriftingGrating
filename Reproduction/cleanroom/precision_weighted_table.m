@@ -35,8 +35,8 @@ function P = precision_weighted_table(varargin)
     p.addParameter('csv', '', @ischar);
     p.addParameter('root', dg_collect_dir(), @ischar);
     p.addParameter('area', 'V1', @ischar);
-    p.addParameter('route', 'roi', @ischar);
-    p.addParameter('thetaV', 'binned', @ischar);
+    p.addParameter('route', 'harmonic', @ischar);
+    p.addParameter('thetaV', 'continuous', @ischar);
     p.addParameter('gain', true, @(x) islogical(x) || isnumeric(x));
     p.addParameter('weighting', 'equalcoverage', @ischar);
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
