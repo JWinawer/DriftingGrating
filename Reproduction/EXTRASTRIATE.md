@@ -176,14 +176,51 @@ is more likely a coverage artifact than a result. It needs scrutiny before it is
 
 ## 7. Open
 
-**Second-harmonic identifiability has not been checked per map.** Under meridian ROI loss, card−obl
-and polc−polo become perfectly confounded — in the harmonic parameterisation their errors correlate
-at exactly +1.0000, and the design correlation r(b2, b4) goes to −1 when a whole ROI class is lost.
-V3 has empty cells and hV4 has 20, so those two columns may be partly the same measurement in those
-maps while the table presents them as separate numbers. This should be checked before either is
-reported.
+> **Corrected 2026-08-24, after the claims below were tested.** The original text said the
+> harmonic route's "inputs are still V1-only" and that it is "the route most exposed to the
+> identifiability problem". Both were wrong; the superseded wording is kept at the end of this
+> section.
 
-**The harmonic route is the better estimator and is not yet wired to the extrastriate path.** On the
-same simulated cell loss it reaches mean RMSE 0.014 against de-trending's 0.016 and the V1 route's
-0.025, and it reproduces the ROI route *exactly* on complete data. But `fit_harmonic_vertex` and its
-inputs are still V1-only, and it is the route most exposed to the identifiability problem above.
+**The second-harmonic degeneracy is in the data, not in either method — and it is total.** For both
+experiments, per cell, `polc-polo` is exactly `+/- card-obl`, the sign alternating with cardinal
+versus oblique ROI (max difference over all cells: 0.000e+00). At cardinal ROIs radial/tangential
+*are* horizontal/vertical; at oblique ROIs they are the two obliques. The two asymmetries are one
+measurement per cell, separated only by how cells are combined across ROIs — which is precisely
+what ROI loss damages. Under 150 meridian-deletion draws on V1 (dg):
+
+| route | error correlation, card-obl vs polc-polo | max difference | rmse card-obl | rmse polc-polo |
+|---|---|---|---|---|
+| ROI / de-trend | +0.465 | 5.1e-02 | 0.0100 | 0.0229 |
+| harmonic | +1.0000 | 1.9e-15 | 0.0096 | 0.0096 |
+
+The harmonic errors are numerically identical because its 4th-harmonic part is `d_p = A + B*s_p`
+with `s_p = cos(4*thetaV) = +/-1`; the derived card-obl is `A` and polc-polo is `B`, so with two
+parameters and two ROI classes the fit is saturated, and a deletion touching only cardinals leaves
+both errors equal to the same quantity. The harmonic route is nonetheless **more accurate on both**,
+markedly so on polc-polo. So it does not create the problem — it makes an existing dependence exact
+and visible, where the ROI route leaves it blurred behind noisier estimates that look more
+independent than they are.
+
+**What follows for reporting:** in any map with class-structured ROI loss, card-obl and polc-polo
+should not be presented as two findings, under either route. That applies to V3 (2 empty cells) and
+especially hV4 (20), not to V1 or V2.
+
+**The harmonic route can already be run on the extrastriate maps.** `_cache/areas.mat` supplies the
+per-vertex table and `harmonic_vertex_data` / `fit_harmonic_vertex` are area-agnostic; fitting V2
+needs no code change and reproduces the V2 ROI numbers to 1e-9 on complete data. What is missing is
+only the precision weighting: sigma per observer currently comes from re-running the *ROI* asymmetry
+inside the run bootstrap, and the harmonic route needs the harmonic model refitted on each
+run-resampled draw. `runbetas_areas_*` holds per-vertex, per-condition, per-run betas for all eight
+areas, so this is one new function rather than a blocker.
+
+---
+
+*Superseded wording, kept per the repository's correction convention:*
+
+> **Second-harmonic identifiability has not been checked per map.** Under meridian ROI loss,
+> card-obl and polc-polo become perfectly confounded [...] This should be checked before either is
+> reported.
+>
+> **The harmonic route is the better estimator and is not yet wired to the extrastriate path.** [...]
+> `fit_harmonic_vertex` and its inputs are still V1-only, and it is the route most exposed to the
+> identifiability problem above.
