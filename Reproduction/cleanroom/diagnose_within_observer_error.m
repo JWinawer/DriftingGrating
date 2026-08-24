@@ -47,12 +47,15 @@ function W = diagnose_within_observer_error(varargin)
 
     p = inputParser;
     p.addParameter('root', dg_collect_dir(), @ischar);
+    p.addParameter('area', 'V1', @ischar);
+    p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.addParameter('nBoot', 500, @isnumeric);
     p.addParameter('quiet', false, @islogical);
     p.parse(varargin{:});
     opt = p.Results;
 
     cfg = config_repro();
+    if ~isempty(opt.eccRange), cfg.eccRange = opt.eccRange; end
     gscale = observer_gain_weights(cfg);   % per-observer pRF-gain rescaling
     nm  = {'horiz-vert','card-obl','rad-tang','polc-polo'};
     nS  = numel(cfg.subjects);
@@ -69,13 +72,20 @@ function W = diagnose_within_observer_error(varargin)
 
     for si = 1:nS
         for ei = 1:2
-            f = fullfile(opt.root, sprintf('runbetas_%s_%s.mat', cfg.subjects{si}, expn{ei}));
-            if ~isfile(f)
-                fprintf('missing %s -- run collect_runwise_betas.m\n', f);  return
+            fA = fullfile(opt.root, sprintf('runbetas_areas_%s_%s.mat', cfg.subjects{si}, expn{ei}));
+            f1 = fullfile(opt.root, sprintf('runbetas_%s_%s.mat',       cfg.subjects{si}, expn{ei}));
+            if isfile(fA),     f = fA;
+            elseif isfile(f1), f = f1;
+            else
+                fprintf('missing %s -- run collect_runwise_betas_areas.m\n', fA);  return
             end
             S = load(f);
-            [A, ok] = prep(S, cfg, expn{ei}, opt.root);
-            if ~ok, continue; end
+            [A, ok] = prep(S, cfg, expn{ei}, opt.root, opt.area);
+            if ~ok
+                fprintf('  %-14s %s %s: no vertices pass the filter\n', ...
+                        cfg.subjects{si}, expn{ei}, opt.area);
+                continue
+            end
 
             [aFull, awFull]  = asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
             W.full(si,:,ei)  = gscale(si) * aFull;
@@ -124,15 +134,38 @@ function W = diagnose_within_observer_error(varargin)
 end
 
 % ------------------------------------------------------------------------
-function [A, ok] = prep(S, cfg, en, root)
-% Restrict to the analysed vertices (4-8 deg, pRF R2 > 0.1) and attach wedge labels.
+function [A, ok] = prep(S, cfg, en, root, area)
+% Restrict to the analysed vertices (cfg.eccRange, pRF R2 > cfg.r2min) and attach
+% wedge labels. Accepts either extraction layout:
+%   runbetas_areas_*  vertIndex + areaMask + areaNames, eight visual areas
+%   runbetas_*        v1Index, V1 only (the original COLLECT_RUNWISE_BETAS)
+% so the V1 results are reproducible from whichever files are present.
     ok = false;  A = struct();
     R = load(fullfile(root, sprintf('ret_%s.mat', S.subject)), 'eccen','vexpl','angle_adj');
-    v = S.v1Index;
+
+    if isfield(S, 'vertIndex')
+        ai = find(strcmp(S.areaNames, area), 1);
+        if isempty(ai)
+            error('diagnose_within_observer_error:area', ...
+                  '%s holds %s, not %s.', S.subject, strjoin(S.areaNames, '/'), area);
+        end
+        sel = S.areaMask(:, ai);
+        v   = S.vertIndex(sel);
+        rb  = S.runBeta(sel, :, :);
+    else
+        if ~strcmp(area, 'V1')
+            error('diagnose_within_observer_error:v1only', ...
+                  ['%s has only the V1-only extraction, so area ''%s'' is unavailable. ' ...
+                   'Run collect_runwise_betas_areas.m.'], S.subject, area);
+        end
+        v  = S.v1Index;
+        rb = S.runBeta;
+    end
+
     good = double(R.eccen(v)) >= cfg.eccRange(1) & double(R.eccen(v)) <= cfg.eccRange(2) ...
          & double(R.vexpl(v)) > cfg.r2min;
     if ~any(good), return; end
-    A.runBeta = S.runBeta(good, :, :);
+    A.runBeta = rb(good, :, :);
     ang  = double(R.angle_adj(v(good)));            % Benson deg, as meanWithinLabel bins
     conv = mod(90 - ang, 360);                      % conventional, matches cfg.paBins
     [~, A.wedge] = min(abs(mod(conv - cfg.paBins(:).' + 180, 360) - 180), [], 2);
