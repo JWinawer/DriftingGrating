@@ -1,7 +1,13 @@
+# Data, caches and figures are ignored everywhere. SCRIPTS AND DOCS ARE TRACKED.
+#
+# Reproduction/ was formerly ignored wholesale, via `Reproduction/**` on this line.
+# The .m files already in git stayed tracked (an ignore rule does not untrack), but
+# every NEW one was invisible to `git add` -- so a commit could pick up an edited
+# caller while silently dropping the function it calls. The specific rules below
+# already cover everything under Reproduction/ that should not be tracked: figures,
+# _cache, _glmqc, and the *.pdf / *.mat / .DS_Store patterns further down.
 Support/
-Reproduction/**
 Data/**
-Support/
 Manuscript draft/
 Reproduction/figures/
 Reproduction/**/_cache/
