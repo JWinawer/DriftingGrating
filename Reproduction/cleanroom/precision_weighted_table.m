@@ -37,7 +37,7 @@ function P = precision_weighted_table(varargin)
     p.addParameter('area', 'V1', @ischar);
     p.addParameter('route', 'roi', @ischar);
     p.addParameter('thetaV', 'binned', @ischar);
-    p.addParameter('gain', false, @(x) islogical(x) || isnumeric(x));
+    p.addParameter('gain', true, @(x) islogical(x) || isnumeric(x));
     p.addParameter('weighting', 'equalcoverage', @ischar);
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.parse(varargin{:});

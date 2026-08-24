@@ -62,7 +62,7 @@ function W = diagnose_within_observer_error(varargin)
     p.addParameter('area', 'V1', @ischar);
     p.addParameter('route', 'roi', @(x) any(strcmpi(x, {'roi','harmonic'})));
     p.addParameter('thetaV', 'binned', @(x) any(strcmpi(x, {'binned','continuous'})));
-    p.addParameter('gain', false, @(x) islogical(x) || isnumeric(x));
+    p.addParameter('gain', true, @(x) islogical(x) || isnumeric(x));
     p.addParameter('weighting', 'equalcoverage', ...
                    @(x) any(strcmpi(x, {'equalcoverage','natural'})));
     p.addParameter('weightBins', 8, @(x) isscalar(x) && x >= 2);
@@ -75,21 +75,37 @@ function W = diagnose_within_observer_error(varargin)
     cfg = config_repro();
     if ~isempty(opt.eccRange), cfg.eccRange = opt.eccRange; end
 
-    % GAIN IS OFF BY DEFAULT. The pRF-gain rescaling is a per-observer SCALAR applied
-    % before observers are combined, so it touches no within-observer quantity and is
-    % separable from everything else in the pipeline. It is left out of the core
-    % computation for two reasons. It is derived in V1 only (DG_GAININV1: V1_REmanual,
-    % 4-8 deg, R2 > 0.1), so applying it to V2/V3/hV4 special-cases V1 as the source --
-    % the opposite of one analysis for every map. And it does not commute with the
-    % precision weighting downstream: scaling y_i and sigma_i by c_i changes tau^2 and
-    % therefore the weights, so it cannot be applied to a finished group estimate.
+    % GAIN IS ON BY DEFAULT, AND IS PER OBSERVER x MAP. The pRF-gain rescaling is a
+    % per-observer scalar applied before observers are combined, so it touches no
+    % within-observer quantity and is separable from the model, the weighting and the
+    % identifiability structure.
     %
-    % Apply it later instead, at the observer level, to W.full and W.seBoot together --
-    % those are returned per observer for exactly this purpose, and W.gainScale carries
-    % the factors. 'gain', true restores the in-line rescaling, which is what reproduces
-    % the manuscript's V1 numbers.
-    if opt.gain, gscale = observer_gain_weights(cfg);
-    else,        gscale = ones(numel(cfg.subjects), 1);
+    % It was briefly defaulted OFF because the only gain available was derived in V1
+    % (DG_GAININV1), and applying a V1 number to V2/V3/hV4 special-cases V1 as the
+    % source. COLLECT_GAIN_AREAS removed that objection by computing gain over all
+    % eight maps, so the default is back on and the factor is now the one for THIS map
+    % and THIS eccentricity band.
+    %
+    % The scaling is amplitude-neutral per map: the geometric mean of the scale factors
+    % is exactly 1, so it equalises observers WITHIN a map without altering that map's
+    % overall response level. Between-map differences -- the V1 > V2 > V3 gain decline,
+    % and the asymmetry attenuation that goes with it -- are therefore untouched.
+    %
+    % It does NOT commute with the precision weighting downstream (scaling y_i and
+    % sigma_i by c_i changes tau^2 and hence the weights), so it cannot be applied to a
+    % finished group estimate. W.full and W.seBoot are returned per observer for that
+    % reason, and W.gainScale carries the factors actually used.
+    if opt.gain
+        band = sprintf('%g-%g', cfg.eccRange(1), cfg.eccRange(2));
+        gscale = observer_gain_weights(cfg, opt.area, band);
+        if ~all(isfinite(gscale))
+            warning('diagnose_within_observer_error:gainFallback', ...
+                    ['no per-map gain for %s %s; falling back to the V1-derived ' ...
+                     'scalar. Run ../server_extract/collect_gain_areas.m.'], opt.area, band);
+            gscale = observer_gain_weights(cfg);
+        end
+    else
+        gscale = ones(numel(cfg.subjects), 1);
     end
     nm  = {'horiz-vert','card-obl','rad-tang','polc-polo'};
     nS  = numel(cfg.subjects);
@@ -182,7 +198,7 @@ function W = diagnose_within_observer_error(varargin)
         end
     end
     W.subjects  = cfg.subjects;
-    W.gainScale = observer_gain_weights(cfg);   % for later application; NOT applied
+    W.gainScale = gscale;                       % the factors actually used
     W.gainApplied = logical(opt.gain);
     if ~opt.quiet, report(W, nm); end
 end
