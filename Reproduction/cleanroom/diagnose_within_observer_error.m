@@ -65,6 +65,7 @@ function W = diagnose_within_observer_error(varargin)
     p.addParameter('gain', false, @(x) islogical(x) || isnumeric(x));
     p.addParameter('weighting', 'equalcoverage', ...
                    @(x) any(strcmpi(x, {'equalcoverage','natural'})));
+    p.addParameter('weightBins', 8, @(x) isscalar(x) && x >= 2);
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.addParameter('nBoot', 500, @isnumeric);
     p.addParameter('quiet', false, @islogical);
@@ -122,7 +123,7 @@ function W = diagnose_within_observer_error(varargin)
 
             harm = strcmpi(opt.route, 'harmonic');
             if harm
-                W.full(si,:,ei) = gscale(si) * asym_from_runs_h(A, 1:S.nRun, cfg, expn{ei}, opt.thetaV, opt.weighting);
+                W.full(si,:,ei) = gscale(si) * asym_from_runs_h(A, 1:S.nRun, cfg, expn{ei}, opt.thetaV, opt.weighting, opt.weightBins);
             else
                 [aFull, awFull]  = asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
                 W.full(si,:,ei)  = gscale(si) * aFull;
@@ -163,7 +164,7 @@ function W = diagnose_within_observer_error(varargin)
             Bb = nan(opt.nBoot, 4); Bw = nan(opt.nBoot, nP, 4);
             for b = 1:opt.nBoot
                 if harm
-                    Bb(b,:) = asym_from_runs_h(A, draws(b,:), cfg, expn{ei}, opt.thetaV, opt.weighting);
+                    Bb(b,:) = asym_from_runs_h(A, draws(b,:), cfg, expn{ei}, opt.thetaV, opt.weighting, opt.weightBins);
                 else
                     [Bb(b,:), aw] = asym_from_runs(A, draws(b,:), cfg, expn{ei});
                     Bw(b,:,:) = aw;
@@ -256,7 +257,7 @@ function [a, aw] = asym_from_runs(A, runs, cfg, en)
 end
 
 % ------------------------------------------------------------------------
-function a = asym_from_runs_h(A, runs, cfg, en, tvSrc, wMode)
+function a = asym_from_runs_h(A, runs, cfg, en, tvSrc, wMode, wBins)
 % Harmonic route. Mean beta over the given runs -> per-vertex demeaned responses ->
 % weighted least squares on the four-term harmonic basis -> the four asymmetries, read
 % off by evaluating the fit at the eight canonical ROI centres and pushing that through
@@ -284,7 +285,7 @@ function a = asym_from_runs_h(A, runs, cfg, en, tvSrc, wMode)
     end
     opts = struct('expanded', false, 'weighting', wMode);
     X    = harmonic_predictors(tv, expCfg, opts);
-    wV   = harmonic_weights(tv, opts.weighting);
+    wV   = harmonic_weights(tv, opts.weighting, wBins);
     sw   = repmat(sqrt(wV(:)), size(Y, 2), 1);
 
     keepCol = ~all(abs(X) < 1e-12, 1);                   % sin columns vanish by design

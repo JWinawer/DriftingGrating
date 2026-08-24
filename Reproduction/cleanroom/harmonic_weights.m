@@ -1,8 +1,12 @@
-function [w, info] = harmonic_weights(thetaV, mode)
+function [w, info] = harmonic_weights(thetaV, mode, nBins)
 % HARMONIC_WEIGHTS  Per-vertex weights giving equal polar-angle coverage.
 %
-%   [w, info] = harmonic_weights(thetaV)                  % 'equalcoverage'
+%   [w, info] = harmonic_weights(thetaV)                  % 'equalcoverage', 24 bins
 %   [w, info] = harmonic_weights(thetaV, 'natural')       % all ones
+%   [w, info] = harmonic_weights(thetaV, 'equalcoverage', 8)   % 45-deg bins
+%
+% nBins sets the bin count (default 24, i.e. 15 deg). 8 gives 45-deg bins, which are
+% the eight polar-angle ROIs themselves -- see the note on bin width below.
 %
 % WHY THIS EXISTS. The published ROI analysis (BIN_AND_AGGREGATE + FIT_LME_FIG7)
 % aggregates each of the eight polar-angle wedges first and then weights the eight
@@ -63,12 +67,27 @@ function [w, info] = harmonic_weights(thetaV, mode)
 %          sum(w)^2/sum(w.^2), <= nVertex; how much the re-weighting costs in
 %          precision).
 
-    if nargin < 2 || isempty(mode), mode = 'equalcoverage'; end
+    if nargin < 2 || isempty(mode),   mode   = 'equalcoverage'; end
+    if nargin < 3 || isempty(nBins),  nBins  = 24; end
 
     tv = double(thetaV(:));
     nV = numel(tv);
 
-    edges = 0:15:360;
+    % EMPTY BINS ARE A NON-EVENT. Only vertices that exist are indexed below
+    % (w(ok) = 1./cnt(ibin(ok)) touches occupied bins only), so an empty bin never
+    % divides, never produces a weight and never creates a missing value. The bin
+    % width therefore has nothing to do with the missing-data problem: bins are not
+    % analysis units, they only partition the vertices that are present.
+    %
+    % What the width DOES control is leverage. w = 1/count means a bin holding one
+    % vertex gives that vertex the same total weight as a bin holding two hundred. At
+    % 15 deg the sparsest bin in V1 holds 2 vertices and the weight ratio between
+    % individual vertices reaches ~100x; at 45 deg it holds 33 and the ratio is 11x,
+    % for a residual r(b1,b3) of 0.075 instead of 0.016 -- a variance inflation of
+    % 1.006, i.e. nothing. 45 deg is also the width of the polar-angle ROIs
+    % themselves, so it keeps ONE binning in the whole pipeline and makes the
+    % estimand exactly "equal weight per ROI", matching the ROI route.
+    edges = linspace(0, 360, nBins + 1);
     nBin  = numel(edges) - 1;
     [cnt, ~, ibin] = histcounts(mod(tv, 360), edges);
     cnt = cnt(:);
