@@ -26,6 +26,19 @@ function W = diagnose_within_observer_error(varargin)
 % decides whether the summary-statistic test is losing efficiency to a mixed model, and
 % whether the spread across observers is genuine individual variation.
 %
+% PER-CELL OUTPUTS (for the extrastriate case). Alongside the observer-level summaries
+% this also returns each (observer, wedge) asymmetry and the bootstrap covariance of
+% those wedge values WITHIN an observer:
+%   W.cell    nSubj x nPA x 4 x 2   the asymmetry in each cell
+%   W.cellCov nPA x nPA x 4 x 2 x nSubj  its sampling covariance, from the same run
+%             bootstrap. NOT diagonal: one observer's wedges are computed from the same
+%             runs, so their sampling errors are correlated, and FIT_CELL_META needs the
+%             whole matrix rather than the diagonal.
+%   W.nVert   nSubj x nPA x 2       vertices contributing to each cell
+% In V1 every cell is populated and W.full is just the wedge mean of W.cell. In the
+% extrastriate maps cells go empty, the wedge mean stops being comparable across
+% observers, and FIT_CELL_META fits the wedge profile instead. See ../LME.md section 5.
+%
 % NOTE the paired test in DIAGNOSE_CONTEXT_ASYMMETRY is valid regardless of the answer:
 % its Type I error is correct whatever the within-observer error, because the
 % across-observer variance is an unbiased estimate of the variance of the per-observer
@@ -33,7 +46,7 @@ function W = diagnose_within_observer_error(varargin)
 % interpretation, not validity.
 
     p = inputParser;
-    p.addParameter('root', '/Users/jaw288/dg_collect', @ischar);
+    p.addParameter('root', dg_collect_dir(), @ischar);
     p.addParameter('nBoot', 500, @isnumeric);
     p.addParameter('quiet', false, @islogical);
     p.parse(varargin{:});
@@ -48,6 +61,10 @@ function W = diagnose_within_observer_error(varargin)
     W.seBoot  = nan(nS, 4, 2);
     W.full    = nan(nS, 4, 2);
     W.nRun    = nan(nS, 2);
+    nP        = numel(cfg.paBins);
+    W.cell    = nan(nS, nP, 4, 2);
+    W.cellCov = nan(nP, nP, 4, 2, nS);
+    W.nVert   = zeros(nS, nP, 2);
     expn = {'dg','da'};
 
     for si = 1:nS
@@ -60,7 +77,10 @@ function W = diagnose_within_observer_error(varargin)
             [A, ok] = prep(S, cfg, expn{ei}, opt.root);
             if ~ok, continue; end
 
-            W.full(si,:,ei) = gscale(si) * asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
+            [aFull, awFull]  = asym_from_runs(A, 1:S.nRun, cfg, expn{ei});
+            W.full(si,:,ei)  = gscale(si) * aFull;
+            W.cell(si,:,:,ei) = gscale(si) * awFull;
+            W.nVert(si,:,ei) = accumarray(A.wedge(:), 1, [nP 1]).';
 
             % Split-half over all balanced splits. Only defined for an even number of
             % runs: two observers depart from 8 (sub-0255 dg has 9, sub-0395 da has 6),
@@ -80,12 +100,23 @@ function W = diagnose_within_observer_error(varargin)
                 W.seSplit(si,:,ei) = gscale(si) * std(dHalf, 0, 1, 'omitnan') / 2;
             end
 
-            % bootstrap over runs
-            rng(si); Bb = nan(opt.nBoot, 4);
+            % bootstrap over runs. The SAME draws give the observer-level SE and the
+            % within-observer covariance across wedges, so the two are guaranteed
+            % consistent: sum(sum(cellCov))/nP^2 is exactly seBoot^2 wherever every
+            % wedge is populated.
+            rng(si); Bb = nan(opt.nBoot, 4); Bw = nan(opt.nBoot, nP, 4);
             for b = 1:opt.nBoot
-                Bb(b,:) = asym_from_runs(A, randi(S.nRun, [1 S.nRun]), cfg, expn{ei});
+                [Bb(b,:), aw] = asym_from_runs(A, randi(S.nRun, [1 S.nRun]), cfg, expn{ei});
+                Bw(b,:,:) = aw;
             end
             W.seBoot(si,:,ei) = gscale(si) * std(Bb, 0, 1, 'omitnan');
+            for j = 1:4
+                okW = ~all(isnan(Bw(:,:,j)), 1);
+                if ~any(okW), continue; end
+                Cv = nan(nP);
+                Cv(okW, okW) = cov(Bw(:, okW, j), 'omitrows');
+                W.cellCov(:,:,j,ei,si) = gscale(si)^2 * Cv;
+            end
         end
     end
     W.subjects = cfg.subjects;
@@ -110,8 +141,10 @@ function [A, ok] = prep(S, cfg, en, root)
 end
 
 % ------------------------------------------------------------------------
-function a = asym_from_runs(A, runs, cfg, en)
+function [a, aw] = asym_from_runs(A, runs, cfg, en)
 % Mean beta over the given runs -> wedge aggregate (cfg.aggregator) -> the 4 asymmetries.
+% Returns both the wedge-averaged asymmetries a (1 x 4) and the per-wedge values
+% aw (nPA x 4) they are the mean of; empty wedges stay NaN in both.
     B = mean(A.runBeta(:, :, runs), 3, 'omitnan');          % nVert x nCond
     idx = cfg.(en).oriIdx;                                  % CONTRASTS.json 26..29
     col = idx - 25 + 8;                                     % -> betamap cols 9..12
@@ -127,8 +160,12 @@ function a = asym_from_runs(A, runs, cfg, en)
         end
     end
     Asy = compute_asymmetries(M, cfg, cfg.(en));
-    a = nan(1,4);
-    for j = 1:4, a(j) = mean(Asy.(Asy.order{j}).diff, 'omitnan'); end
+    a  = nan(1,4);
+    aw = nan(nP,4);
+    for j = 1:4
+        aw(:,j) = Asy.(Asy.order{j}).diff;
+        a(j)    = mean(aw(:,j), 'omitnan');
+    end
 end
 
 % ------------------------------------------------------------------------

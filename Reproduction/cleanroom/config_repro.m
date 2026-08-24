@@ -51,7 +51,8 @@ function cfg = config_repro()
 
     % Per-observer pRF gain rescaling, as applied in lme1_fit.m/plot1_/plot2_.
     % Set cfg.gainFile = '' to disable. See OBSERVER_GAIN_WEIGHTS.
-    cfg.gainFile = '/Users/jaw288/dg_collect/gainSummary.csv';
+    cfg.collectDir = dg_collect_dir();   % see DG_COLLECT_DIR; '' if not mounted
+    cfg.gainFile = fullfile(cfg.collectDir, 'gainSummary.csv');
     cfg.gainMean = 'geometric';     % 'geometric' (manuscript) | 'arithmetic' (repo code)
 
     % --- bootstrap ---

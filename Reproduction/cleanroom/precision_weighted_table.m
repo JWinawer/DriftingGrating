@@ -33,7 +33,7 @@ function P = precision_weighted_table(varargin)
 
     p = inputParser;
     p.addParameter('csv', '', @ischar);
-    p.addParameter('root', '/Users/jaw288/dg_collect', @ischar);
+    p.addParameter('root', dg_collect_dir(), @ischar);
     p.parse(varargin{:});
     opt = p.Results;
 
