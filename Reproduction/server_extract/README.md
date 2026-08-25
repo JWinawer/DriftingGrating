@@ -24,8 +24,9 @@ is needed.
 | `extract_for_transfer.m` | the original, narrower extraction | superseded by `collect_everything.m`; kept as a record |
 
 Which analysis each one feeds is documented in the file header, and in
-[`../EXTRASTRIATE.md`](../EXTRASTRIATE.md), [`../HARMONIC_MODEL.md`](../HARMONIC_MODEL.md) and
-[`../local_qc/REPORT.md`](../local_qc/REPORT.md).
+[`../SPECIFICATION.md`](../SPECIFICATION.md),
+[`../supplement/SUPPLEMENT_harmonic_model.md`](../supplement/SUPPLEMENT_harmonic_model.md)
+and [`../local_qc/DATA_QUALITY.md`](../local_qc/DATA_QUALITY.md).
 
 ## Running one
 
@@ -77,8 +78,9 @@ collect_everything([],[],'/path/to/output')               % somewhere other than
 
 The V1 patch is built from the label plus **eccentricity and `vexpl` only** — never polar angle.
 Polar angle in this project has a Benson-vs-conventional convention difference that has already
-caused one false-alarm bug report ([`../AUDIT.md`](../AUDIT.md)). Nothing here needs it, so nothing
-here touches it.
+caused one false-alarm bug report
+([`../STIMULUS_CONVENTIONS.md`](../STIMULUS_CONVENTIONS.md)). Nothing here needs it, so
+nothing here touches it.
 
 ## Two questions still unanswered from off-server
 

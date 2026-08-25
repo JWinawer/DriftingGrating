@@ -53,7 +53,7 @@ end
 fprintf('\n================ V1 TABLES ================\n');
 for k = 1:numel(V), spec_tables('area','V1', 'variant', V(k).tag); end
 
-fprintf('\n================ EXTRASTRIATE SWEEP ================\n');
+fprintf('\n================ VISUAL-HIERARCHY SWEEP ================\n');
 for k = 1:numel(V)
     fprintf('\n########## variant %s ##########\n', V(k).tag);
     A = spec_areas_summary('variant', V(k).tag);

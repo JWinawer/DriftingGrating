@@ -9,7 +9,7 @@ function [A, ok] = load_runbetas_area(S, cfg, en, root, area)
 % A.thetaV (continuous, conventional degrees) and A.wedge (nearest of cfg.paBins).
 %
 % ok is false when no vertex survives, which happens in the sparser maps and is a
-% reportable fact rather than an error -- see ../EXTRASTRIATE.md section 6.
+% reportable fact rather than an error -- see ../SPECIFICATION.md section 7.
 %
 % EXTRACTED from DIAGNOSE_WITHIN_OBSERVER_ERROR so SPEC_PROFILES fits the same
 % vertices from the same files. One definition of the analysed vertex set, not two.
@@ -28,7 +28,7 @@ function [A, ok] = load_runbetas_area(S, cfg, en, root, area)
 % ON THE ANGLE. ret_*.mat stores Benson angle_adj, which is what meanWithinLabel.m
 % bins; conv = mod(90 - ang, 360) puts it in the conventional frame cfg.paBins is
 % written in. Getting this backwards reflects the wedges about 45 deg and swaps the
-% four cardinal meridians -- see ../AUDIT.md sections 3 and 5.
+% four cardinal meridians -- see ../STIMULUS_CONVENTIONS.md sections 3 and 5.
 
     ok = false;  A = struct();
     R = load(fullfile(root, sprintf('ret_%s.mat', S.subject)), 'eccen','vexpl','angle_adj');

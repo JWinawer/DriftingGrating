@@ -6,19 +6,19 @@
 > subject bootstrap.
 >
 > **§6–§8 and Recommendations 0, 3, 5, 6a, 7, 8 do not.** They are superseded by
-> [`local_qc/REPORT.md`](../local_qc/REPORT.md), which had data this document did not:
+> [`local_qc/DATA_QUALITY.md`](../local_qc/DATA_QUALITY.md), which had data this document did not:
 >
 > - **The blank is full-field pink noise, not a mean-luminance baseline** (REPORT §1). Pink noise
 >   is on screen for the whole run, so there is no true baseline and no absolute response
 >   magnitude to recover. Every "blank-referenced gain" below is a grating-vs-pink-noise
 >   *contrast*, so a non-positive value does not mean the observer had no gain — the premise of
 >   §8 fails, not just its conclusion.
-> - **Neither flagged observer is a non-responder** (REPORT §2.5–2.6). In the same sessions,
+> - **Neither flagged observer is a non-responder** (DATA_QUALITY §2.5–2.6). In the same sessions,
 >   sub-0037's and sub-0201's MT is motion-selective and their V4 prefers gratings to pink noise.
->   **The §8 exclusion is withdrawn; all 8 observers are retained.** `GLM_QUALITY.md` §5 had
+>   **The §8 exclusion is withdrawn; all 8 observers are retained.** the first GLM-quality audit (deleted; see `README.md`) §5 had
 >   already withdrawn the sub-0201 half on independent grounds.
 > - **The GLM fits have been checked** (§7's open question): all 16 sessions, twice, with no
->   coding or processing error found — see `GLM_QUALITY.md` and REPORT §2.
+>   coding or processing error found — see DATA_QUALITY §2.
 > - **The retinotopy-gain route (§6, Recommendation 6a) is closed negative.** `prfvista_mov`
 >   stores no gain map; it saves only `angle`, `angle_adj`, `eccen`, `sigma`, `vexpl`, `x`, `y`.
 >
@@ -391,9 +391,9 @@ that observers were weighted equally as a deliberate choice.
 ## 7. ~~Open:~~ CLOSED — the GLM fits have now been checked
 
 > **Done, 2026-07-23 and 2026-07-24.** Steps 1–3 below were carried out: all 8 observers ×
-> both experiments were extracted from the server and audited (`GLM_QUALITY.md`), then
+> both experiments were extracted from the server and audited, then
 > re-extracted with **no filtering at all** and reviewed in full
-> ([`local_qc/REPORT.md`](../local_qc/REPORT.md)). Findings: **no coding or processing error**,
+> ([`local_qc/DATA_QUALITY.md`](../local_qc/DATA_QUALITY.md)). Findings: **no coding or processing error**,
 > uniform model parameters, no bad run, no dropout, correct co-registration — and **neither
 > sub-0201 nor sub-0037 is a bad-data case** (step 2's prediction of a bad run or motion
 > artefact was not confirmed for either). Step 3's inclusion decision resolved as **retain all
@@ -451,7 +451,7 @@ Recommended next step, in priority order:
 > **Withdrawn 2026-07-24.** This section's own closing caveat — *"provisional on the GLM audit
 > (§7). If the GLMsingle metrics show sub-0037 and sub-0201 are fine, the reasoning above needs
 > revisiting"* — is exactly what happened. They are fine
-> ([`local_qc/REPORT.md`](../local_qc/REPORT.md) §2.5–2.6): in the same sessions, both observers'
+> ([`local_qc/DATA_QUALITY.md`](../local_qc/DATA_QUALITY.md) §2.5–2.6): in the same sessions, both observers'
 > MT is motion-selective and their V4 prefers gratings to pink noise, so the visual system
 > responded normally and there is no quality ground for exclusion.
 >
@@ -519,7 +519,7 @@ say.
 
 > **Read with the 2026-07-24 banner at the top of this file.** Superseded:
 > **0** (the exclusion is withdrawn), **3** and **5** (z-scoring is not retained in any form —
-> `local_qc/REPORT.md` §4), **6a** (the retinotopy-gain route is closed negative — no gain map
+> `local_qc/DATA_QUALITY.md` §4), **6a** (the retinotopy-gain route is closed negative — no gain map
 > is stored), **7** (both observers are cleared), and **8** (the GLM fits have been checked).
 > **Standing: 1, 2, 4, 6.** The current recommendation is simply: report the raw variants,
 > weight observers equally as a deliberate choice, and frame the paper on the cross-experiment

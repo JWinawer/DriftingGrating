@@ -104,7 +104,8 @@ function extract_glm_qc(bidsDir, outDir, saveFullSurface)
                 vexp = [MRIread(fullfile(retDir,'lh.vexpl.mgz')).vol, ...
                         MRIread(fullfile(retDir,'rh.vexpl.mgz')).vol];
                 % NB: only ecc and vexpl are used, never angle -- this deliberately avoids
-                % the Benson-vs-conventional polar-angle convention (see ../AUDIT.md).
+                % the Benson-vs-conventional polar-angle convention
+                % (see ../STIMULUS_CONVENTIONS.md).
 
                 inPatch = false(nVert,1);
                 inPatch(label_idx) = true;

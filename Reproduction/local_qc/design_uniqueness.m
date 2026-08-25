@@ -1,6 +1,6 @@
 % Design-uniqueness check: fingerprint each per-run trialMat and find collisions.
 % NOTE: with a FIXED rng seed (=0, as used here) all sessions are IDENTICAL by run
-% position, so "duplicates" are EXPECTED, not a bug. See REPORT.md.
+% position, so "duplicates" are EXPECTED, not a bug. See DATA_QUALITY.md.
 COL = fullfile(getenv('HOME'),'dg_collect','design');
 for pj = {'dg','da'}
   d = dir(fullfile(COL,pj{1},'*_design_*.mat'));

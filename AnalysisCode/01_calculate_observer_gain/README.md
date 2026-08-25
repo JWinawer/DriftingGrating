@@ -8,7 +8,7 @@ group mean back in (`04_plot_betaAsymmetries/retrieveObserverGainWeights.m`).
 `gainSummary.csv` (at `~/dg_collect/`). The V1-only restriction in `dg_computeGain` has since been
 widened — `Reproduction/server_extract/collect_gain_areas.m` computes gain over all eight visual
 maps, so a per-observer × **map** factor is available, which is what the settled specification uses
-(`Reproduction/EXTRASTRIATE.md` §3). That path reproduces this one in V1 4–8° to **5.3e-15**, which
+(`Reproduction/SPECIFICATION.md` §4). That path reproduces this one in V1 4–8° to **5.3e-15**, which
 is the argument for keeping both.
 
 One difference worth knowing: the mov/stat protocols are combined by **geometric** mean in the

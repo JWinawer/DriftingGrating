@@ -60,7 +60,7 @@ function S = diagnose_context_asymmetry(varargin)
 %     regardless; only efficiency was ever at stake.
 %
 % Absence of evidence is not evidence of absence, and with n = 8 the distinction is
-% not academic here. See ../HARMONIC_MODEL.md and ../supplement/.
+% not academic here. See ../supplement/SUPPLEMENT_harmonic_model.md and ../supplement/.
 
     p = inputParser;
     p.addParameter('nBoot', 1000, @isnumeric);

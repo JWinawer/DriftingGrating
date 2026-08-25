@@ -9,7 +9,7 @@ function D = harmonic_vertex_data(T, cfg, expCfg, doZscore)
 % each vertex's four stationary responses with the vertex mean removed.
 %
 % Removing the mean across the four orientations also removes the blank, which is
-% why the pink-noise-baseline problem (local_qc/REPORT.md section 1) does not touch
+% why the pink-noise-baseline problem (local_qc/DATA_QUALITY.md section 1) does not touch
 % this model: only orientation DIFFERENCES survive. All four harmonic predictors
 % likewise sum to zero across the four conditions, for both experiments, so the
 % model needs no intercept and demeaning does not distort the design.
@@ -18,7 +18,7 @@ function D = harmonic_vertex_data(T, cfg, expCfg, doZscore)
 %   T        : per-vertex V1 table from LOAD_AND_FILTER or LOAD_ALLCONDITIONS.
 %   expCfg   : cfg.dg or cfg.da.
 %   doZscore : divide by the per-vertex beta std (sensitivity variant only; the raw
-%              analysis is the one adopted -- local_qc/REPORT.md section 4).
+%              analysis is the one adopted -- METHOD_DECISIONS.md section 1).
 %
 % Output D
 %   .Y       nVertex x nOri, demeaned per-vertex responses (the regression target).

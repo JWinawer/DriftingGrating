@@ -35,7 +35,8 @@ function P = precision_weighted_cells(varargin)
 % up to 0.05 depending on how the within-observer sampling covariance is modelled --
 % full bootstrap covariance, diagonal only, or compound symmetric all give different
 % mu, because GLS re-weights wedges WITHIN an observer using a covariance estimated
-% from 8 runs. That is LME.md section 5's own warning ("at n = 8, estimated-weight GLS
+% from 8 runs. That is METHOD_DECISIONS.md section 4's own warning ("at n = 8,
+% estimated-weight GLS
 % can add variance rather than remove it") showing up in practice. De-trending uses the
 % model only for the wedge profile, which is what the missing cells actually require,
 % and leaves the weighting at the observer level where it is already validated.

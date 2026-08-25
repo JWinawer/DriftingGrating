@@ -14,7 +14,7 @@ function V = spec_variants(tag)
 % harmonic-plus-precision variant here: it would leave no pair differing in one thing.
 %
 %   spec    harmonic model, continuous thetaV, equal weighting     <- PRIMARY
-%           the settled specification, ../EXTRASTRIATE.md section 1
+%           the settled specification, ../SPECIFICATION.md section 1
 %   roi     eight polar-angle wedges, equal weighting
 %           the manuscript route. Identical to spec on complete data -- they are one
 %           estimator re-parameterised -- and diverging in proportion to empty cells,

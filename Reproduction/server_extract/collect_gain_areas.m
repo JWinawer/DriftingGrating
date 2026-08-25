@@ -7,7 +7,8 @@ function S = collect_gain_areas(varargin)
 %
 % The existing gainSummary.csv holds ONE gain per observer, computed over V1 only
 % (DG_GAININV1: V1_REmanual, 4-8 deg, R2 > 0.1). Applying a V1-derived scalar to V2, V3
-% or hV4 special-cases V1 as the source, which is what EXTRASTRIATE.md's decision 1 set
+% or hV4 special-cases V1 as the source, which is what the gain decision in
+% ../SPECIFICATION.md section 4 set
 % out to remove. This computes gain over the union of V1 V2 V3 V3a V3b hV4 MT MST so a
 % per-observer x map factor is available.
 %

@@ -186,7 +186,8 @@ function [v1idx, note, inventory, retPatch, patchEccen, patchVexpl] = ...
         build_patch(bidsDir, subjectname, eccRange, r2min)
 % V1 label intersected with the eccentricity and pRF-R2 filters. Deliberately uses only
 % eccen and vexpl, never angle -- polar angle has a Benson-vs-conventional convention
-% trap that is irrelevant here (see AUDIT.md), so this sidesteps it entirely.
+% trap that is irrelevant here (see ../STIMULUS_CONVENTIONS.md), so this
+% sidesteps it entirely.
 %
 % Returns each retained vertex's eccentricity and vexpl as well, so the receiving end can
 % narrow the range (e.g. back to the manuscript 4-8 deg) without re-reading the server.

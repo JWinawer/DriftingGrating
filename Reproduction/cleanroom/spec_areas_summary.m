@@ -4,7 +4,7 @@ function A = spec_areas_summary(varargin)
 %   A = spec_areas_summary()                      % all eight maps, both bands
 %   A = spec_areas_summary('maps',{'V1','V2','V3'})
 %
-% One analysis, applied unchanged to every map (../EXTRASTRIATE.md section 1). Runs
+% One analysis, applied unchanged to every map (../SPECIFICATION.md section 1). Runs
 % SPEC_PROFILES + SPEC_TABLES per map x band, records coverage, applies the section 6
 % reportability criterion, and tests the hierarchy trend.
 %
@@ -21,7 +21,7 @@ function A = spec_areas_summary(varargin)
 % correlated by an unmeasured amount. Assuming independence would understate the SE.
 % Equal weighting needs no such assumption.
 %
-% THE HIERARCHY TREND. ../EXTRASTRIATE.md section 8 records that the monotonic
+% THE HIERARCHY TREND. ../RESULTS.md section 5 records that the monotonic
 % V1 -> V2 -> V3 decline rested on six individually significant cells falling in the
 % same order, and that the trend itself had never been computed. It is computed here,
 % WITHIN observer: for each observer, the V1-minus-V3 difference of the context
@@ -60,7 +60,7 @@ function A = spec_areas_summary(varargin)
             end
             % A map with no per-map gain would be scored with a V1-derived scalar,
             % which is the V1 special-casing the specification set out to remove
-            % (../EXTRASTRIATE.md section 3). Record it, and do not report the map.
+            % (../SPECIFICATION.md section 4). Record it, and do not report the map.
             [~, wid] = lastwarn();
             gainFellBack = strcmp(wid, 'spec_profiles:gainFallback') || ...
                            strcmp(wid, 'observer_gain_weights:missing');
@@ -175,7 +175,7 @@ function report(A)
             A.cov.max_weight_ratio(r), tern(A.cov.gain_fell_back(r),'MISSING','ok'), ...
             tern(A.cov.reportable(r),'yes','no'));
     end
-    fprintf(['\nCriterion (../EXTRASTRIATE.md section 6): at most 2 empty (observer x ROI)\n' ...
+    fprintf(['\nCriterion (../SPECIFICATION.md section 7): at most 2 empty (observer x ROI)\n' ...
              'cells of 64, median at least 20 vertices per cell, max precision-weight ratio\n' ...
              'below 25, and a per-map gain that exists. Failing it says this DESIGN cannot\n' ...
              'resolve that map by polar angle -- not that the map has no asymmetries.\n']);

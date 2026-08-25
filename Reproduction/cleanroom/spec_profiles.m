@@ -6,7 +6,7 @@ function S = spec_profiles(varargin)
 %   S = spec_profiles('area','V3a','eccRange',[2 10])
 %   S = spec_profiles('route','roi')            % the ALTERNATIVE route, for comparison
 %
-% THE SPECIFICATION (../EXTRASTRIATE.md section 1), applied unchanged to every map:
+% THE SPECIFICATION (../SPECIFICATION.md section 1), applied unchanged to every map:
 %   gain        on, per observer x MAP, applied at the observer boundary
 %   model       four-term harmonic, fitted per vertex, CONTINUOUS thetaV
 %   weighting   equal coverage at 45 deg -- the polar-angle ROIs themselves
@@ -159,7 +159,7 @@ function S = spec_profiles(varargin)
 
             % --- the three contrasts measurable at a single polar angle ----
             % Only 3 of the 4 harmonic degrees of freedom are observable per vertex
-            % (../HARMONIC_MODEL.md, "Why the model is interpretable"), so a profile
+            % (../supplement/SUPPLEMENT_harmonic_model.md section S2.3), so a profile
             % against continuous thetaV can show these three and no more. The fourth
             % coefficient is identified ACROSS vertices, by the thetaV modulation of
             % the first and third -- which is exactly what the curves below display.

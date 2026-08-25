@@ -13,7 +13,8 @@ function collect_prf_replicate(varargin)
 %
 % The disagreement between the two estimates the pRF measurement error, which is what
 % DIAGNOSE_PRF_ANGLE_ERROR needs in order to bound the polar-angle error sigma. See
-% ../HARMONIC_MODEL.md for why sigma matters: angle error attenuates b1 in the polar
+% ../supplement/SUPPLEMENT_harmonic_model.md for why sigma matters: angle error
+% attenuates b1 in the polar
 % experiment but not in the Cartesian one, so it inflates the cross-experiment gap.
 %
 % REQUIRES /Volumes/Vision mounted. That server is thousands of miles away and each

@@ -157,6 +157,14 @@ difference from the ROI analysis is the quantity under study.
 from 1,000 bootstrap resamples of the eight observers. Fitting per observer rather than pooling
 avoids weighting observers by V1 surface area (vertex counts range from about 3,400 to 8,100).
 
+*Note on intervals (added 2026-08-25).* The intervals in this section are percentile bootstrap,
+which is what this model's code computes. Elsewhere in the project the primary interval is *t* on
+n − 1 df, because at n = 8 the percentile bootstrap has poor coverage and does not account for
+uncertainty in the spread. The two agree on every conclusion drawn here, and on seven of the eight
+individual asymmetries. They disagree on one: the polar experiment's **cardinal − oblique**, whose
+bootstrap interval excludes zero while its *t* interval does not (*p* = .105). Where an interval
+excluding zero carries a claim, take the *t* reading — see `../METHOD_DECISIONS.md` §5.
+
 **Units.** Raw beta weights in percent signal change; no z-scoring. All eight observers are
 retained.
 
@@ -284,7 +292,8 @@ manuscript's central claim, and it survives the test the model was built to impo
 
 **The two polar-frame asymmetries show no detectable difference between experiments.** Radial −
 tangential is 0.119 [0.061, 0.194] for Cartesian gratings and 0.162 [0.025, 0.264] for polar
-gratings — both clearly non-zero, with a difference of −0.043 [−0.161, 0.143].
+gratings — non-zero in both, though the polar value is the marginal one (*t* *p* = .028 under the
+project's settled specification) — with a difference of −0.043 [−0.161, 0.143].
 
 **This absence of evidence should not be read as evidence of absence**, and we state that
 explicitly because the temptation to claim a one-sided context effect is strong. Because all eight
@@ -487,9 +496,9 @@ equivalence analyses, and the mixed-model comparison of §S5.5 are in
 `diagnose_context_asymmetry.m`; the within-observer error of §S5.5 is measured in
 `diagnose_within_observer_error.m`, which draws on the per-run condition betas extracted by
 `Reproduction/server_extract/collect_runwise_betas.m`. Coefficients for both weighting schemes and
-both scaling variants are tabulated in `harmonic_coefficients_raw.csv`, alongside this document. A
-fuller internal account, including the z-scored sensitivity analysis, is in
-`Reproduction/HARMONIC_MODEL.md`.
+both scaling variants are tabulated in `harmonic_coefficients_raw.csv`, alongside this document. The settled analysis specification that this model became, and the numbers it now
+produces across the visual hierarchy, are in `Reproduction/SPECIFICATION.md` and
+`Reproduction/RESULTS.md`.
 
 ---
 

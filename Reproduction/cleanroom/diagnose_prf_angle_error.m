@@ -6,7 +6,8 @@ function E = diagnose_prf_angle_error(varargin)
 % REQUIRES the NYUAD volume mounted at /Volumes/Vision (thousands of miles away, so
 % each .mgz read costs a second or two). Reads 4 files per subject.
 %
-% WHY THIS EXISTS. The per-vertex harmonic model (../HARMONIC_MODEL.md) regresses on
+% WHY THIS EXISTS. The per-vertex harmonic model (see
+% ../supplement/SUPPLEMENT_harmonic_model.md) regresses on
 % each vertex's pRF polar angle thetaV. Error in thetaV attenuates whichever terms
 % depend on it, and the two experiments depend on it through DIFFERENT terms:
 %

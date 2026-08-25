@@ -16,7 +16,7 @@ function R = spec_tables(varargin)
 %   obs, the count of observers sharing the group sign
 %
 % WHY BOTH INTERVALS. They disagree for two polar cells, and only those two
-% (../LME.md section 7). Reporting one silently would hide a real open decision;
+% (../METHOD_DECISIONS.md section 5). Reporting one silently would hide a real open decision;
 % reporting both makes it a choice the reader can see. At n = 8 the percentile
 % bootstrap has poor coverage and does not account for uncertainty in the spread, so
 % t is the primary interval here.
@@ -112,7 +112,7 @@ function row = summarise(d, sigma, area, en, name, V, nBoot)
 % summary is NaN rather than an estimate over the observers that remain. An estimate
 % silently computed over 7 of 8 is not comparable with one computed over 8, and in the
 % sparse maps the missing observer is missing because the map has no vertices there --
-% exactly the fact worth surfacing (../EXTRASTRIATE.md section 6).
+% exactly the fact worth surfacing (../SPECIFICATION.md section 7).
     Ge = spec_group(d, sigma, 'equal');
     Gp = spec_group(d, sigma, 'precision');
     G  = Ge;  if strcmp(V.weighting,'precision'), G = Gp; end
@@ -177,7 +177,7 @@ function show(R)
     if any(d) || any(R.context.ci_methods_disagree)
         fprintf(['\nThe percentile bootstrap and the t interval disagree where marked. t is ' ...
                  'primary\nhere; at n = 8 the percentile method has poor coverage. See ' ...
-                 '../LME.md section 7.\n']);
+                 '../METHOD_DECISIONS.md section 5.\n']);
     end
 end
 

@@ -8,7 +8,8 @@ function collect_runwise_betas(varargin)
 % MEASUREMENT, which means resampling runs. Resampling vertices does not do it: the
 % GLM betas are held fixed and only reshuffled, so it characterises which patch of V1
 % was sampled rather than the reliability of the measurement (and it ignores spatial
-% autocorrelation). See ../HARMONIC_MODEL.md and ../cleanroom/diagnose_context_asymmetry.m.
+% autocorrelation). See ../supplement/SUPPLEMENT_harmonic_model.md and
+% ../cleanroom/diagnose_context_asymmetry.m.
 %
 % WHAT IS AVAILABLE. GLMsingle's TYPED_FITHRF_GLMDENOISE_RR.mat holds
 %   modelmd : [nVertex x 1 x 1 x nTrials] SINGLE-TRIAL betas

@@ -20,7 +20,8 @@ function G = build_group_matrices_fromCSV(cfg, expCfg, doZscore, T)
 % degrees is [90 45 0 315 ...]. The CSV's pRF_angle_bin is already conventional, so we
 % must select bins in that order rather than ascending 0..315. Building this array in
 % ascending conventional order (as this file did until 2026-07-22) reflects the wedges
-% about 45 deg and sign-flips the four cardinal meridians. See ../AUDIT.md section 5.
+% about 45 deg and sign-flips the four cardinal meridians. See
+% ../STIMULUS_CONVENTIONS.md section 5.
 
     if nargin < 4 || isempty(T), T = load_and_filter(cfg); end
     keep = T.pRF_ecc >= cfg.eccRange(1) & T.pRF_ecc <= cfg.eccRange(2) & T.pRF_r2 > cfg.r2min;

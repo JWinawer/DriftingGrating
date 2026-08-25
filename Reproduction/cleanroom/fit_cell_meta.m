@@ -20,7 +20,7 @@ function R = fit_cell_meta(d, obs, wedge, S, varargin)
 % observer. With complete data it is the ordinary grand mean; with empty cells it is
 % the least-squares mean, recovered from the incomplete design instead of silently
 % redefined as "the mean over whichever wedges this observer happened to have". That
-% is the entire reason for fitting a model here -- see ../LME.md section 5 and the
+% is the entire reason for fitting a model here -- see ../METHOD_DECISIONS.md section 4 and the
 % note there that the wedge-average and pooled routes diverge as soon as balance goes.
 %
 % S IS KNOWN AND NOT DIAGONAL. The per-wedge asymmetries of one observer are computed
@@ -28,7 +28,8 @@ function R = fit_cell_meta(d, obs, wedge, S, varargin)
 % DIAGNOSE_WITHIN_OBSERVER_ERROR returns the whole nP x nP covariance and all of it is
 % used. Passing only the diagonal would understate the correlated part and overstate
 % the precision of mu. This known-covariance structure is exactly what fitlme cannot
-% express (LME.md section 5), which is why the fit is done here rather than with it.
+% express (METHOD_DECISIONS.md section 4), which is why the fit is done here
+% rather than with it.
 %
 % Inputs
 %   d      nCell x 1 cell-level asymmetries.
@@ -47,7 +48,7 @@ function R = fit_cell_meta(d, obs, wedge, S, varargin)
 %                  whenever cells are missing; provided only for comparison.
 %   'df'           degrees of freedom for the interval on mu. Default nObs-1.
 %                  NOT the cell count: the row count is 8x the observer count and
-%                  using it repeats the error diagnosed in LME.md section 3.
+%                  using it repeats the error diagnosed in METHOD_DECISIONS.md section 3.
 %
 % STRUCTURAL GAPS. A wedge absent for EVERY observer cannot contribute to mu -- alpha_p
 % is not estimable there and no model recovers it. Such levels are dropped and named in

@@ -32,7 +32,7 @@ function [scale, gain] = observer_gain_weights(cfg, area, eccBand)
 % How much this matters, measured on the current spec: per-map gain differs from the
 % V1-derived scalar by at most 0.0073 in the group estimate (hV4; 0.0045 V2, 0.0051 V3),
 % against 0.0127 for gain-versus-no-gain. So the per-map refinement is real but small,
-% and smaller than every other choice in EXTRASTRIATE.md's review.
+% and smaller than every other choice in SPECIFICATION.md's review.
 %
 % Returns scale as nSubj x 1 (ones, with a warning, if the gain file is unavailable).
 

@@ -9,7 +9,7 @@ function out = plot_spec_hierarchy(A, figDir)
 % qualifies only at 2-10 deg and so is NOT on the same footing as the others.
 %
 % Maps that fail the criterion are absent by design, not by oversight: the criterion
-% is a statement about what this design can resolve BY POLAR ANGLE (../EXTRASTRIATE.md
+% is a statement about what this design can resolve BY POLAR ANGLE (../SPECIFICATION.md
 % section 6), and their numbers are still in spec_areas_*.csv with a reportable flag.
 %
 % SCALES ARE SHARED WITHIN EACH ROW, and deliberately not between them. All four top

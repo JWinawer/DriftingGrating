@@ -19,7 +19,7 @@ function cfg = config_repro()
     %              reproduction and diagnostic plots (RUN_ALL_REPRO, PLOT_HARMONIC)
     %              write here because they are working output, not deliverables.
     %   suppFigDir deliverables. Tracked despite the blanket *.png / *.pdf ignore
-    %              rules, because these are the figures SPEC_FIGURES.md and the
+    %              rules, because these are the figures RESULTS.md and the
     %              manuscript refer to. The specification figures write here
     %              DIRECTLY -- they are not copied from figDir, because keeping the
     %              same image in two places is how the two drift apart.
@@ -48,7 +48,7 @@ function cfg = config_repro()
     % compute_derivativeDirections.m:48, plot1_experimentalCond.m:121 and lme1_fit.m:88
     % all assume exactly this. ANY array handed to a repo stage-04 function must be in
     % this order -- getting it wrong reflects the wedges about 45 deg, which swaps the
-    % four cardinal meridians. See ../AUDIT.md sections 3 and 5.
+    % four cardinal meridians. See ../STIMULUS_CONVENTIONS.md sections 3 and 5.
     cfg.paBinsRepoOrder = [90 45 0 315 270 225 180 135];
 
     % --- across-vertex aggregator, and observer gain rescaling ------------------
@@ -56,7 +56,7 @@ function cfg = config_repro()
     % meanBOLDpa and medianBOLDpa; lme1_fit.m (Fig 7) already reads meanBOLDpa, while
     % plot_NeuralAsymmetries.m (Figs 5/6) passed medianBOLDpa. Mean + gain rescaling
     % reproduces all eight manuscript asymmetries to +-0.003; the median route does not
-    % (it misses dg horiz-vert by 0.07). See ../local_qc/GLM_SUMMARY_SECTION.md.
+    % (it misses dg horiz-vert by 0.07). See ../local_qc/RELIABILITY.md.
     cfg.aggregator = 'mean';        % 'mean' | 'median'
 
     % Per-observer pRF gain rescaling, as applied in lme1_fit.m/plot1_/plot2_.
@@ -106,7 +106,8 @@ function cfg = config_repro()
     % =horizontal=0, cspiral=45, ccspiral=135; these rotate with polar angle.
     % The spiral identities are fixed by CONTRASTS.json (idx 28 = scspiral_v_b = s45,
     % idx 29 = sccspiral_v_b = s135) and by createTables.m:146-149, and were confirmed
-    % against sub-0255's raw betas to 5e-15 (AUDIT.md section 6). They were swapped here
+    % against sub-0255's raw betas to 5e-15 (STIMULUS_CONVENTIONS.md section 6).
+    % They were swapped here
     % until 2026-07-22, which sign-flipped the four OBLIQUE wedges of every derived
     % asymmetry and produced a spurious da horiz-vert of -0.041 instead of -0.446.
     cfg.da.name     = 'da';

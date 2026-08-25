@@ -4,12 +4,12 @@ function [X, info] = harmonic_predictors(thetaV, expCfg, opts)
 %   [X, info] = harmonic_predictors(thetaV, expCfg, opts)
 %
 % Builds the design for the per-vertex model of the four stationary-orientation
-% betas (see ../HARMONIC_MODEL.md):
+% betas (see ../supplement/SUPPLEMENT_harmonic_model.md):
 %
 %   y_vk = b1*cos(2*theta) + b2*cos(4*theta)
 %        + b3*cos(2*(theta-thetaV)) + b4*cos(4*(theta-thetaV))
 %
-% ANGLE CONVENTION (settled; see ../AUDIT.md section 2).
+% ANGLE CONVENTION (settled; see ../STIMULUS_CONVENTIONS.md section 2).
 %   theta  = orientation of the grating BARS, in conventional visual-field degrees
 %            (0 = rightward horizontal meridian, CCW positive), mod 180.
 %            So theta=0 is a HORIZONTAL grating and theta=90 a VERTICAL one.
@@ -33,7 +33,8 @@ function [X, info] = harmonic_predictors(thetaV, expCfg, opts)
 %            .expanded (default false) -- also return the four sin columns, giving
 %                      the complete harmonic basis at harmonics 2 and 4. The core
 %                      model imposes two testable constraints relative to this
-%                      (see ../HARMONIC_MODEL.md); the sin columns should be ~0
+%                      (see ../supplement/SUPPLEMENT_harmonic_model.md); the sin
+%                      columns should be ~0
 %                      under left-right visual-field symmetry.
 %
 % Outputs

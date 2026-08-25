@@ -50,7 +50,8 @@ function W = diagnose_within_observer_error(varargin)
 % per-cell outputs above are only produced by the 'roi' route.
 % In V1 every cell is populated and W.full is just the wedge mean of W.cell. In the
 % extrastriate maps cells go empty, the wedge mean stops being comparable across
-% observers, and FIT_CELL_META fits the wedge profile instead. See ../LME.md section 5.
+% observers, and FIT_CELL_META fits the wedge profile instead. See
+% ../METHOD_DECISIONS.md section 4.
 %
 % NOTE the paired test in DIAGNOSE_CONTEXT_ASYMMETRY is valid regardless of the answer:
 % its Type I error is correct whatever the within-observer error, because the
@@ -263,8 +264,9 @@ function a = asym_from_runs_h(A, runs, cfg, en, tvSrc, wMode, wBins)
     % only to preserve legacy numbers would be the customisation being eliminated.
     %
     % The difference is not error: it is the within-wedge local-orientation term that
-    % ../HARMONIC_MODEL.md isolates as Fit A minus Fit B. It moves V1 by up to 0.037,
-    % most of it in polc-polo, whose coefficient has least redundancy under binning.
+    % ../supplement/SUPPLEMENT_harmonic_model.md isolates as Fit A minus Fit B. It
+    % moves V1 by up to 0.037, most of it in polc-polo, whose coefficient has the
+    % least redundancy under binning.
     if strcmpi(tvSrc, 'continuous'), tv = A.thetaV;
     else,                            tv = cfg.paBins(A.wedge).';
     end

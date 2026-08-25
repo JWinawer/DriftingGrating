@@ -27,7 +27,7 @@ function P = precision_weighted_table(varargin)
 % The result of the table is that the two agree. Precision weighting is available and
 % principled and changes nothing, because tau^2 is common to every observer and here
 % exceeds the mean sigma_i^2 -- so a large spread in RELIABILITY becomes a small spread in
-% WEIGHT. See ../LME.md section 5.
+% WEIGHT. See ../METHOD_DECISIONS.md section 4.
 %
 % Returns P.asym and P.context, each a table. Optional 'csv' writes them out.
 

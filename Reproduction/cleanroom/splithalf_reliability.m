@@ -6,7 +6,7 @@ function S = splithalf_reliability(varargin)
 % WHY. The GLM-summary section of the manuscript currently reports fit quality (R2)
 % from single examples. R2 is the wrong currency here: the reference condition is
 % full-field pink noise, so R2 measures cross-condition DIFFERENTIATION, not
-% responsiveness (see ../local_qc/REPORT.md section 1). What Figures 5-8 actually
+% responsiveness (see ../local_qc/DATA_QUALITY.md section 1). What Figures 5-8 actually
 % rest on is that the analysed profile -- 4 orientations x 8 polar-angle wedges per
 % observer -- is REPRODUCIBLE. That is measured by resampling the measurement, i.e.
 % splitting the runs.

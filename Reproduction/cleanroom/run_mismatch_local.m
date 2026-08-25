@@ -165,7 +165,8 @@ function D = load_designs(root, en, nRun)
 % (0,45,90,135 -> matching the beta column order), 13 = blank.
     D = cell(1, nRun);
     for r = 1:nRun
-        % Any session's run r will do: REPORT.md section 3 establishes that the fixed
+        % Any session's run r will do: ../local_qc/DATA_QUALITY.md section 3
+        % establishes that the fixed
         % rng seed makes every observer's and session's run r byte-identical.
         f = dir(fullfile(root, 'design', en, sprintf('*_Run%d_*design_Run%d.mat', r, r)));
         if isempty(f), error('run_mismatch_local:design', 'no design for %s run %d', en, r); end

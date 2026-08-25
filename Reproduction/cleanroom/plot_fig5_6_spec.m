@@ -17,13 +17,14 @@ function out = plot_fig5_6_spec(S, en, figNum, figDir, L, V)
 %   coverage at 45 deg, per observer x map gain); MARKERS are the observed wedge
 %   means over the same vertices. Where they separate, the difference is the
 %   within-wedge local-orientation term that binning thetaV conflates with context
-%   -- visible here rather than argued (../HARMONIC_MODEL.md Result 1).
+%   -- visible here rather than argued
+%   (../supplement/SUPPLEMENT_harmonic_model.md section S5.1).
 %
 %   RADIUS IS DEMEANED. The model is fitted to each vertex's four orientation
 %   responses with that vertex's mean over the four removed, so it carries no overall
 %   response level and the radial axis is a deviation from the local mean, not a raw
 %   percent signal change. That is deliberate: demeaning removes the blank, which is
-%   full-field pink noise rather than a baseline (../local_qc/REPORT.md section 1),
+%   full-field pink noise rather than a baseline (../local_qc/DATA_QUALITY.md section 1),
 %   so only orientation DIFFERENCES enter. Zero is drawn as a grey circle.
 %
 % Row 2: each observer's pro-minus-con as one point, with the group mean and a t
@@ -35,7 +36,7 @@ function out = plot_fig5_6_spec(S, en, figNum, figDir, L, V)
 %
 %   t, NOT the percentile bootstrap: at n = 8 the percentile method has poor coverage
 %   and disagrees with t on exactly the two polar cells this figure would be read for
-%   (../LME.md section 7). SPEC_TABLES reports both, so the choice is visible.
+%   (../METHOD_DECISIONS.md section 5). SPEC_TABLES reports both, so the choice is visible.
 
     if nargin < 5 || isempty(L), L = spec_axis_limits(S); end
     if nargin < 6 || isempty(V)

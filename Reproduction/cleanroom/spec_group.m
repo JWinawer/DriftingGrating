@@ -5,7 +5,7 @@ function G = spec_group(d, sigma, weighting)
 %   G = spec_group(d, sigma, 'precision')
 %
 % EQUAL is the ordinary across-observer t interval, and is the specification's primary
-% (../EXTRASTRIATE.md section 5): with 8 runs, sigma-hat carries ~7 df and scatters even
+% (../SPECIFICATION.md section 6): with 8 runs, sigma-hat carries ~7 df and scatters even
 % when every observer has identical true precision, so most of what you would weight by
 % is estimation noise.
 %
@@ -13,7 +13,7 @@ function G = spec_group(d, sigma, weighting)
 %   w_i = 1 / (tau^2 + sigma_i^2),   tau^2 = max(0, var(y_i) - mean(sigma_i^2))
 % with sigma_i MEASURED by resampling runs rather than inferred from a design that has
 % no replication. tau^2 is common to every observer, so a large spread in RELIABILITY
-% compresses into a small spread in WEIGHT -- see ../LME.md section 5, which also
+% compresses into a small spread in WEIGHT -- see ../METHOD_DECISIONS.md section 4, which also
 % explains why MATLAB's fitlme cannot express this and the closed form is used.
 %
 % NAN CONVENTION, shared with PRECISION_WEIGHTED_TABLE: if any observer is missing the

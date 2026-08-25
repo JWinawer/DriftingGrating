@@ -21,7 +21,7 @@ function out = plot_spec_profile(S, figDir, L, V)
 % contrasts MEASURABLE at a single polar angle. Four orientations at 45 deg spacing
 % give each vertex's demeaned response exactly three degrees of freedom, so a profile
 % against continuous theta_V can show three curves and no more
-% (../HARMONIC_MODEL.md, "Why the model is interpretable"). The fourth coefficient is
+% (../supplement/SUPPLEMENT_harmonic_model.md section S2.3). The fourth coefficient is
 % identified ACROSS vertices, from the theta_V modulation of the first and third --
 % which is what the tilt of these curves is.
 %

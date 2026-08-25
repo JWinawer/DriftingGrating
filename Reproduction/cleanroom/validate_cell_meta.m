@@ -32,7 +32,8 @@ function V = validate_cell_meta(varargin)
 %   one case where the intercept separates from the wedge effects and GLS reduces to
 %   weighting observer means. With any heterogeneous S the GLS re-weights wedges WITHIN
 %   an observer using a covariance estimated from 8 runs, and moves mu by up to 0.05 --
-%   larger than several of the effects being estimated. This is LME.md section 5's own
+%   larger than several of the effects being estimated. This is
+%   METHOD_DECISIONS.md section 4's own
 %   caveat, that estimated-weight GLS at n = 8 can add variance rather than remove it,
 %   appearing in practice. It is why PRECISION_WEIGHTED_CELLS uses the fit only for the
 %   wedge profile and keeps the weighting at the observer level.

@@ -11,7 +11,8 @@ function R = run_harmonic_model(doZscore)
 %       vertex on the horizontal meridian, and the wedges are 45 deg wide;
 %   (b) genuine longer-range context effects.
 %
-% See ../HARMONIC_MODEL.md for the model, the conventions and the conclusions.
+% See ../supplement/SUPPLEMENT_harmonic_model.md for the model, the conventions
+% and the conclusions.
 % TEST_HARMONIC_MODEL must pass before any of this is interpreted.
 
     if nargin < 1 || isempty(doZscore), doZscore = false; end
@@ -56,7 +57,7 @@ function V = section_validate(T, cfg, doZscore)
 % The per-vertex machinery must reproduce the manuscript ROI pipeline before any of
 % its departures mean anything.
 %
-% REFERENCE COLUMN. Z-scoring has been dropped (local_qc/REPORT.md section 4; the
+% REFERENCE COLUMN. Z-scoring has been dropped (METHOD_DECISIONS.md section 1; the
 % revised manuscript, confirmed 2026-08-17, reports percent signal change). The four
 % constants per experiment transcribed in VALIDATE_AGAINST_MANUSCRIPT are reproduced
 % to 3 decimals by the Z-SCORED pipeline and not by the raw one, so as transcribed
@@ -68,7 +69,7 @@ function V = section_validate(T, cfg, doZscore)
 % contrasts) rather than transcribed. Read the rtMean column, NOT ref/pubMed: the
 % across-vertex MEAN is the manuscript's aggregate (2026-08-19), and mean + observer
 % pRF-gain rescaling reproduces all eight manuscript asymmetries to +/-0.003, where the
-% median route misses dg horiz-vert by 0.07. See ../HARMONIC_MODEL.md, A note on units.
+% median route misses dg horiz-vert by 0.07. See ../METHOD_DECISIONS.md section 2.
     banner('1. VALIDATION -- does the per-vertex machinery reproduce the ROI pipeline?');
     if doZscore
         ref.dg = [-1.155 -0.40 0.23 0.06];      % SUPERSEDED sigma-unit manuscript values
@@ -129,7 +130,7 @@ function F = section_fitAB(Ddg, Dda, cfg)
 %             eight wedges equally), and it makes the four predictors orthogonal.
 %   SECONDARY 'natural'       -- one vertex, one vote. V1 over-represents the
 %             horizontal meridian, which correlates the b1 and b3 columns at ~+0.35.
-% See HARMONIC_WEIGHTS and ../HARMONIC_MODEL.md.
+% See HARMONIC_WEIGHTS and ../supplement/SUPPLEMENT_harmonic_model.md.
 %
 % weightSource is pinned to 'continuous' for BOTH fits here, so the weights are held
 % fixed and only thetaV moves. Without the pin Fit A would bin its weights from the

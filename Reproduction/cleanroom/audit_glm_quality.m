@@ -5,7 +5,7 @@ function A = audit_glm_quality(qcDir)
 %   A = audit_glm_quality(qcDir)
 %
 % Consumes the small per-subject files written by EXTRACT_GLM_QC and answers the
-% question in ../_archive/NEXT_STEPS.md: are the observers that per-vertex z-scoring up-weights
+% question in ../METHOD_DECISIONS.md: are the observers that per-vertex z-scoring up-weights
 % most also the ones with the worst GLM fits?
 %
 % Two specific predictions are worth checking, from _archive/ZSCORE_FIG7.md section 3a:
