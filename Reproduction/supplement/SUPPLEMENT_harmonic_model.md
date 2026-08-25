@@ -513,7 +513,9 @@ are the mean across the eight observers of each observer's bin mean, error bars 
 observers. Top row, Cartesian gratings; bottom row, polar gratings. Red is the four-term model
 fitted to that experiment. Blue is the context-free null — the *other* experiment's coefficients
 evaluated through this experiment's geometry — solid without and dashed with the fitted
-cross-experiment gain; blue departing from red is the context effect.
+cross-experiment gain; blue departing from red is the context effect. All six panels share a
+common y-axis (−1 to 0.8), so the relative sizes of the six terms can be read directly off the
+figure.
 
 The left column shows the same finding twice, in the two forms the mirror structure produces. In the
 Cartesian panel the discrepancy is almost purely a vertical offset (the modulation matches, the level

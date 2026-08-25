@@ -31,6 +31,14 @@ function out = fig_decomposition(R, Ddg, Dda, cfg, variant)
              'FontSize',9);
 
     tvD = linspace(0,360,721).';
+
+    % ONE y-scale for all six panels. Every panel is a pro-minus-con response
+    % difference in the same units, so panel-specific limits silently magnify the
+    % small terms: on free axes the middle and right columns are blown up two- to
+    % five-fold relative to the left, and the reader cannot see that the horiz-vert
+    % and rad-tang terms dominate. Range chosen to contain every point, error bar
+    % and curve in the figure.
+    yLim = [-1 0.8];
     exps = {'dg','Cartesian gratings'; 'da','Polar gratings'};
     for ei = 1:2
         en = exps{ei,1};
@@ -103,7 +111,7 @@ function out = fig_decomposition(R, Ddg, Dda, cfg, variant)
                      'MarkerSize',3.5, 'LineWidth',0.6, 'CapSize',0);
             hM  = plot(tvD, curv{k}, 'r-', 'LineWidth', 1.8);
             yline(0,'k:');
-            xlim([0 360]); xticks(0:90:360); grid on;
+            xlim([0 360]); ylim(yLim); xticks(0:90:360); grid on;
             xlabel('pRF polar angle \theta_V (deg, 0 = right HM)');
             if k==1, ylabel(sprintf('%s\nresponse difference', exps{ei,2})); end
             title(lab{k}, 'FontWeight','normal','FontSize',9);
