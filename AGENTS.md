@@ -150,6 +150,11 @@ decides which maps can be reported at polar-angle resolution:
 [`EXTRASTRIATE.md`](Reproduction/EXTRASTRIATE.md) §1–§6. Adopting it moved V1 by at most 0.040 and
 changed no significance.
 
+**Figures 5 and 6 and the supplement have been regenerated under it**
+([`SPEC_FIGURES.md`](Reproduction/SPEC_FIGURES.md), 2026-08-24): four figures in
+`Reproduction/supplement/figures/`, eight CSVs in `Reproduction/supplement/`, one command
+(`run_spec_outputs`). The V1 asymmetries moved by at most 0.033 and none changed significance.
+
 ---
 
 ## 5. Code map
@@ -225,9 +230,12 @@ and in the upstream `AnalysisCode` files
   **uninformative rather than absent**, and the interval admits an effect larger than the
   cardinal/oblique context effect that *is* significant. → also
   [`EXTRASTRIATE.md`](Reproduction/EXTRASTRIATE.md) §7
-- **Bootstrap vs. *t* intervals disagree on two polar asymmetries** (`da` card−obl, `da` rad−tang).
-  The supplement currently calls polar rad−tang "clearly non-zero"; *t* on 7 df gives *p* = 0.081.
-  Context effects are unaffected. → [`LME.md`](Reproduction/LME.md) §7
+- **Bootstrap vs. *t* intervals disagree on one polar asymmetry.** Under the settled
+  specification `da` rad−tang no longer disagrees — both intervals exclude zero (*t* *p* = .028),
+  because the per-map gain rescaling tightened it. **`da` card−obl still does**: bootstrap
+  [−0.083, −0.002] excludes zero, *t* [−0.092, 0.011] does not (*p* = .105). Report the *t*
+  interval, or say which method is used. Context effects are unaffected.
+  → [`SPEC_FIGURES.md`](Reproduction/SPEC_FIGURES.md), [`LME.md`](Reproduction/LME.md) §7
 - **Geometric vs. arithmetic mean gain.** The Methods say geometric; `lme1_fit.m`,
   `plot1_experimentalCond.m` and `plot2_experimentalCond.m` use `mean(gainWeights)` and should be
   `exp(mean(log(gainWeights)))`. Worth ~1% on every effect size; changes no *t* or *p*. The
@@ -243,9 +251,12 @@ and in the upstream `AnalysisCode` files
 
 **Analysis still to do**
 
-- **Test the hierarchy trend.** The claim that the context effect declines monotonically V1 → V2 →
-  V3 rests on six individually significant cells falling in the same order. The trend itself — a
-  within-observer V1 − V3 difference — has not been computed. → [`EXTRASTRIATE.md`](Reproduction/EXTRASTRIATE.md) §8
+- ~~**Test the hierarchy trend.**~~ **Done 2026-08-24**, and it changed the claim: the
+  within-observer V1 − V3 difference of the context effect is significant for horiz−vert
+  (−0.215, *p* = .028) and **not** for card−obl (−0.066, *p* = .153). "Both Cartesian effects
+  decline monotonically" is established for one of the two, not both — the cells fall in order in
+  each map, but the difference *between* maps is resolved for only one asymmetry.
+  → [`SPEC_FIGURES.md`](Reproduction/SPEC_FIGURES.md), [`EXTRASTRIATE.md`](Reproduction/EXTRASTRIATE.md) §8
 - **Finish the run-mismatch calibration.** The sign result is settled and measured on 56 run pairs;
   what a further pull adds is absolute ROI-level magnitude. Check **sub-0201/da** (ρ = 0.36, only
   66% of pairs negative) before stating the claim over all run pairs.
@@ -273,6 +284,7 @@ routes, the data table, and how to run them.
 | document | what it owns |
 |---|---|
 | [`Reproduction/EXTRASTRIATE.md`](Reproduction/EXTRASTRIATE.md) | **The settled specification** and the results across eight visual maps. The most recent word on method; where V1 and the supplement now agree. |
+| [`Reproduction/SPEC_FIGURES.md`](Reproduction/SPEC_FIGURES.md) | Figures 5/6 and the extrastriate supplement **as regenerated under the specification** — what changed, the coverage table, the hierarchy trend, and how to rebuild it all in one command. |
 | [`Reproduction/HARMONIC_MODEL.md`](Reproduction/HARMONIC_MODEL.md) | The per-vertex harmonic model — geometry vs. context in V1, the pRF-angle-error control, cross-experiment prediction. The internal account. |
 | [`Reproduction/supplement/SUPPLEMENT_harmonic_model.md`](Reproduction/supplement/SUPPLEMENT_harmonic_model.md) | The same work written for readers, with four committed figures. |
 | [`Reproduction/AUDIT.md`](Reproduction/AUDIT.md) | Stimulus-design audit, experiment code → GLM → CSV → figures. Owns every angle convention, and the retraction of the reported polar-angle bug. |

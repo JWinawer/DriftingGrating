@@ -40,6 +40,7 @@ function P = precision_weighted_table(varargin)
     p.addParameter('gain', true, @(x) islogical(x) || isnumeric(x));
     p.addParameter('weighting', 'equalcoverage', @ischar);
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
+    p.addParameter('quiet', false, @islogical);
     p.parse(varargin{:});
     opt = p.Results;
 
@@ -67,13 +68,15 @@ function P = precision_weighted_table(varargin)
     end
     P.context = mk(rows);
 
-    show('ASYMMETRIES, per experiment', P.asym);
-    show('CONTEXT EFFECTS (dg - da)',   P.context);
-    fprintf(['\nThe two weightings agree on every context effect and on all six Cartesian-frame\n' ...
-             'entries. They differ in status for da rad-tang, which is marginal by any route.\n' ...
-             'tau^2 is common to every observer, so a large spread in reliability compresses\n' ...
-             'into a small spread in weight; and tau^2 is estimated on %d df, so the weights\n' ...
-             'are themselves imprecise.\n'], nS-1);
+    if ~opt.quiet
+        show('ASYMMETRIES, per experiment', P.asym);
+        show('CONTEXT EFFECTS (dg - da)',   P.context);
+        fprintf(['\nThe two weightings agree on every context effect and on all six Cartesian-frame\n' ...
+                 'entries. They differ in status for da rad-tang, which is marginal by any route.\n' ...
+                 'tau^2 is common to every observer, so a large spread in reliability compresses\n' ...
+                 'into a small spread in weight; and tau^2 is estimated on %d df, so the weights\n' ...
+                 'are themselves imprecise.\n'], nS-1);
+    end
 
     if ~isempty(opt.csv)
         T = [P.asym; P.context];

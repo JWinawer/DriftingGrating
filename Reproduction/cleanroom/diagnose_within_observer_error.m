@@ -131,7 +131,7 @@ function W = diagnose_within_observer_error(varargin)
                 fprintf('missing %s -- run collect_runwise_betas_areas.m\n', fA);  return
             end
             S = load(f);
-            [A, ok] = prep(S, cfg, expn{ei}, opt.root, opt.area);
+            [A, ok] = load_runbetas_area(S, cfg, expn{ei}, opt.root, opt.area);
             if ~ok
                 fprintf('  %-14s %s %s: no vertices pass the filter\n', ...
                         cfg.subjects{si}, expn{ei}, opt.area);
@@ -205,45 +205,6 @@ function W = diagnose_within_observer_error(varargin)
 end
 
 % ------------------------------------------------------------------------
-function [A, ok] = prep(S, cfg, en, root, area)
-% Restrict to the analysed vertices (cfg.eccRange, pRF R2 > cfg.r2min) and attach
-% wedge labels. Accepts either extraction layout:
-%   runbetas_areas_*  vertIndex + areaMask + areaNames, eight visual areas
-%   runbetas_*        v1Index, V1 only (the original COLLECT_RUNWISE_BETAS)
-% so the V1 results are reproducible from whichever files are present.
-    ok = false;  A = struct();
-    R = load(fullfile(root, sprintf('ret_%s.mat', S.subject)), 'eccen','vexpl','angle_adj');
-
-    if isfield(S, 'vertIndex')
-        ai = find(strcmp(S.areaNames, area), 1);
-        if isempty(ai)
-            error('diagnose_within_observer_error:area', ...
-                  '%s holds %s, not %s.', S.subject, strjoin(S.areaNames, '/'), area);
-        end
-        sel = S.areaMask(:, ai);
-        v   = S.vertIndex(sel);
-        rb  = S.runBeta(sel, :, :);
-    else
-        if ~strcmp(area, 'V1')
-            error('diagnose_within_observer_error:v1only', ...
-                  ['%s has only the V1-only extraction, so area ''%s'' is unavailable. ' ...
-                   'Run collect_runwise_betas_areas.m.'], S.subject, area);
-        end
-        v  = S.v1Index;
-        rb = S.runBeta;
-    end
-
-    good = double(R.eccen(v)) >= cfg.eccRange(1) & double(R.eccen(v)) <= cfg.eccRange(2) ...
-         & double(R.vexpl(v)) > cfg.r2min;
-    if ~any(good), return; end
-    A.runBeta = rb(good, :, :);
-    ang  = double(R.angle_adj(v(good)));            % Benson deg, as meanWithinLabel bins
-    conv = mod(90 - ang, 360);                      % conventional, matches cfg.paBins
-    [~, A.wedge] = min(abs(mod(conv - cfg.paBins(:).' + 180, 360) - 180), [], 2);
-    A.thetaV = conv(:);                             % continuous, for the harmonic route
-    A.expn = en;
-    ok = true;
-end
 
 % ------------------------------------------------------------------------
 function [a, aw] = asym_from_runs(A, runs, cfg, en)

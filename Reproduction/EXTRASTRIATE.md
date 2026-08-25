@@ -8,6 +8,9 @@ records two traps in the code.
 
 Numbers: [`supplement/precision_weighted_areas.csv`](supplement/precision_weighted_areas.csv) (eight
 maps x two eccentricity bands, 192 rows, each with its coverage and a `reportable` flag), [`supplement/gain_areas_summary.csv`](supplement/gain_areas_summary.csv).
+**Figures and the regenerated tables: [`SPEC_FIGURES.md`](SPEC_FIGURES.md)**, which applies this
+specification to Figures 5/6 and to the supplement, and carries the coverage table, the hierarchy
+trend, and the `spec_*.csv` outputs.
 Code: [`cleanroom/diagnose_within_observer_error.m`](cleanroom/diagnose_within_observer_error.m),
 [`cleanroom/precision_weighted_table.m`](cleanroom/precision_weighted_table.m),
 [`cleanroom/precision_weighted_cells.m`](cleanroom/precision_weighted_cells.m),
@@ -196,8 +199,9 @@ All sixteen runs are in `supplement/precision_weighted_areas.csv` with their cov
 
 Equal-weighted, spec settings. ⚠ marks τ̂² pinned at zero.
 
-**Context effects (dg − da), 4–8°.** Both Cartesian effects decline monotonically up the hierarchy
-and remain significant throughout. V3a is shown at 2–10°, the only band where it qualifies, so it is
+**Context effects (dg − da), 4–8°.** Both Cartesian effects fall monotonically up the hierarchy
+and remain significant in every map. *Read that as an ordering of the cells, not as a tested trend:
+the within-observer V1 − V3 difference is significant for horiz−vert and not for card−obl (§8).* V3a is shown at 2–10°, the only band where it qualifies, so it is
 not on the same footing as the other three.
 
 | asymmetry | V1 | V2 | V3 | V3a (2–10°) |
@@ -274,10 +278,15 @@ intervals.
 **card−obl and polc−polo are not two findings in V3 or hV4.** See §5: they are one measurement per
 cell, and class-structured ROI loss is what separates them.
 
-**The hierarchy trend has not been tested.** The claim that the context effect declines
-monotonically V1 → V2 → V3 rests on six individually significant cells falling in the same order in
-both asymmetries. That is more than any single test, but the trend itself — a within-observer
-V1 − V3 difference — has not been computed. This is the first thing to do next.
+**The hierarchy trend was tested on 2026-08-24, and it holds for one asymmetry, not both.**
+The within-observer V1 − V3 difference of the context effect is **−0.215 [−0.398, −0.031],
+*p* = .028** for horiz−vert (7/8 observers, with the V2 → V3 step carrying most of it: −0.159,
+*p* = .006, 8/8). For card−obl it is **−0.066 [−0.162, 0.031], *p* = .153 — not significant**; only
+the V2 − V3 step reaches *p* = .047, one of twelve uncorrected tests. So the sentence in §7 that
+"both Cartesian effects decline monotonically up the hierarchy" is established for
+**horizontal−vertical only**. The individual cells are each significant in each map and do fall in
+order; the *difference between maps* is resolved for one asymmetry.
+See [`SPEC_FIGURES.md`](SPEC_FIGURES.md) and `supplement/spec_areas_trend.csv`.
 
 **Multiplicity.** The tables hold 48 tests. Nothing here is corrected for that; the Cartesian
 context effects survive comfortably, the marginal cells do not.

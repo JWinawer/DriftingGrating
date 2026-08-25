@@ -14,7 +14,17 @@ function cfg = config_repro()
     cfg.cleanroomDir = thisDir;
     cfg.csvPath      = fullfile(repoDir, 'Support', 'allsubjectsTable.csv');
     cfg.cacheDir     = fullfile(thisDir, '_cache');
+    % TWO figure destinations, with different jobs.
+    %   figDir     scratch. Reproduction/figures/ is git-ignored, and the older
+    %              reproduction and diagnostic plots (RUN_ALL_REPRO, PLOT_HARMONIC)
+    %              write here because they are working output, not deliverables.
+    %   suppFigDir deliverables. Tracked despite the blanket *.png / *.pdf ignore
+    %              rules, because these are the figures SPEC_FIGURES.md and the
+    %              manuscript refer to. The specification figures write here
+    %              DIRECTLY -- they are not copied from figDir, because keeping the
+    %              same image in two places is how the two drift apart.
     cfg.figDir       = fullfile(reproDir, 'figures', 'cleanroom');
+    cfg.suppFigDir   = fullfile(reproDir, 'supplement', 'figures');
     cfg.force_reload = false;   % set true to rebuild the V1 cache from the CSV
 
     % --- analysis inclusion filter (V1 patch) ---

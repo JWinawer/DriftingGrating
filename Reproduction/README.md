@@ -64,6 +64,8 @@ measured coverage criterion deciding which are reportable — [`EXTRASTRIATE.md`
 | `run_harmonic_model(false)` | the per-vertex harmonic model, raw variant (`true` = z-scored sensitivity check) |
 | `precision_weighted_table` | the per-observer precision-weighted tables |
 | `asymmetry_tables` | the asymmetry and context-effect tables on the current route |
+| **`run_spec_outputs`** | **Figures 5/6 and every table under the settled specification** — see [`SPEC_FIGURES.md`](SPEC_FIGURES.md). Needs `~/dg_collect/`; ~5 min. |
+| `spec_profiles`, `spec_tables`, `spec_areas_summary` | the pieces that driver runs, callable per map |
 
 The first call builds the V1 cache (`_cache/v1.mat`, ~10 s); later calls reuse it.
 
