@@ -114,7 +114,7 @@ function S = splithalf_reliability(varargin)
         end
     end
 
-    % ---- observer gain weighting (the published route) ----------------------
+    % ---- observer gain weighting (the manuscript route) ----------------------
     [S.scale, S.gain] = observer_gain_weights(cfg);
     S.asymW   = S.asym   .* S.scale;
     S.asymSEW = S.asymSE .* S.scale;

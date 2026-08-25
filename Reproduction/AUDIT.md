@@ -268,13 +268,12 @@ is a place a reimplementation can go wrong — and two of them are where the rep
   correlated predictors and shrinks the weights. −0.30 vs −0.446 is that attenuation, and it
   runs in the same direction for the other asymmetries too (e.g. `dg` H−V: independent −1.155,
   manuscript LME 1.10).
-- **z-scoring provenance.** The saved results are z-scored but `main_singlesub.m:131` now has
-  `normalize = 0` (changed 2026-07-14). Anyone re-running stage 01 will silently produce
-  non-z-scored betas and different Fig 7 statistics. This flag should be made an explicit,
-  recorded parameter rather than a hand-edited constant — and the manuscript Methods, which
-  commit to z-scoring, match the *saved* files, not the current default.
-- **The z-scoring decision itself** (`Reproduction/_archive/NEXT_STEPS.md`) remains open; this audit
-  only establishes which variant the existing figures came from.
+- **z-scoring — CLOSED 2026-07-24.** This audit established only which variant the existing figures
+  came from. The decision itself went **against** z-scoring
+  ([`WHY_NOT_ZSCORE.md`](WHY_NOT_ZSCORE.md)), so `main_singlesub.m`'s `normalize = 0` (changed
+  2026-07-14) is now the correct default rather than a trap, and the Methods drop their z-scoring
+  language. The flag is still a hand-edited constant and would be better as an explicit, recorded
+  parameter.
 
 ## 9. Recommendation
 

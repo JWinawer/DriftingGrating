@@ -16,7 +16,7 @@ function res = fit_harmonic_vertex(D, cfg, expCfg, thetaVsource, opts)
 %
 % VERTEX WEIGHTING (opts.weighting, see HARMONIC_WEIGHTS). The default
 % 'equalcoverage' gives every 15-deg polar-angle bin the same total weight, which
-% reproduces the equal-weighting-of-wedges of the published ROI analysis and makes the
+% reproduces the equal-weighting-of-wedges of the manuscript ROI analysis and makes the
 % b1/b3 design correlation ~0 instead of the ~+0.35 that natural V1 vertex density
 % imposes. 'natural' recovers the old unweighted behaviour. Weights enter the fit, the
 % R2 and the collinearity diagnostics alike, via b = (X.*sqrt(w))\(y.*sqrt(w)); each
@@ -36,7 +36,7 @@ function res = fit_harmonic_vertex(D, cfg, expCfg, thetaVsource, opts)
 %                     one the design uses. This matters, and the two callers want
 %                     different things:
 %                     - Leaving it '' makes Fit A weight the eight wedge centres
-%                       equally, which is EXACTLY the published ROI weighting, so
+%                       equally, which is EXACTLY the manuscript ROI weighting, so
 %                       Fit A then reproduces FIT_LME_FIG7 to the printed precision.
 %                       That is what RUN_HARMONIC_MODEL section 1 wants.
 %                     - Pinning it to 'continuous' for BOTH fits makes Fit A minus

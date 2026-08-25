@@ -109,16 +109,15 @@ full machine-readable values incl. motion and un-subtracted responses are in `gl
 
 *R² = median % variance explained; β = mean % signal change, stationary − blank.*
 
-> **Correction, 2026-08-19 (JW).** This caption previously read "V1 responses are concentrated in
-> the stimulated 4–8° band … the eccentricity restriction is what isolates the responsive patch."
-> That mis-states why 4–8° is used: it is the band where **spatial frequency is most closely
-> matched between the two experiments**, not the stimulated extent. The stimulus spanned roughly
-> **0.5–12°**. The individual numbers are unchanged and correct — over the whole V1 label
-> sub-0037's dg R² is 5.4 against 16.6 within 4–8° — but they do not show that 4–8° is "the
-> responsive patch", since the whole V1 label also includes eccentricities the stimulus never
-> reached. Measured directly, the group-median R²-by-eccentricity profile across V1 is roughly
-> flat, so no spatial-specificity claim should be drawn from it. See
-> [`GLM_SUMMARY_SECTION.md`](GLM_SUMMARY_SECTION.md), "Still outstanding".*
+> **Draw no spatial-specificity claim from this table.** 4–8° is the band where **spatial frequency
+> is most closely matched between the two experiments** — it is *not* the stimulated extent, which
+> was roughly **0.5–12°**. So the 4–8°-vs-whole-label contrast (sub-0037's dg R² is 5.4 over the
+> whole V1 label against 16.6 within 4–8°) does not show that 4–8° is "the responsive patch": the
+> whole label also covers eccentricities the stimulus never reached. Measured directly, the
+> group-median R²-by-eccentricity profile across V1 is roughly flat, and
+> [`GLM_SUMMARY_SECTION.md`](GLM_SUMMARY_SECTION.md), "Figure 4C", gives three reasons that is what
+> should be expected. *(The individual numbers are unchanged and correct; the caption's earlier
+> "concentrated in the stimulated 4–8° band" reading was withdrawn 2026-08-19, JW.)*
 
 ### 2.2 Model parameters — uniform (`group_models.m`)
 
@@ -290,23 +289,21 @@ A draft manuscript paragraph capturing the pink-noise-baseline caveat is in
 
 ## Open items
 
-- **sub-0201, full per-condition confirmation.** The negative mean V1 response is consistent with
-  the earlier "blank beta exceeds the stimulus betas" observation, but a per-condition check (blank
-  vs each of the 13) needs the raw single-trial betas (`modelmd`), which were not extracted. A
-  targeted re-pull of that one field for sub-0201 (~1 GB) would settle it.
-- **Fixed random seed** — confirm with the lead author whether it was intended (§3).
-- **Cross-run design order.** Run counts and per-run R² are consistent (rules out a *mispaired*
-  run), but each session's data-run order was not byte-matched against its design-file order; low
-  priority given §2.3.
+Three, all low priority, all carried with everything else in [`../../AGENTS.md`](../../AGENTS.md) §7:
+**sub-0201's per-condition confirmation** (needs the raw `modelmd`, ~1 GB, not extracted);
+**the fixed stimulus `rng` seed** (§3, confirm with the lead author that it was intended); and
+**cross-run design order**, which was never byte-matched against each session's data-run order —
+run counts and per-run R² already rule out a mispaired run (§2.3).
 
 ## Files (in `Reproduction/local_qc/`)
 
 - `REPORT.md` — this document.
 - `GLM_SUMMARY_SECTION.md` — split-half (over runs) reliability of the analysed profile and of each
-  asymmetry, plus draft manuscript text for the Results section "GLM summary". Extends §2.7 from
-  the asymmetries to the profile itself; written 2026-08-19.
-- `splithalf_reliability.csv` / `.mat` — per-observer split-half reliabilities behind that document
-  (`../cleanroom/splithalf_reliability.m`).
+  asymmetry, which across-vertex aggregate the manuscript uses, the Figure 4 controls, and draft
+  manuscript text for the Results section "GLM summary". Extends §2.7 from the asymmetries to the
+  profile itself; written 2026-08-19.
+- `splithalf_reliability.csv` — per-observer split-half reliabilities behind that document
+  (`../cleanroom/splithalf_reliability.m`; the companion `.mat` is git-ignored).
 - `glm_summary.csv` — per-observer table: R², and raw and blank-subtracted responses (stationary,
   moving, blank) for V1/V2/V3 (4–8°), V4 and MT (whole ROI), and whole surface. Also at
   `~/Downloads/`.

@@ -40,7 +40,7 @@ function W = diagnose_within_observer_error(varargin)
 %
 % ROUTE. 'harmonic' (default) fits the per-vertex model; 'roi' bins vertices into the
 % eight polar-angle ROIs and contrasts
-% within each, which is the published route. 'harmonic' instead fits the four-term
+% within each, which is the manuscript route. 'harmonic' instead fits the four-term
 % per-vertex model of FIT_HARMONIC_VERTEX to the same run-resampled betas, with polar
 % angle CONTINUOUS, and reads the four asymmetries off the fitted coefficients
 % evaluated at the eight canonical ROI centres. The two agree exactly on complete data
@@ -292,7 +292,7 @@ function a = asym_from_runs_h(A, runs, cfg, en, tvSrc, wMode, wBins)
 
     % thetaV CONTINUOUS by default: each vertex's own pRF polar angle, no binning of
     % the design anywhere. 'binned' quantises the regressor to the eight ROI centres,
-    % which makes the fit algebraically the published ROI analysis and so leaves V1
+    % which makes the fit algebraically the manuscript ROI analysis and so leaves V1
     % unchanged -- but it puts cos(4*thetaV) at only two values (+1 at cardinals, -1 at
     % obliques), so the second-harmonic pair b4 = b2 * cos(4*thetaV) is a TWO-POINT
     % design: exactly orthogonal at full coverage, and exactly degenerate (VIF = Inf) as

@@ -5,9 +5,9 @@ function [M, counts] = bin_and_aggregate(T, cfg, expCfg, doZscore)
 %
 % Applies the analysis inclusion filter (ecc in cfg.eccRange, pRF_r2 > cfg.r2min;
 % V1 already enforced by LOAD_AND_FILTER), computes per-vertex contrasts, then takes
-% cfg.aggregator ('mean', the published choice, or 'median') across vertices within each
+% cfg.aggregator ('mean', the manuscript choice, or 'median') across vertices within each
 % polar-angle wedge, separately per subject. Each subject's wedge values are then scaled
-% by their pRF-gain factor (OBSERVER_GAIN_WEIGHTS), matching the published route.
+% by their pRF-gain factor (OBSERVER_GAIN_WEIGHTS), matching the manuscript route.
 %
 % M      : nOri x nPA x nSubj, ordering follows expCfg.oriCols, cfg.paBins, cfg.subjects.
 % counts : nPA x nSubj, number of vertices contributing to each wedge/subject.

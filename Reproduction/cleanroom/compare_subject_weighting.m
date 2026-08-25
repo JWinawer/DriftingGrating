@@ -2,7 +2,7 @@
 %
 % Every choice in this analysis implies a subject weighting, and the per-vertex
 % z-scoring makes one implicitly. This script makes the three candidates explicit and
-% evaluates them side by side (see ../_archive/_archive/ZSCORE_FIG7.md section 6):
+% evaluates them side by side (see ../_archive/ZSCORE_FIG7.md section 6):
 %
 %   W1 equal weight        - one observer, one vote (what the raw analysis does)
 %   W2 precision weight    - w ∝ 1/SE^2, SE = within-subject bootstrap standard error of
@@ -105,6 +105,6 @@ for E = {cfg.dg, cfg.da}
     end
 end
 
-fprintf(['\nNote: W3 is applied here as a per-subject scalar for comparability. The published\n' ...
+fprintf(['\nNote: W3 is applied here as a per-subject scalar for comparability. The manuscript\n' ...
          'per-vertex z-scoring is W3 plus a units change; the ladder in diagnose_zscore_fig7.m\n' ...
          'shows the per-subject scalar reproduces its whole effect on Fig 7.\n']);

@@ -40,7 +40,8 @@ also happens to reweight observers; it was never stated as either.
 
 - Methods drop the "beta weights for each vertex were standardized" statement and the σ-unit in-text
   statistics; figures use the raw variants, which already exist.
-- In Figure 7 the largest polar-grating asymmetry is horizontal−vertical, the raw result.
+- In the polar experiment the largest asymmetry is horizontal−vertical, the raw result. (This was
+  the headline difference in Figure 7, which is itself being removed — [`LME.md`](LME.md).)
 - The pink-noise-baseline caveat applies to raw and z-scored analyses equally, so it is not a mark
   against the raw one. Draft manuscript text: [`local_qc/manuscript_caveat_paragraph.md`](local_qc/manuscript_caveat_paragraph.md).
 

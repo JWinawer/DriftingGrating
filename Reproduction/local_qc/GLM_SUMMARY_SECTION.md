@@ -1,22 +1,23 @@
-# Quantifying the GLM-summary section
+# The GLM-summary section — reliability, route, and the Figure 4 controls
 
-*2026-08-19. Split-half (over runs) reliability of the quantities that Figures 5–8 analyse, plus
-draft manuscript text for the Results section "GLM summary". Computed by
+*What quantifies the first-stage GLM estimates for the Results section "GLM summary", plus draft
+manuscript text. Computed by
 [`../cleanroom/splithalf_reliability.m`](../cleanroom/splithalf_reliability.m); per-observer values
-in `splithalf_reliability.csv` / `.mat`.*
+in `splithalf_reliability.csv` / `.mat`. Written 2026-08-19.*
 
-**Across-vertex mean** (JW decision, 2026-08-19), with the observer pRF-gain rescaling.
+All numbers here are on the settled route: **across-vertex mean, with the observer pRF-gain
+rescaling** (JW, 2026-08-19). Result 3 below is what established that route.
 
-> **Figure 7 is being removed** (JW, 2026-08-19): the LME is exactly redundant with Figures 5/6
-> once the same across-vertex aggregate is used. This is now demonstrable rather than argued —
-> `fit_lme_fig7` returns [−0.547, −0.221, 0.104, 0.039] for the Cartesian experiment, identical to
-> the independent asymmetry means in Result 3. The apparent difference between the two routes was
-> the aggregate mismatch (`lme1_fit.m` read `meanBOLDpa`, `plot_NeuralAsymmetries.m` passed
-> `medianBOLDpa`), not anything the model added. [`../LME.md`](../LME.md) already recommended
-> omitting it; that recommendation is now adopted. See "Which route the manuscript uses" below — this is the route that reproduces the
-published numbers, and the repo's current `median` callers are not final.
-
----
+| section | what it settles |
+|---|---|
+| Why reliability rather than R² | why the section's current three R² numbers are the wrong currency |
+| Method | the split-half over runs |
+| Which route the manuscript uses | mean vs. median, gain vs. none — **resolved** |
+| Results 1–2 | split-half reliability; measurement error against the effect |
+| Results 3–4 | the asymmetry tables on the current route; gain × precision weighting |
+| Result 5 | the Fig-4A run-mismatch control |
+| Draft text | prose for the manuscript |
+| Figure 4C | why it carries no quantitative claim |
 
 ## Why reliability rather than R²
 
@@ -62,7 +63,7 @@ strips response-level differences which are reliable but carry no orientation in
 exactly the subspace that carries all four asymmetries. **`roiDiff` is the strict test and the one
 to report.**
 
-**Validation.** This route (run-averaged GLMsingle single-trial betas) reproduces the published ROI
+**Validation.** This route (run-averaged GLMsingle single-trial betas) reproduces the manuscript ROI
 pipeline — see below — and the split-half within-observer SEs agree with the independent
 bootstrap-over-runs estimator in [`REPORT.md`](REPORT.md) §2.7 to ±0.005. The vertex counts also
 match `gainSummary.csv`'s independently-computed `nVertices` exactly for all 8 observers,
@@ -70,7 +71,7 @@ confirming the same V1 / 4–8° / pRF R² > 0.1 selection.
 
 ## Which route the manuscript uses — resolved
 
-Four candidate routes were compared against the eight published asymmetries, summing the absolute
+Four candidate routes were compared against the eight manuscript asymmetries, summing the absolute
 deviation over all eight values:
 
 | route | Σ&#124;route − manuscript&#124; |
@@ -91,18 +92,19 @@ deviation over all eight values:
 | da | rad−tang | 0.15 | 0.150 | 0.148 | 0.151 | **0.151** |
 | da | polc−polo | 0.04 | 0.034 | 0.033 | 0.040 | **0.040** |
 
-**Mean + gain weighting matches every published value to ±0.003.** The aggregator is what does the
+**Mean + gain weighting matches every manuscript value to ±0.003.** The aggregator is what does the
 work (the median route misses dg horiz−vert by 0.07); the gain weighting is a small refinement that
 closes the residual on card−obl and polc−polo.
 
 Notes on the two components:
 
-- **Mean vs. median.** `meanWithinLabel.m` (upstream, commit 89085a0) saves both `meanBOLDpa` and
-  `medianBOLDpa`; its callers — `plot_NeuralAsymmetries.m`, `plot1_/plot2_experimentalCond.m`,
-  `lme1_fit.m` — currently pass the **median**. That is not final: the decision is **mean**, which
-  is also what the Methods text already says. The repo callers should be switched to
-  `meanBOLDpa`, and [`../HARMONIC_MODEL.md`](../HARMONIC_MODEL.md) §Validation (which recommends
-  the `pubMed` = −0.480 column) needs updating to point at `rtMean` instead.
+- **Mean vs. median. Applied 2026-08-19.** `meanWithinLabel.m` saves both `meanBOLDpa` and
+  `medianBOLDpa`. `lme1_fit.m` was already reading the mean; `plot_NeuralAsymmetries.m` passed the
+  median and has been switched, so Figs 5/6 and Fig 7 are no longer computed from different
+  aggregates. The clean-room switches via `cfg.aggregator`. `plot1_/plot2_experimentalCond.m` and
+  the `compute_derivative*` functions still *name* their first parameter `medianBOLDpa` while
+  receiving mean data — deliberately left, because upstream also edits those files and the rename
+  would create merge conflicts for no functional gain.
 - **Gain weighting.** Upstream commits a498f08 (2026-07-31) and e2acbf7 (2026-08-07) divide each
   observer's BOLD by their own mean pRF gain and multiply the group-mean gain back in
   (`retrieveObserverGainWeights.m`), applied to Figures 5, 6 and 7. Gains are read from
@@ -157,8 +159,8 @@ error; `p disatt` removes that variance and re-tests.
 | | rad−tang | 0.150 | 0.170 | 0.136 | 1.1 | 64% | 0.0416 | 0.0043 |
 | | polc−polo | 0.040 | 0.105 | 0.073 | 0.5 | 48% | 0.3185 | 0.1795 |
 
-> **`within/total` is the wrong statistic to headline, and an earlier draft of this document
-> mis-framed it.** It is a ratio of *between-observer* variance, so it is large either when
+> **`within/total` is the wrong statistic to headline.** It is a ratio of *between-observer*
+> variance, so it is large either when
 > measurement error is large **or when observers genuinely agree with one another** — and those
 > are opposite situations. The two cells above 50% are one of each:
 >
@@ -423,12 +425,6 @@ representative split — puts the reliability claim in the same "show the data" 
 **Supplementary tables.** Table SX = `splithalf_reliability.csv` (per-observer reliability).
 Table SY = the MT / V4 columns of `glm_summary.csv` ([`REPORT.md`](REPORT.md) §2.6).
 
-**Done 2026-08-19:** `plot_NeuralAsymmetries.m` switched to `meanBOLDpa`/`meanBOLD` (`lme1_fit.m`
-was already on `meanBOLDpa`, so Figs 5/6 and Fig 7 had been computed from different across-vertex
-aggregates); clean-room switched via `cfg.aggregator` and `cfg.gainFile`/`cfg.gainMean`;
-[`../HARMONIC_MODEL.md`](../HARMONIC_MODEL.md) and [`../LME.md`](../LME.md) §5 carry dated
-correction banners.
-
 **Left for Rania: the geometric vs. arithmetic mean gain.** The manuscript should keep the
 **geometric** mean (JW's recommendation, which she has agreed to adopt); `lme1_fit.m`,
 `plot1_experimentalCond.m` and `plot2_experimentalCond.m` currently use `mean(gainWeights)` and
@@ -437,33 +433,13 @@ should be changed to `exp(mean(log(gainWeights)))`. The clean-room already defau
 these 8, a factor of 0.9895 — so it shifts every reported effect size by ~1% and leaves every
 correlation, variance ratio, *t* and *p* value **exactly** unchanged.
 
-**Cosmetic, left alone deliberately:** `plot1_/plot2_experimentalCond.m` and the
-`compute_derivative*` functions still name their first parameter `medianBOLDpa`, which now receives
-mean data. Renaming was skipped because upstream also edits those files (gain weighting) and the
-rename would create merge conflicts for no functional gain.
+## Figure 4C — no quantitative claim attached
 
-## Still outstanding
-
-**Finish the run-mismatch calibration** (Result 5). The sign result is settled locally; what the
-one-session pull adds is the cross-vertex noise correlation needed for absolute ROI-level
-magnitudes, and ⟨e, ŷ_m⟩ over 56 run pairs instead of 2. If measured and predicted agree, the local
-estimator covers the other 15 sessions at no transfer cost. Also check **sub-0201/da** (ρ = 0.36,
-66% of pairs negative) before stating the claim over all run pairs.
-
-**Merge or triage the 4 upstream commits.** `origin/main` (raniaezzo) is 4 commits ahead as of
-2026-08-07. Beyond the gain weighting: an **ROI-order bug fix** in `lme1_fit.m` (index by
-`roi_idx{roi}`, not the loop counter — related to [`../AUDIT.md`](../AUDIT.md) §3/§5), the ROI set
-expanded from 1 to 8, a new `01_calculate_observer_gain/` module, `02_ttave/createTTaveTable.m`
-(the Fig 4B trial-triggered averages), `_raw` variants of the axis-limit jsons, and a change making
-`cart_MotvStat`/`pol_MotvStat` a normalised index (m−s)/(m+s) — that last affects only those two
-summary columns, not the per-orientation betas, so nothing above is affected.
-
-**Attach no quantitative claim to Fig 4C** (corrected 2026-08-19, JW). An earlier version of this
-document said the map shows R² "concentrated in the stimulated 4–8° band". That is wrong on the
-premise: **4–8° is the window where spatial frequency is most closely matched between the two
-experiments, not the stimulated extent.** The stimulus spanned roughly **0.5–12°**, so the model
-should fit across that whole range and fall off only beyond it — 4–8° is not expected to be
-diagnostic of where the model fits better.
+**4–8° is the window where spatial frequency is most closely matched between the two experiments,
+not the stimulated extent.** The stimulus spanned roughly **0.5–12°**, so the model should fit
+across that whole range and fall off only beyond it — 4–8° is not expected to be diagnostic of
+where the model fits better, and no R²-by-eccentricity claim should be built on it. *(A "R²
+concentrated in the stimulated 4–8° band" reading of this map was withdrawn 2026-08-19, JW.)*
 
 Tested directly (V1 median GLM R² by eccentricity, dg, all 8 observers):
 
@@ -549,3 +525,20 @@ diagnostic surface figure — MT+ positive in 8/8 observers, hV4 near zero, whol
 0.000, and the pink-noise reference cancels exactly since both conditions share it. It is set aside
 because **this paper analyses only the stationary conditions**, so a motion figure would be off-topic
 here. Worth remembering for a paper where it is not.
+
+---
+
+## What is still open here
+
+Carried in [`../../AGENTS.md`](../../AGENTS.md) §7 along with everything else open in the project:
+
+- **Finish the run-mismatch calibration** (Result 5). The sign result is settled and measured on 56
+  run pairs; what a further pull adds is the cross-vertex noise correlation needed for absolute
+  ROI-level magnitudes. Check **sub-0201/da** (ρ = 0.36, only 66% of pairs negative) before stating
+  the claim over all run pairs.
+- **Geometric vs. arithmetic mean gain** — left for Rania, above.
+- **Figure 4C** — drop it, or present it as an illustration with no quantitative claim.
+
+*The "merge or triage the 4 upstream commits" item that stood here is closed: a498f08, e2acbf7 and
+the rest are in this history, including the `lme1_fit.m` ROI-order fix, the ROI set expanded to 8,
+`01_calculate_observer_gain/`, and `02_ttave/createTTaveTable.m`.*

@@ -25,7 +25,7 @@ function extract_for_transfer(bidsDir, outDir)
 %
 % Everything is restricted to the V1 label so the FreeSurfer labels and retinotopy
 % maps never have to be copied either. Each vertex's eccentricity comes along in
-% `patchEccen`, so the published 4-8 deg band -- or any other -- is a local filter rather
+% `patchEccen`, so the manuscript 4-8 deg band -- or any other -- is a local filter rather
 % than a reason to re-run this. Whole-surface percentile summaries are kept alongside so
 % no context is lost.
 %
@@ -47,7 +47,7 @@ function extract_for_transfer(bidsDir, outDir)
     % NO eccentricity restriction: keep the whole V1 label and save each vertex's
     % eccentricity alongside (`patchEccen`).
     %
-    % The published analysis restricts to 4-8 deg, but that restriction is a
+    % The manuscript analysis restricts to 4-8 deg, but that restriction is a
     % STIMULUS-MATCHING constraint, not the stimulus extent. The stimulus is a much
     % larger annulus (roughly 1-12 deg). Cartesian gratings have uniform spatial
     % frequency across the aperture while polar gratings' SF scales inversely with
@@ -189,7 +189,7 @@ function [v1idx, note, inventory, retPatch, patchEccen, patchVexpl] = ...
 % trap that is irrelevant here (see AUDIT.md), so this sidesteps it entirely.
 %
 % Returns each retained vertex's eccentricity and vexpl as well, so the receiving end can
-% narrow the range (e.g. back to the published 4-8 deg) without re-reading the server.
+% narrow the range (e.g. back to the manuscript 4-8 deg) without re-reading the server.
     v1idx = []; inventory = {}; retPatch = struct();
     patchEccen = single([]); patchVexpl = single([]);
     try

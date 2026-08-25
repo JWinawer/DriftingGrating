@@ -1,34 +1,42 @@
-# Per-vertex harmonic model — geometry vs context (2026-08-17)
+# Per-vertex harmonic model — geometry vs context
 
-> **Revised 2026-08-17b.** Vertices are now weighted for **equal polar-angle coverage**, which is
-> what the published ROI analysis does implicitly and what makes the four predictors orthogonal.
-> This is the primary specification; the previous natural-vertex-density numbers are kept
-> alongside as a clearly labelled secondary column. See *Vertex weighting* below. Conclusions are
-> unchanged; the individual numbers moved by up to ~0.03.
-
-A model-based test of whether the Cartesian-vs-polar difference in the V1 orientation
-asymmetries is explained by **within-ROI local-orientation geometry** rather than by
-longer-range **context effects**.
+A model-based test of whether the Cartesian-vs-polar difference in the V1 orientation asymmetries
+is explained by **within-ROI local-orientation geometry** rather than by longer-range **context
+effects**.
 
 Every analysis behind Figs 5–8 is ROI-based: vertices are binned into eight ±22.5° polar-angle
 wedges, and each stimulus gets one label per wedge — a horizontal grating counts as "horizontal"
-for the Cartesian asymmetries and as "radial" for the polar ones. But it is only exactly radial
-for a vertex whose pRF sits on the horizontal meridian; across a 45°-wide wedge the local offset
-runs over ±22.5°. The two stimulus sets are only *approximately* matched within those wedges.
-This model removes the binning entirely and regresses on each vertex's own pRF polar angle.
+for the Cartesian asymmetries and as "radial" for the polar ones. But it is only exactly radial for
+a vertex whose pRF sits on the horizontal meridian; across a 45°-wide wedge the local offset runs
+over ±22.5°. The two stimulus sets are only *approximately* matched within those wedges. This model
+removes the binning entirely and regresses on each vertex's own pRF polar angle.
 
 > **Conclusion.** Within-ROI local-orientation geometry accounts for **6–8%** of the
-> Cartesian-vs-polar gap in the horizontal/vertical and cardinal/oblique asymmetries (5.6% and
-> 7.6% under the primary equal-coverage weighting; 7.6% and 8.4% at natural vertex density). The
+> Cartesian-vs-polar gap in the horizontal/vertical and cardinal/oblique asymmetries (5.6% and 7.6%
+> under the primary equal-coverage weighting; 7.6% and 8.4% at natural vertex density). The
 > remaining ~93% survives, and survives equalising overall response gain and tightening the pRF
-> quality floor. The manuscript's context claim stands on this test.
+> quality floor. **The manuscript's context claim stands on this test.**
 >
-> **Corrected 2026-08-17c.** An earlier version of this document claimed that the radial/tangential
-> asymmetry is *not* context-dependent. That is not supported. It shows no DETECTABLE difference
-> between experiments, but the interval still admits an effect larger than the cardinal/oblique
+> The radial/tangential asymmetry shows **no detectable difference between experiments** — but that
+> is not "context-invariant". The interval admits an effect larger than the cardinal/oblique
 > context effect, one observer drives the null, and the Cartesian-frame effect is not reliably
-> larger than the polar-frame one. Report absence of evidence, not evidence of absence. See
-> `cleanroom/diagnose_context_asymmetry.m`.
+> larger than the polar-frame one. Report absence of evidence, not evidence of absence
+> (Result 3; `cleanroom/diagnose_context_asymmetry.m`).
+
+**Status.** This document is the standing internal account of *the model* — its design, angle
+convention, weighting, validation, and the pRF-angle-error control. The **specification the project
+now runs**, which generalises this model to eight visual maps and settles gain, weighting and
+precision, is [`EXTRASTRIATE.md`](EXTRASTRIATE.md) §1. Two differences to know when reading the V1
+numbers below:
+
+| | here | settled spec |
+|---|---|---|
+| gain | equalised only in the labelled "gain-equalised" columns | on by default, per observer × map |
+| coverage weighting bin | 15° (24 bins) | 45° — the polar-angle ROIs themselves |
+
+Adopting the spec moves the V1 numbers by at most **0.040** and changes **no** significance
+(`EXTRASTRIATE.md` §7), so every conclusion below is unaffected. The largest mover is `dg`
+polc−polo, the term least constrained under binning.
 
 ---
 
@@ -73,7 +81,7 @@ flip the sign of **both** first-harmonic terms: `b1 > 0` would mean vertical > h
 
 ### Vertex weighting — equal polar-angle coverage (primary)
 
-The published ROI analysis aggregates each of eight polar-angle wedges and then weights the eight
+The manuscript ROI analysis aggregates each of eight polar-angle wedges and then weights the eight
 wedges **equally**. Under that weighting the four asymmetry predictors of `lme_codes` are exactly
 orthogonal: their Gram matrix is `diag(16, 32, 16, 32)`, every off-diagonal zero.
 
@@ -93,8 +101,8 @@ imported from cortical magnification, not from the question.
 
 `harmonic_weights.m` fixes it: bin `thetaV` into 24 bins of 15° over [0,360), give each vertex
 `w = 1/count(its bin)`, rescale to `mean(w) == 1`. Every occupied bin then carries the same total
-weight. This drives the correlation to **+0.016**, restoring the published design's orthogonality
-**while keeping θV continuous** — so the only remaining difference from the published analysis is
+weight. This drives the correlation to **+0.016**, restoring the manuscript design's orthogonality
+**while keeping θV continuous** — so the only remaining difference from the manuscript analysis is
 the thing actually under study, true θV versus wedge centre.
 
 | | natural density | equal coverage |
@@ -125,7 +133,7 @@ Two consequences worth knowing:
 
 - **Fit A now reproduces the ROI pipeline exactly.** With θV quantised to the wedge centres, the
   weights are binned from those same centres, so every wedge carries equal weight — literally the
-  published weighting. `FitA·2` now equals `LMEmean` to the printed precision, where the
+  manuscript weighting. `FitA·2` now equals `LMEmean` to the printed precision, where the
   natural-density fit differed by up to 0.03.
 - **For the Fit A vs Fit B comparison the weights are held fixed** (binned from the true pRF
   angle for both), so A − B is a pure θV manipulation. Without that pin, roughly a third of the
@@ -192,7 +200,7 @@ Two structural facts, both asserted in `cleanroom/test_harmonic_model.m`:
 
 ## Validation
 
-The per-vertex machinery reproduces the published ROI pipeline before any of its departures mean
+The per-vertex machinery reproduces the manuscript ROI pipeline before any of its departures mean
 anything (§1 of the run output). Raw variant, % signal change:
 
 | | | ref | pubMed | rtMed | rtMean | LMEmean | FitA·2 |
@@ -212,29 +220,22 @@ not linear. **`FitA·2` now equals `LMEmean` to the printed precision** — unde
 per-vertex fit at the wedge centres weights each wedge equally, which is exactly what the ROI
 route does. The natural-density fit differed by up to 0.03 (it weighted each observer's wedges by
 vertex count); that residual gap is now closed, and the per-vertex machinery is an exact
-re-expression of the published analysis before any of its departures.
+re-expression of the manuscript analysis before any of its departures.
 
 ### A note on units
 
-> **Correction, 2026-08-19 — the recommended column has changed from `ref`/`pubMed` to
-> `rtMean`.** The paragraph below recommended the `ref` (= `pubMed`, across-vertex **median**)
-> column as "the values a non-z-scored manuscript should carry". That recommendation is
-> withdrawn. The across-vertex **mean** is the manuscript's aggregate (JW, 2026-08-19), and the
-> mean route plus the observer pRF-gain rescaling reproduces all eight published asymmetries to
-> ±0.003, whereas the median route misses dg horiz−vert by 0.07. `lme1_fit.m` (Fig 7) was
-> already reading `meanBOLDpa`; only `plot_NeuralAsymmetries.m` (Figs 5/6) passed the median,
-> and it has been switched. **Read `rtMean`, not `ref`, in the table above**, and see
-> [`local_qc/GLM_SUMMARY_SECTION.md`](local_qc/GLM_SUMMARY_SECTION.md) for the route comparison
-> and the gain-rescaled values (which differ from `rtMean` by ~1–6% per asymmetry). The
-> superseded paragraph is kept below.
-
+**Read `rtMean`, not `ref`.** The across-vertex **mean** is the manuscript's aggregate, and the mean
+route plus the observer pRF-gain rescaling reproduces all eight manuscript asymmetries to ±0.003,
+where the median route (`ref` = `pubMed`) misses `dg` horiz−vert by 0.07.
+[`local_qc/GLM_SUMMARY_SECTION.md`](local_qc/GLM_SUMMARY_SECTION.md) has the route comparison and
+the gain-rescaled values, which differ from `rtMean` by ~1–6% per asymmetry. *(An earlier
+recommendation of `ref` was withdrawn 2026-08-19, JW.)*
 
 The four constants per experiment transcribed in `cleanroom/validate_against_manuscript.m`
 (`[-1.155 -0.40 0.23 0.06]`, `[-0.45 -0.06 0.60 0.17]`) are reproduced to three decimals by the
-**z-scored** pipeline and not by the raw one, so as transcribed they are in σ units. Z-scoring
-has been dropped (`local_qc/REPORT.md` §4; confirmed against the revised manuscript 2026-08-17),
-so those are superseded. The percent-signal-change equivalents from the same published route are
-the `ref` column above — **these are the values a non-z-scored manuscript should carry.**
+**z-scored** pipeline and not by the raw one, so as transcribed they are in σ units. Z-scoring has
+been dropped (`local_qc/REPORT.md` §4; confirmed against the revised manuscript 2026-08-17), so
+those constants are superseded — the percent-signal-change equivalents are in the table above.
 
 ---
 
@@ -416,7 +417,7 @@ shared coefficient set, plus angle error σ) reproduces the observed `b1` ratio 
 runs with different stimuli, held in sibling derivative trees: `prfvista_mov` — which is the
 solution the analysis uses, verified identical to the local `ret_<subject>.mat` to
 `max|difference| = 0` — and `prfvista`. `collect_prf_replicate.m` mirrors the second solution into
-`~/dg_collect`; `diagnose_prf_angle_error.m` compares them over the published vertex set
+`~/dg_collect`; `diagnose_prf_angle_error.m` compares them over the manuscript vertex set
 (V1_REmanual, 4–8°, `vexpl > 0.1` in **both** solutions; 10,956 vertices):
 
 ```
@@ -497,7 +498,7 @@ results struct in `cleanroom/_cache/harmonic_<variant>.mat`.
 | `cleanroom/predict_harmonic.m` | apply coefficients to an experiment's geometry |
 | `cleanroom/harmonic_decompose.m` | the A/B/C reformulation |
 | `cleanroom/harmonic_crossexp.m` | cross-prediction, gain, nested levels |
-| `cleanroom/harmonic_roi_roundtrip.m` | push per-vertex values through the published ROI pipeline |
+| `cleanroom/harmonic_roi_roundtrip.m` | push per-vertex values through the manuscript ROI pipeline |
 | `cleanroom/test_harmonic_model.m` | assertions — run first |
 | `cleanroom/diagnose_prf_angle_error.m` | measures pRF polar-angle σ from the two independent fits |
 | `cleanroom/diagnose_context_asymmetry.m` | within-subject context tests, leave-one-out, equivalence bound, and why the LME is not used |

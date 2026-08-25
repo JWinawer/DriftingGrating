@@ -38,7 +38,7 @@ for E = {cfg.dg, cfg.da}
     X = S4 - blank;                      % the analysed contrasts
 
     g = struct();
-    g.std13     = zeros(1,nS);   % published divisor: std over all 13 conditions
+    g.std13     = zeros(1,nS);   % manuscript divisor: std over all 13 conditions
     g.std8mot   = zeros(1,nS);   % std over the 8 motion conditions (effect-independent)
     g.mean8mot  = zeros(1,nS);   % mean motion drive over blank (effect-independent)
     g.maxResp   = zeros(1,nS);   % ephys-style: peak stimulus response over blank
@@ -83,7 +83,7 @@ end
 fprintf('\n==== 3. group asymmetries under per-observer gain normalisation (da) ====\n');
 E = cfg.da; X = G.da.X;
 schemes = {'raw (no normalisation)', ones(1,nS); ...
-           'std13 (published)',       G.da.std13; ...
+           'std13 (manuscript)',       G.da.std13; ...
            'std8mot',                 G.da.std8mot; ...
            'mean8mot',                G.da.mean8mot; ...
            'maxResp (ephys-style)',   G.da.maxResp};

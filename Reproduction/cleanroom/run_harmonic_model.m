@@ -32,7 +32,7 @@ function R = run_harmonic_model(doZscore)
              'pro-minus-con difference, matching the manuscript''s deltas.\n' ...
              'Vertex weighting: EQUAL POLAR-ANGLE COVERAGE is primary (24 bins of 15 deg,\n' ...
              'w = 1/count, mean 1), matching the equal weighting of the eight wedges in the\n' ...
-             'published ROI analysis and making the four predictors orthogonal. Natural\n' ...
+             'manuscript ROI analysis and making the four predictors orthogonal. Natural\n' ...
              'vertex density is reported alongside in section 2. See HARMONIC_WEIGHTS.\n']);
 
     R.validate = section_validate(T, cfg, doZscore);
@@ -53,7 +53,7 @@ end
 
 % ========================================================================
 function V = section_validate(T, cfg, doZscore)
-% The per-vertex machinery must reproduce the published ROI pipeline before any of
+% The per-vertex machinery must reproduce the manuscript ROI pipeline before any of
 % its departures mean anything.
 %
 % REFERENCE COLUMN. Z-scoring has been dropped (local_qc/REPORT.md section 4; the
@@ -64,16 +64,18 @@ function V = section_validate(T, cfg, doZscore)
 % the z-scored sensitivity run.
 %
 % The live reference is the raw one, in PERCENT SIGNAL CHANGE, computed here from the
-% published route (bin_and_aggregate + compute_asymmetries on blank-subtracted
-% contrasts) rather than transcribed -- these are the values the revised manuscript
-% should carry.
+% manuscript route (bin_and_aggregate + compute_asymmetries on blank-subtracted
+% contrasts) rather than transcribed. Read the rtMean column, NOT ref/pubMed: the
+% across-vertex MEAN is the manuscript's aggregate (2026-08-19), and mean + observer
+% pRF-gain rescaling reproduces all eight manuscript asymmetries to +/-0.003, where the
+% median route misses dg horiz-vert by 0.07. See ../HARMONIC_MODEL.md, A note on units.
     banner('1. VALIDATION -- does the per-vertex machinery reproduce the ROI pipeline?');
     if doZscore
         ref.dg = [-1.155 -0.40 0.23 0.06];      % SUPERSEDED sigma-unit manuscript values
         ref.da = [-0.45  -0.06 0.60 0.17];
         refLbl = 'old(sigma)';
     else
-        ref.dg = [-0.4798 -0.2044 0.1159 0.0292];   % published route, % signal change
+        ref.dg = [-0.4798 -0.2044 0.1159 0.0292];   % manuscript route, % signal change
         ref.da = [-0.2114 -0.0296 0.1501 0.0336];
         refLbl = 'ref(%BOLD)';
     end
@@ -103,7 +105,7 @@ function V = section_validate(T, cfg, doZscore)
         V.(en) = struct('ref',ref.(en),'refLabel',refLbl,'pubMed',indPub,'rtMed',indMed, ...
                         'rtMean',indMean,'lmeMean',rl.delta,'fitA',2*rA.bMean);
     end
-    fprintf(['\npubMed = published route (wedge medians of blank-subtracted contrasts).\n' ...
+    fprintf(['\npubMed = manuscript route (wedge medians of blank-subtracted contrasts).\n' ...
              'rtMed/rtMean = the same wedges applied to the per-vertex DEMEANED data. The four\n' ...
              'asymmetries are zero-sum contrasts, so demeaning cancels exactly under the mean\n' ...
              'but not under the median -- hence rtMean == LMEmean exactly, while rtMed differs\n' ...
@@ -123,7 +125,7 @@ function F = section_fitAB(Ddg, Dda, cfg)
 %
 % Reported under BOTH vertex weightings, so the two are like-for-like:
 %   PRIMARY   'equalcoverage' -- every 15-deg polar-angle bin carries equal total
-%             weight. This is what the published ROI analysis does (it weights the
+%             weight. This is what the manuscript ROI analysis does (it weights the
 %             eight wedges equally), and it makes the four predictors orthogonal.
 %   SECONDARY 'natural'       -- one vertex, one vote. V1 over-represents the
 %             horizontal meridian, which correlates the b1 and b3 columns at ~+0.35.
@@ -134,7 +136,7 @@ function F = section_fitAB(Ddg, Dda, cfg)
 % wedge centres and Fit B from the true angles, and roughly a third of the dg
 % horiz-vert A->B shift would be that change of weighting rather than geometry. (The
 % unpinned Fit A is still the right one for section 1, where the point is precisely
-% that equal weight per wedge reproduces the published ROI analysis.)
+% that equal weight per wedge reproduces the manuscript ROI analysis.)
     banner('2. FIT A vs FIT B -- how much is within-ROI local-orientation geometry?');
     nm = {'horiz-vert','card-obl','rad-tang','polc-polo'};
 
@@ -279,7 +281,7 @@ end
 
 % ========================================================================
 function O = section_roi(Ddg, Dda, cfg, F)
-% Push observed and cross-predicted per-vertex responses through the published ROI
+% Push observed and cross-predicted per-vertex responses through the manuscript ROI
 % pipeline, so the model's claim lands in the manuscript's own units.
     banner('4. ROI ROUND-TRIP -- observed vs cross-predicted asymmetries');
     nm = {'horiz-vert','card-obl','rad-tang','polc-polo'};
@@ -308,7 +310,7 @@ function O = section_roi(Ddg, Dda, cfg, F)
         O.(tgt) = struct('obs',Aobs,'pred',Apred,'predGain',Apg,'gain',g,'src',src);
     end
     fprintf(['\nThese are wedge MEANS of demeaned responses, so they are directly comparable\n' ...
-             'between observed and predicted but sit slightly below the published medians.\n']);
+             'between observed and predicted but sit slightly below the manuscript medians.\n']);
 end
 
 % ========================================================================

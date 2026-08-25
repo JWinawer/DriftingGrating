@@ -45,7 +45,7 @@ function cfg = config_repro()
     % MEAN, not median (JW, 2026-08-19). The repo's meanWithinLabel.m saves both
     % meanBOLDpa and medianBOLDpa; lme1_fit.m (Fig 7) already reads meanBOLDpa, while
     % plot_NeuralAsymmetries.m (Figs 5/6) passed medianBOLDpa. Mean + gain rescaling
-    % reproduces all eight published asymmetries to +-0.003; the median route does not
+    % reproduces all eight manuscript asymmetries to +-0.003; the median route does not
     % (it misses dg horiz-vert by 0.07). See ../local_qc/GLM_SUMMARY_SECTION.md.
     cfg.aggregator = 'mean';        % 'mean' | 'median'
 

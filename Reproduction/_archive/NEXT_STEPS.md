@@ -267,7 +267,7 @@ pRF maps never need copying.
 > nothing — whole surface, every retinotopy map, every label, ~1.2 GB to `~/dg_collect/` — for
 > the reasons in `GLM_QUALITY.md` §6a (a filter applied before the data leaves the server makes
 > its own influence untestable). That ran on 2026-07-24 →
-> [`local_qc/REPORT.md`](../local_qc/REPORT.md). **Use `server_extract/RUNME.md` if this ever
+> [`local_qc/REPORT.md`](../local_qc/REPORT.md). **Use `server_extract/README.md` if this ever
 > needs running again**, not the commands below.
 
 **If someone else is running this on the server**, send them

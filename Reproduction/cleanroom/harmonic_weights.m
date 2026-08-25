@@ -8,7 +8,7 @@ function [w, info] = harmonic_weights(thetaV, mode, nBins)
 % nBins sets the bin count (default 24, i.e. 15 deg). 8 gives 45-deg bins, which are
 % the eight polar-angle ROIs themselves -- see the note on bin width below.
 %
-% WHY THIS EXISTS. The published ROI analysis (BIN_AND_AGGREGATE + FIT_LME_FIG7)
+% WHY THIS EXISTS. The manuscript ROI analysis (BIN_AND_AGGREGATE + FIT_LME_FIG7)
 % aggregates each of the eight polar-angle wedges first and then weights the eight
 % wedges EQUALLY. Under that weighting the four asymmetry predictors of LME_CODES are
 % EXACTLY orthogonal -- their Gram matrix is diag(16,32,16,32) with zero off-diagonals.
@@ -26,8 +26,8 @@ function [w, info] = harmonic_weights(thetaV, mode, nBins)
 % confound imported from cortical magnification.
 %
 % Re-weighting the vertices so every polar-angle bin contributes the same total weight
-% drives that correlation to ~0 and restores the published design's orthogonality, while
-% keeping thetaV CONTINUOUS. The only remaining difference from the published analysis is
+% drives that correlation to ~0 and restores the manuscript design's orthogonality, while
+% keeping thetaV CONTINUOUS. The only remaining difference from the manuscript analysis is
 % then the thing actually under study: each vertex's true pRF polar angle versus its
 % 45-deg-wide wedge centre.
 %

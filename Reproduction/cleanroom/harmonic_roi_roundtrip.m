@@ -1,5 +1,5 @@
 function [A, M] = harmonic_roi_roundtrip(Y, D, cfg, expCfg, aggName)
-% HARMONIC_ROI_ROUNDTRIP  Push per-vertex responses through the published ROI pipeline.
+% HARMONIC_ROI_ROUNDTRIP  Push per-vertex responses through the manuscript ROI pipeline.
 %
 %   [A, M] = harmonic_roi_roundtrip(Y, D, cfg, expCfg, aggName)
 %

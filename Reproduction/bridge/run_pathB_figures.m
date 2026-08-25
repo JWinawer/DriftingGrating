@@ -7,7 +7,7 @@
 %
 % This is the z-scored variant (the manuscript default). Because it uses the real
 % derived-direction routine, the da H-V panel here carries the PA-ordering artifact
-% (see FINDINGS.md); the clean-room figures show the corrected version.
+% (see ../_archive/FINDINGS.md); the clean-room figures show the corrected version.
 
 clear; clc;
 here     = fileparts(mfilename('fullpath'));

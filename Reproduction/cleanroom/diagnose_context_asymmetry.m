@@ -15,7 +15,7 @@ function S = diagnose_context_asymmetry(varargin)
 %
 % Two routes to the POINT ESTIMATE, which agree to three decimals:
 %   (A) the per-vertex harmonic model (HARMONIC_CROSSEXP, b_dg - b_da per observer)
-%   (B) the published ROI route: wedge medians -> COMPUTE_ASYMMETRIES, per observer
+%   (B) the manuscript ROI route: wedge medians -> COMPUTE_ASYMMETRIES, per observer
 % and the paired t-test / bootstrap across the eight observers on (B) is the primary
 % inferential test.
 %
@@ -73,7 +73,7 @@ function S = diagnose_context_asymmetry(varargin)
     nm  = {'horiz-vert','card-obl','rad-tang','polc-polo'};
     S   = struct('names', {nm});
 
-    % ---- (B) published ROI route, per observer -------------------------------
+    % ---- (B) manuscript ROI route, per observer -------------------------------
     per = struct();
     for e = {'dg','da'}
         en = e{1};
@@ -86,7 +86,7 @@ function S = diagnose_context_asymmetry(varargin)
     d = per.dg - per.da;                       % paired, per observer
     S.perSubjectDG = per.dg;  S.perSubjectDA = per.da;  S.paired = d;
 
-    banner('WITHIN-SUBJECT CONTEXT TEST (published ROI route, %BOLD)');
+    banner('WITHIN-SUBJECT CONTEXT TEST (manuscript ROI route, %BOLD)');
     fprintf('%-11s %9s %9s %10s %-21s %7s %8s\n', ...
             'asymmetry','dg','da','dg-da','95% CI (paired)','t(7)','p');
     S.t = nan(1,4); S.p = nan(1,4); S.ci = nan(4,2);

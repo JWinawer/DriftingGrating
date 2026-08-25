@@ -3,7 +3,7 @@ function D = harmonic_vertex_data(T, cfg, expCfg, doZscore)
 %
 %   D = harmonic_vertex_data(T, cfg, expCfg, doZscore)
 %
-% Applies the published inclusion filter (V1 already enforced by LOAD_AND_FILTER /
+% Applies the manuscript inclusion filter (V1 already enforced by LOAD_AND_FILTER /
 % LOAD_ALLCONDITIONS; here ecc in cfg.eccRange and pRF_r2 > cfg.r2min -- the exact
 % line from BIN_AND_AGGREGATE:13, so the vertex set matches Figs 5-8), then returns
 % each vertex's four stationary responses with the vertex mean removed.

@@ -7,7 +7,7 @@ function P = precision_weighted_cells(varargin)
 % Same estimand, same weighting, same intervals as PRECISION_WEIGHTED_TABLE. The one
 % change is what each observer's number is a mean OF.
 %
-% THE PROBLEM. The published route takes each observer's asymmetry as the mean over
+% THE PROBLEM. The manuscript route takes each observer's asymmetry as the mean over
 % their eight polar-angle wedges. In V1 every (observer, wedge) cell is populated, so
 % that mean is over the same eight wedges for everyone and the route is sound. In the
 % extrastriate maps cells go empty -- and not at random: map boundaries lie on the
@@ -31,7 +31,7 @@ function P = precision_weighted_cells(varargin)
 %
 % WHY NOT JUST READ mu OFF FIT_CELL_META. The cell-level GLS estimates the same mu and
 % recovers it about equally well under cell loss (RMSE 0.016 vs 0.016 in simulation,
-% against 0.032 for the published route). But on COMPLETE V1 data its answer moves by
+% against 0.032 for the manuscript route). But on COMPLETE V1 data its answer moves by
 % up to 0.05 depending on how the within-observer sampling covariance is modelled --
 % full bootstrap covariance, diagonal only, or compound symmetric all give different
 % mu, because GLS re-weights wedges WITHIN an observer using a covariance estimated

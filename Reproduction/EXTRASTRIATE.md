@@ -4,7 +4,7 @@
 supplement maps — V1, V2, V3, V3a, V3b, hV4, MT, MST —
 arrived at by working through four decisions in turn. Section 1 is the specification; sections 2–5
 are the evidence for each choice; sections 6–8 are the results and what qualifies them. Section 9
-records what earlier passes got wrong.
+records two traps in the code.
 
 Numbers: [`supplement/precision_weighted_areas.csv`](supplement/precision_weighted_areas.csv) (eight
 maps x two eccentricity bands, 192 rows, each with its coverage and a `reportable` flag), [`supplement/gain_areas_summary.csv`](supplement/gain_areas_summary.csv).
@@ -282,23 +282,28 @@ V1 − V3 difference — has not been computed. This is the first thing to do ne
 **Multiplicity.** The tables hold 48 tests. Nothing here is corrected for that; the Cartesian
 context effects survive comfortably, the marginal cells do not.
 
-## 9. What earlier passes got wrong
+## 9. Traps in this code
 
-Recorded rather than rewritten, per the repository's correction convention.
+Two of these cost real time and would recur silently. Both are the reason an independent check
+path is worth keeping.
 
-- **"The harmonic route's inputs are still V1-only."** False — the cached per-vertex table covers
-  all four maps and the fitting code is area-agnostic. The only real gap was precision weighting.
-- **"The harmonic route is most exposed to the second-harmonic degeneracy."** Backwards. The
-  degeneracy is in the data; the harmonic route makes it exact and visible, and is more accurate.
-- **hV4's positive da horiz−vert was presented as needing scrutiny.** It got it: under the spec it
-  is 0.024 [−0.031, 0.079], *p* = .34 — not significant, and an ROI-binning artefact.
-- **A bootstrap regression was introduced and fixed.** Pre-generating draws as a matrix fills
+- **Bootstrap draws must be generated one row at a time.** Pre-generating them as a matrix fills
   column-major and consumes the random stream in a different order than the original per-iteration
-  call, silently changing every bootstrap SE. Draws must be generated up front, since the fitting
-  path reseeds the global stream, but one row at a time.
-- **An indexing bug in the gain summary** masked full-surface vectors with a mask defined over
-  `vertIndex`, reading the wrong elements. Caught only because an independent path (`dg_computeGain`)
-  existed to check against — which is the argument for keeping it.
-- **A predicted status change that did not happen.** Adopting continuous θv was flagged as moving
-  dg polc−polo across *p* = .05. That was read off the precision-weighted column; under equal
-  weighting, now primary, the status holds.
+  call, **silently changing every bootstrap SE** — no error, no warning, different numbers. Draws do
+  have to be generated up front, since the fitting path reseeds the global stream; generate them a
+  row at a time.
+- **Do not mask a full-surface vector with a mask defined over `vertIndex`.** An indexing bug in the
+  gain summary did exactly that and read the wrong elements. It was caught only because an
+  independent path (`dg_computeGain`) existed to check against.
+
+And one reading trap: **read significance off the equal-weighted column, which is primary.**
+Adopting continuous θv was once flagged as moving dg polc−polo across *p* = .05; that was read off
+the precision-weighted column, and under equal weighting the status holds.
+
+Three claims from earlier passes were wrong and are withdrawn; the correct positions are stated in
+§§1–7 above. For the record: the harmonic route's inputs were said to be V1-only (they are not — the
+cached per-vertex table covers all four maps and the fitting code is area-agnostic; the only real
+gap was precision weighting); the harmonic route was said to be most exposed to the second-harmonic
+degeneracy (backwards — the degeneracy is in the data, and the harmonic route makes it exact and
+visible); and hV4's positive `da` horiz−vert was flagged as needing scrutiny (it got it — under the
+spec it is 0.024 [−0.031, 0.079], *p* = .34, an ROI-binning artefact).

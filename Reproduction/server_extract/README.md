@@ -1,83 +1,93 @@
-# Server extraction — for whoever has access to the data volume
+# Server extraction — for whoever has the data volume mounted
 
 Self-contained MATLAB that reads data on the server and writes a small folder to send back.
-**It only reads. It writes nothing into the data directories and modifies nothing.**
+**These scripts only read.** They write nothing into the data directories and modify nothing on the
+server; everything they write goes to `~/dg_collect/` (or wherever you point them).
 
-## Which script
+They deliberately **filter nothing** — whole surface, every retinotopy map, every label. Three
+early rounds were each cut short because something had been filtered out before saving, and each
+one cost another trip.
 
-Four scripts have accumulated here, each a separate one-pass extraction. Run the one that
-matches what is needed; none depends on the others.
+## The scripts
+
+Each is a separate one-pass extraction; none depends on the others. Run the one that matches what
+is needed.
 
 | script | feeds | status |
 |---|---|---|
-| `collect_everything.m` | the GLM quality review (`../local_qc/REPORT.md`) — the main extraction | done 2026-07-24, all 8 observers |
-| `collect_prf_replicate.m` | the pRF polar-angle precision control (`../HARMONIC_MODEL.md`, supplement §S6) | done |
-| `collect_runwise_betas.m` | per-run condition betas for the within-observer error estimate (supplement §S5.5) | done |
-| `extract_for_transfer.m` | the original narrower extraction, superseded by `collect_everything.m` | kept as a record |
+| `collect_everything.m` | the GLM quality review — the main extraction | **done** 2026-07-24, all 8 observers |
+| `collect_prf_replicate.m` | the pRF polar-angle precision control (second, independent pRF solution) | **done** |
+| `collect_runwise_betas.m` | per-run condition betas, V1, for the within-observer error estimate | **done** |
+| `collect_runwise_betas_areas.m` | the same for eight maps — V1 V2 V3 V3a V3b hV4 MT MST | **done** |
+| `collect_gain_areas.m` | per-observer × **map** pRF gain (the V1-only `gainSummary.csv` special-cased V1) | **done** |
+| `collect_timeseries.m` | preprocessed fsnative BOLD, to calibrate the Fig-4A run-mismatch control | **done** for sub-0037/`dg` (8 runs, 2.35 GB); see Open items in `../../AGENTS.md` |
+| `extract_for_transfer.m` | the original, narrower extraction | superseded by `collect_everything.m`; kept as a record |
 
-`RUNME.md` is the step-by-step for `collect_everything.m` specifically.
+Which analysis each one feeds is documented in the file header, and in
+[`../EXTRASTRIATE.md`](../EXTRASTRIATE.md), [`../HARMONIC_MODEL.md`](../HARMONIC_MODEL.md) and
+[`../local_qc/REPORT.md`](../local_qc/REPORT.md).
 
-## Why this exists
+## Running one
 
-Two open questions about Figures 5–8 both need data that is not in `allsubjectsTable.csv`, and
-this collects both in one pass so there is no second round trip.
+All of them take the same shape. Using `collect_everything` as the example:
 
-1. **Are the GLM fits sound for every observer?** No GLMsingle quality metric enters the analysis
-   pipeline at any stage — the only quality filter is on the *pRF* fit (`pRF_r2 > 0.1`). Two
-   observers look anomalous in the polar experiment: **sub-0201**, whose blank beta is larger than
-   all 12 stimulus betas in *both* experiments, and **sub-0037**, which shows no differentiation
-   between any conditions in `da` despite responding strongly in `dg`. Those patterns are what a
-   bad run or a motion artefact produces, and `R2run` would show it.
-2. **Is there a usable per-observer BOLD gain?** We want to normalize observers into commensurate
-   units, but the divisor has to be independent of the conditions being analysed. The retinotopy
-   scan is a separate session, so `prfvista_mov` is the natural source — we just don't know from
-   off-server which maps that pipeline saves. The script inventories them.
+**1. Preflight — seconds, writes nothing.**
 
-## How to run
-
-```matlab
-cd <wherever you put this file>
-extract_for_transfer
+```bash
+matlab -batch "addpath(genpath('<repo>/Reproduction/server_extract')); collect_everything([],[],[],struct('preflightOnly',true))"
 ```
 
-If the data is not at the default path, pass it explicitly:
+Run it from any folder; the script finds `AnalysisCode` on its own and calls `setup_user` from
+there. It prints an `[ ok ]` / `[FAIL]` line per check. The two failures worth anticipating:
 
-```matlab
-extract_for_transfer('/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids/')
+- **`MRIread not on the MATLAB path`** — FreeSurfer is not where `setup_user.m` expects. Check the
+  `freesurferDir` for your machine in `AnalysisCode/general/setup_user.m`. Hard stop: without it no
+  retinotopy maps are exported at all.
+- **`bidsDir NOT reachable`** — the volume is not mounted, or is at a different path. Pass yours:
+  `collect_everything('/your/path/data_bids/')`.
+
+**2. Run it.**
+
+```bash
+matlab -batch "addpath(genpath('<repo>/Reproduction/server_extract')); collect_everything"
 ```
 
-It needs `setup_user`, `read_label`, `get_surfsize` and `MRIread` on the path — the same helpers
-`meanWithinLabel.m` uses. Nothing else.
+Expect it to be slow: it reads 16 `results.mat` files of roughly 500 MB each, and they are v7
+format, so MATLAB cannot load parts of them selectively. Over a network mount that is the whole
+cost. Measured mount throughput has ranged 0.8–3.4 MB/s (Abu Dhabi → New York), so treat any single
+throughput measurement as unreliable for planning.
 
-**Expect it to take a while.** It reads 16 `results.mat` files of roughly 500 MB each. They are v7
-format, so MATLAB cannot load parts of them selectively — each is read whole and then discarded.
-Over a network mount this is the slow step.
+Run it under `caffeinate` — a sleep dropped the mount mid-run once, and **a dropped mount returns
+empty rather than erroring**, so verify file sizes, not just presence.
 
-## What to send back
+**3. Check, then send.** Open `~/dg_collect/manifest.csv` and look for any row whose `status` is
+not `ok`. `missing`, `bad-structure` and `read-failed` are worth mentioning when you send the
+folder — they may be expected, but that cannot be told from off-server. Then `rsync -avz
+~/dg_collect/ <destination>`; the folder is about 1.2 GB.
 
-The folder it prints at the end (`glm_qc_for_transfer/` by default). Zip it.
+Common options:
 
-- With the V1 restriction working: a few MB per file at most, so tens of MB total. (The first
-  run of this script also restricted to 4–8°, giving ~50 kB files. It now keeps all of V1 and
-  saves each vertex's eccentricity, so the eccentricity band can be chosen after the fact —
-  bigger files, but no further round trips.)
-- If the V1 restriction fails (it warns), files are ~10 MB each and the folder is ~160 MB. Still
-  far smaller than the 8 GB of `results.mat`, but too big to email — use a file transfer.
-- **If all else fails, `summary.csv` alone answers most of question 1.** It is a few kB.
+```matlab
+collect_everything([],[],[],struct('includeBetas',true))  % adds ~8 GB, usually not needed
+collect_everything([],[],[],struct('force',true))         % collect what is reachable despite preflight
+collect_everything([],[],'/path/to/output')               % somewhere other than ~/dg_collect
+```
 
-## What to check before sending
+## Deliberately avoided: polar angle
 
-The script prints a line per subject × experiment. Worth a glance:
-
-- Any row saying **`MISSING results.mat`** — is the path right for that subject?
-- Any row saying **`UNEXPECTED structure`** — that subject was run with a different
-  `hRF_setting` and has no GLMsingle TYPED output. Worth knowing.
-- The **`V1 patch UNAVAILABLE`** warning — everything still gets saved, but the files are much
-  bigger and we lose the restriction to the analysed patch. The error message says why.
-
-## A note on one thing that is deliberately avoided
-
-The patch is built from the V1 label plus **eccentricity and `vexpl` only** — never polar angle.
+The V1 patch is built from the label plus **eccentricity and `vexpl` only** — never polar angle.
 Polar angle in this project has a Benson-vs-conventional convention difference that has already
-caused one false-alarm bug report (see `../AUDIT.md`). Nothing here needs polar angle, so it
-does not touch it.
+caused one false-alarm bug report ([`../AUDIT.md`](../AUDIT.md)). Nothing here needs it, so nothing
+here touches it.
+
+## Two questions still unanswered from off-server
+
+Worth a sentence in your reply if you know:
+
+1. **Are `/Volumes/Vision/UsersShare/Rania/Project_dg/` and `/Volumes/server/Projects/Project_dg/`
+   the same data, or two copies?** Different scripts in `AnalysisCode` point at each — `setup.json`,
+   `meanWithinLabel.m` and `lme1_fit.m` use the first; `roi2image*.m` and
+   `analyzeROI_anotherMetric.m` use the second. If they are separate copies that have drifted,
+   some figures were made from different data than others.
+2. **What is the actual server?** Everything in the code is a local mount point (`/Volumes/...`),
+   so nothing records the machine or share.

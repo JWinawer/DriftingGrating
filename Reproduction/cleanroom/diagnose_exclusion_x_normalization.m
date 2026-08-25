@@ -10,7 +10,7 @@
 % observers for whom normalisation is undefined". This script crosses the two decisions
 % and reports whether the Fig 7B ordering is stable once they are made together.
 %
-% See ../_archive/_archive/ZSCORE_FIG7.md section 6 and section 8.
+% See ../_archive/ZSCORE_FIG7.md section 6 and section 8.
 
 cfg = config_repro();
 T   = load_allconditions(cfg);
@@ -38,7 +38,7 @@ end
 
 excluded  = {'sub-0037','sub-0201'};
 keepSubj  = ~ismember(cfg.subjects, excluded);
-normNames = {'raw (none)','std13 (published)','std8mot','mean8mot','maxResp (ephys-style)'};
+normNames = {'raw (none)','std13 (manuscript)','std8mot','mean8mot','maxResp (ephys-style)'};
 normVals  = {ones(1,nS), g.std13, g.std8mot, g.mean8mot, g.maxResp};
 
 fprintf('\nExcluded from the "n=6" rows: %s\n', strjoin(excluded, ', '));

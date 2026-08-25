@@ -5,30 +5,30 @@ function V = validate_cell_meta(varargin)
 %   V = validate_cell_meta('nRep', 200)
 %
 % V1 is the control: every (observer, wedge) cell is populated (minimum 22 vertices),
-% so the published observer-level route in PRECISION_WEIGHTED_TABLE is valid there and
+% so the manuscript observer-level route in PRECISION_WEIGHTED_TABLE is valid there and
 % anything new must agree with it before being trusted on the extrastriate maps, where
 % cells go empty and no such check is available.
 %
 % TEST 1 -- exact reduction of the fitter. Collapse each observer to one cell (d = the
 %   wedge average, S = that observer's bootstrap variance, tau2cell = 0, tau2obs fixed
-%   at the method-of-moments value) and FIT_CELL_META must return the published
+%   at the method-of-moments value) and FIT_CELL_META must return the manuscript
 %   weighted mean and its SE as an algebraic identity. Tests the GLS, the weighting and
 %   the interval, and nothing else. Passes at ~1e-17.
 %
 % TEST 2 -- complete-data agreement of the two candidate estimators.
-%   PRECISION_WEIGHTED_CELLS must reproduce the published table EXACTLY, because with
+%   PRECISION_WEIGHTED_CELLS must reproduce the manuscript table EXACTLY, because with
 %   no missing cells the fitted wedge profile sums to zero over all eight wedges and
 %   cancels out of every observer mean. It does, at ~1e-16.
 %
 %   Reading mu straight off the cell-level GLS does NOT reproduce it, and the size of
 %   the discrepancy depends on how the within-observer sampling covariance is modelled:
 %
-%       asymmetry        published   full S    diag S   compound-symmetric S
+%       asymmetry        manuscr.    full S    diag S   compound-symmetric S
 %       dg horiz-vert      -0.549    -0.505    -0.535        -0.549
 %       dg card-obl        -0.213    -0.171    -0.204        -0.213
 %       dg rad-tang         0.112     0.124     0.132         0.111
 %
-%   Only the compound-symmetric case recovers the published route, because that is the
+%   Only the compound-symmetric case recovers the manuscript route, because that is the
 %   one case where the intercept separates from the wedge effects and GLS reduces to
 %   weighting observer means. With any heterogeneous S the GLS re-weights wedges WITHIN
 %   an observer using a covariance estimated from 8 runs, and moves mu by up to 0.05 --
@@ -40,7 +40,7 @@ function V = validate_cell_meta(varargin)
 % TEST 3 -- recovery under cell loss, which is the whole point. Delete cells from V1 in
 %   the pattern the extrastriate maps show (loss on the meridian wedges, where the map
 %   boundaries are), and measure how far each route moves from its own full-data answer.
-%   The published route inherits the deletion pattern; both model-based routes largely
+%   The manuscript route inherits the deletion pattern; both model-based routes largely
 %   do not.
 %
 % Returns V with .test1, .test2, .test3 tables. Prints all three.
@@ -74,7 +74,7 @@ function V = validate_cell_meta(varargin)
     end
     V.test1 = cell2table(rows, 'VariableNames', ...
         {'exp','asymmetry','closedForm','fitCellMeta','muAbsDiff','seAbsDiff'});
-    banner('TEST 1  exact reduction of FIT_CELL_META to the published estimator');
+    banner('TEST 1  exact reduction of FIT_CELL_META to the manuscript estimator');
     disp(V.test1);
     fprintf('max |mu diff| = %.3e   max |se diff| = %.3e\n', ...
             max(V.test1.muAbsDiff), max(V.test1.seAbsDiff));
@@ -88,7 +88,7 @@ function V = validate_cell_meta(varargin)
 
     V.test2 = table(dAsym, dCtx, dCiA, 'VariableNames', ...
         {'maxDiffAsym','maxDiffContext','maxDiffCI'});
-    banner('TEST 2  PRECISION_WEIGHTED_CELLS reproduces the published table on V1');
+    banner('TEST 2  PRECISION_WEIGHTED_CELLS reproduces the manuscript table on V1');
     fprintf('max |asymmetry diff| = %.3e\nmax |context diff|   = %.3e\nmax |CI diff|        = %.3e\n', ...
             dAsym, dCtx, dCiA);
     assert(max([dAsym dCtx dCiA]) < 1e-12, 'validate_cell_meta:test2', ...

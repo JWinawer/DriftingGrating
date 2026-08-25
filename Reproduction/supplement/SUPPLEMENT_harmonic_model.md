@@ -140,7 +140,7 @@ checked in §S5.4.
 
 ## S3. Fitting and inference
 
-**Vertices.** The published inclusion criteria, unchanged: V1, 4–8° eccentricity, pRF R² > 0.1.
+**Vertices.** The manuscript inclusion criteria, unchanged: V1, 4–8° eccentricity, pRF R² > 0.1.
 This yields 11,075 vertices across the eight observers.
 
 **Vertex weighting.** The ROI analysis weights each of the eight wedges equally, which makes the
@@ -166,10 +166,10 @@ retained.
 
 Before interpreting any departure from the ROI analysis, the per-vertex machinery must reproduce it.
 With θ_V quantised to the wedge centres, the per-vertex fit recovers the linear-mixed-effects
-weights of the ROI route to the printed precision, and the ROI route itself reproduces the published
+weights of the ROI route to the printed precision, and the ROI route itself reproduces the manuscript
 values exactly (percent signal change):
 
-| | | published route | per-vertex fit, θ_V at wedge centre |
+| | | manuscript route | per-vertex fit, θ_V at wedge centre |
 |---|---|---|---|
 | **Cartesian** | horizontal − vertical | −0.480 | −0.554 |
 | | cardinal − oblique | −0.204 | −0.237 |
@@ -180,7 +180,7 @@ values exactly (percent signal change):
 | | radial − tangential | 0.150 | 0.151 |
 | | polar-cardinal − polar-oblique | 0.034 | 0.040 |
 
-The residual differences are entirely attributable to the published route taking the median within
+The residual differences are entirely attributable to the manuscript route taking the median within
 each wedge while the model is least-squares and therefore mean-based; the four asymmetries are
 zero-sum contrasts, so under a linear aggregator the per-vertex demeaning cancels exactly and the
 two agree to machine precision.
@@ -330,7 +330,7 @@ included. The four-term model is adequate.
 
 Every context-effect statistic reported above is formed **within observer**: the difference between
 experiments is computed for each of the eight observers first, and only then summarised. The
-per-vertex harmonic model and the published ROI route agree on the point estimate to three decimals.
+per-vertex harmonic model and the manuscript ROI route agree on the point estimate to three decimals.
 
 We did *not* use a linear mixed-effects model with experiment × asymmetry interactions, and the
 reason is worth recording because such a model is the natural thing to reach for. In
@@ -404,7 +404,7 @@ horizontal/vertical ratio at σ ≈ 39°.
 
 We measured σ rather than assuming it. Every observer's retinotopy was fitted twice and
 independently, from two pRF runs with different stimuli. Comparing the two solutions across the
-published vertex set (10,956 vertices meeting the criteria in both fits) gives a pooled bias of
+manuscript vertex set (10,956 vertices meeting the criteria in both fits) gives a pooled bias of
 +0.19° and a circular standard deviation of 5.70° for the *difference*, hence for a single solution
 (**Figure S4**):
 

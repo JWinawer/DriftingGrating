@@ -1,7 +1,9 @@
 # DriftingGrating
 
-See `AGENTS.md` for a fuller summary of the project (the manuscript at
-`Support/draft.pdf`, the analysis pipeline, and known gotchas).
+See `AGENTS.md` for a fuller summary of the project (the analysis pipeline,
+what is settled, what is open, and known gotchas). The manuscript is **in
+preparation** — not published, not preprinted; it is a Google Doc reachable
+through the shortcut in `Manuscript/`.
 
 ## ExperimentCode
 

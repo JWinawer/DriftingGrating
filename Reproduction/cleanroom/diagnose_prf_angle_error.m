@@ -33,7 +33,7 @@ function E = diagnose_prf_angle_error(varargin)
 % disagreement beyond pure noise. An upper bound is what the argument needs: if even
 % the bound is far below 40 deg, angle error cannot manufacture the result.
 %
-% Vertices: V1_REmanual, 4-8 deg eccentricity, vexpl > 0.1 -- the published inclusion
+% Vertices: V1_REmanual, 4-8 deg eccentricity, vexpl > 0.1 -- the manuscript inclusion
 % criteria -- and by default vexpl > 0.1 in the REPLICATE too, since a vertex the
 % replicate failed to fit tells us nothing about precision.
 %

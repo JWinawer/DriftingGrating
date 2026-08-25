@@ -1,6 +1,6 @@
 function R = asymmetry_tables(varargin)
 % ASYMMETRY_TABLES  The four asymmetries per experiment, and the four context effects,
-% on the published route (cfg.aggregator = 'mean' + observer pRF-gain rescaling).
+% on the manuscript route (cfg.aggregator = 'mean' + observer pRF-gain rescaling).
 %
 %   R = asymmetry_tables()
 %   R = asymmetry_tables('csv', '../supplement/asymmetry_tables')
