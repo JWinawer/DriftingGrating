@@ -1,12 +1,13 @@
-# Orientation asymmetries across V1, V2, V3 and hV4
+# Orientation asymmetries across the visual hierarchy
 
-**Status: specification settled 2026-08-24.** One analysis, applied unchanged to every map,
+**Status: specification settled 2026-08-24.** One analysis, applied unchanged to all eight
+supplement maps — V1, V2, V3, V3a, V3b, hV4, MT, MST —
 arrived at by working through four decisions in turn. Section 1 is the specification; sections 2–5
 are the evidence for each choice; sections 6–8 are the results and what qualifies them. Section 9
 records what earlier passes got wrong.
 
-Numbers: [`supplement/precision_weighted_areas.csv`](supplement/precision_weighted_areas.csv) (both
-routes, 96 rows), [`supplement/gain_areas_summary.csv`](supplement/gain_areas_summary.csv).
+Numbers: [`supplement/precision_weighted_areas.csv`](supplement/precision_weighted_areas.csv) (eight
+maps x two eccentricity bands, 192 rows, each with its coverage and a `reportable` flag), [`supplement/gain_areas_summary.csv`](supplement/gain_areas_summary.csv).
 Code: [`cleanroom/diagnose_within_observer_error.m`](cleanroom/diagnose_within_observer_error.m),
 [`cleanroom/precision_weighted_table.m`](cleanroom/precision_weighted_table.m),
 [`cleanroom/precision_weighted_cells.m`](cleanroom/precision_weighted_cells.m),
@@ -24,10 +25,10 @@ Code: [`cleanroom/diagnose_within_observer_error.m`](cleanroom/diagnose_within_o
 | **Weighting** | equal coverage at **45°** — the polar-angle ROIs themselves |
 | **Fitting** | per observer, then averaged across observers |
 | **Precision** | σ from bootstrapping runs; **equal weighting primary**, precision-weighted reported alongside |
-| **Diagnostics** | VIF and design correlations per map; hV4 not reported at polar-angle resolution |
+| **Diagnostics** | VIF and design correlations per map; polar-angle resolution reported only where coverage passes the §6 criterion |
 
-No per-map customisation anywhere. hV4's exclusion is a reporting decision taken on a measured
-criterion, not a change of method.
+No per-map customisation anywhere. Which maps get reported at polar-angle resolution is a
+reporting decision taken on a measured criterion (§6), not a change of method.
 
 ## 2. Why the V1 procedure needed replacing
 
@@ -149,34 +150,67 @@ That is also why **θv is continuous**. Binned θv puts cos(4θv) at only two va
 (VIF = ∞) once one ROI class is lost. Continuous θv never degenerates: VIF 4.12 with all four
 cardinal ROIs removed.
 
-## 6. Coverage
+## 6. Coverage, and which maps can be reported
 
-Empty (observer × ROI) cells, of 128 per map, at 4–8° with pRF R² > 0.1:
+The supplement covers eight maps. All eight were extracted and all have per-map gain; whether each
+can support a *polar-angle-resolved* analysis is a separate, measurable question. Criterion: at most
+2 empty (observer × ROI) cells of 64, a median of at least 20 vertices per cell, and a maximum
+precision-weight ratio below 25.
 
-| map | empty | note |
-|---|---|---|
-| V1 | 0 | sparsest cell 22 vertices |
-| V2 | 0 | |
-| V3 | 2 | one cell per experiment |
-| hV4 | 48 | median 4 vertices per cell; 270° empty for **all** observers |
+| map | band | empty cells | median vertices/cell | max weight ratio | reportable |
+|---|---|---|---|---|---|
+| V1 | 4–8° | 0 | 150 | 17.1 | **yes** |
+| V1 | 2–10° | 0 | 326 | 18.1 | **yes** |
+| V2 | 4–8° | 0 | 136 | 15.8 | **yes** |
+| V2 | 2–10° | 0 | 325 | 8.6 | **yes** |
+| V3 | 4–8° | 1 | 80 | 10.3 | **yes** |
+| V3 | 2–10° | 0 | 202 | 10.1 | **yes** |
+| V3a | 4–8° | 4 | 18 | 15.4 | no |
+| V3a | 2–10° | 1 | 44 | 9.5 | **yes** |
+| hV4 | 4–8° | 24 | 4 | 22.2 | no |
+| hV4 | 2–10° | 10 | 34 | 8.8 | no |
+| V3b | 4–8° | 18 | 10 | 170.2 | no |
+| V3b | 2–10° | 10 | 25 | 176.9 | no |
+| MT | 4–8° | 30 | 1 | ∞ | no |
+| MT | 2–10° | 19 | 9 | 48.2 | no |
+| MST | 4–8° | 28 | 2 | 146.8 | no |
+| MST | 2–10° | 21 | 9 | 123.6 | no |
 
-hV4 at 4–8° is not analysable at polar-angle resolution — a *structural* gap, and no model recovers
-an ROI no observer has. Widening to 2–10° leaves 20 empty cells and no all-observer gap, which is
-the band reported below.
+So **V1, V2 and V3 at 4–8°, plus V3a at 2–10°**. hV4, V3b, MT and MST do not qualify at either
+band: MT has a median of *one* vertex per cell at 4–8°, and MT at 4–8° returns all-NaN because one
+observer has no surviving vertices at all. Their weight ratios above 100× are the same failure seen
+from the other side — with one or two vertices in a cell, σ̂ is not a measurement.
+
+This is not a claim that those maps have no asymmetries. It is a claim that **this design cannot
+resolve them by polar angle**, which is what `local_qc/group_addv4mt.m` already concluded when it
+went whole-ROI for hV4 and MT. Whole-ROI analyses of those maps remain available and are unaffected.
+
+Note that hV4 at 2–10° now falls below the line on the empty-cell count, where earlier passes
+reported it with caveats. The criterion is stricter than the prose caveat was, and consistently
+applied.
+
+All sixteen runs are in `supplement/precision_weighted_areas.csv` with their coverage and a
+`reportable` flag, so the excluded numbers are inspectable rather than absent.
 
 ## 7. Results
 
 Equal-weighted, spec settings. ⚠ marks τ̂² pinned at zero.
 
 **Context effects (dg − da), 4–8°.** Both Cartesian effects decline monotonically up the hierarchy
-and remain significant throughout.
+and remain significant throughout. V3a is shown at 2–10°, the only band where it qualifies, so it is
+not on the same footing as the other three.
 
-| asymmetry | V1 | V2 | V3 |
-|---|---|---|---|
-| horiz−vert | −0.316 [−0.520, −0.113] *p*=.008 | −0.260 [−0.369, −0.152] *p*=.001 | −0.102 [−0.186, −0.018] *p*=.024 |
-| card−obl | −0.181 [−0.311, −0.050] *p*=.014 | −0.161 [−0.256, −0.066] *p*=.005 | −0.115 [−0.220, −0.010] *p*=.036 |
-| rad−tang | −0.036 *p*=.647 | +0.045 *p*=.304 | −0.060 *p*=.055 ⚠ |
-| polc−polo | +0.039 *p*=.354 | +0.046 *p*=.259 | +0.035 *p*=.380 |
+| asymmetry | V1 | V2 | V3 | V3a (2–10°) |
+|---|---|---|---|---|
+| horiz−vert | −0.316 [−0.520, −0.113] *p*=.008 | −0.260 [−0.369, −0.152] *p*=.001 | −0.102 [−0.186, −0.018] *p*=.024 | −0.084 *p*=.074 |
+| card−obl | −0.181 [−0.311, −0.050] *p*=.014 | −0.161 [−0.256, −0.066] *p*=.005 | −0.115 [−0.220, −0.010] *p*=.036 | −0.152 [−0.259, −0.046] *p*=.012 |
+| rad−tang | −0.036 *p*=.647 | +0.045 *p*=.304 | −0.060 *p*=.055 ⚠ | −0.154 [−0.207, −0.101] *p*<.001 ⚠ |
+| polc−polo | +0.039 *p*=.354 | +0.046 *p*=.259 | +0.035 *p*=.380 | +0.037 *p*=.046 ⚠ |
+
+**V3a, 2–10°, per experiment.** Cartesian asymmetries continue to attenuate (dg horiz−vert −0.099
+*p*=.027, card−obl −0.150 *p*=.010); radial−tangential in the polar experiment stays large
+(0.189 [0.116, 0.262], *p*<.001), consistent with V1–V3. Its two significant polar-frame *context*
+effects both sit in τ̂² = 0 rows and should not be read as findings.
 
 **Per-experiment asymmetries, 4–8°.**
 
