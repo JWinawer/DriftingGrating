@@ -71,6 +71,9 @@ function W = diagnose_within_observer_error(varargin)
     p.addParameter('eccRange', [], @(x) isempty(x) || numel(x)==2);
     p.addParameter('nBoot', 500, @isnumeric);
     p.addParameter('quiet', false, @islogical);
+    % Simulated cell loss, for DIAGNOSE_CELL_LOSS only: nSubj x nPA logical marking
+    % (observer x ROI) cells to empty out. Empty by default and empty means unchanged.
+    p.addParameter('dropCells', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
     p.parse(varargin{:});
     opt = p.Results;
 
@@ -121,6 +124,10 @@ function W = diagnose_within_observer_error(varargin)
     W.cellCov = nan(nP, nP, 4, 2, nS);
     W.nVert   = zeros(nS, nP, 2);
     expn = {'dg','da'};
+    drop = opt.dropCells;
+    if isempty(drop), drop = false(nS, nP); else, drop = logical(drop); end
+    assert(isequal(size(drop), [nS nP]), 'diagnose_within_observer_error:dropCells', ...
+           'dropCells must be %d x %d.', nS, nP);
 
     for si = 1:nS
         for ei = 1:2
@@ -132,7 +139,7 @@ function W = diagnose_within_observer_error(varargin)
                 fprintf('missing %s -- run collect_runwise_betas_areas.m\n', fA);  return
             end
             S = load(f);
-            [A, ok] = load_runbetas_area(S, cfg, expn{ei}, opt.root, opt.area);
+            [A, ok] = load_runbetas_area(S, cfg, expn{ei}, opt.root, opt.area, drop(si,:));
             if ~ok
                 fprintf('  %-14s %s %s: no vertices pass the filter\n', ...
                         cfg.subjects{si}, expn{ei}, opt.area);

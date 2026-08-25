@@ -110,6 +110,13 @@ one observer with no surviving vertices at all, so its estimates are NaN by cons
 numbers are still in `spec_areas_*.csv` behind a `reportable` flag, so they are inspectable rather
 than absent.
 
+**Why the excluded maps are excluded, measured 2026-08-25.** Reproducing a map's whole coverage
+profile in V1 — its empty cells and its per-cell vertex counts together — gives a 90% band on `dg`
+rad−tang of 0.018 under V3's coverage and **0.131 under MT's**, against an effect of 0.119. The
+binding problem is how few vertices these maps have, not the shape of the gaps: V1 with MT's 30
+cells deleted still holds 7045 vertices and the specification absorbs that loss to within 0.066,
+while MT holds 545. → [`MISSING_DATA.md`](MISSING_DATA.md)
+
 ### Per-experiment asymmetries, 4–8°
 
 ⚠ marks a row where τ̂² is pinned at zero (see §7).

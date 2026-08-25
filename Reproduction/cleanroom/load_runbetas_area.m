@@ -1,7 +1,14 @@
-function [A, ok] = load_runbetas_area(S, cfg, en, root, area)
+function [A, ok] = load_runbetas_area(S, cfg, en, root, area, dropWedges)
 % LOAD_RUNBETAS_AREA  Restrict a run-wise beta extraction to the analysed vertices.
 %
 %   [A, ok] = load_runbetas_area(S, cfg, en, root, area)
+%   [A, ok] = load_runbetas_area(S, cfg, en, root, area, dropWedges)
+%
+% DROPWEDGES is a 1 x nPA logical, optional and empty by default, marking polar-angle
+% ROIs to empty out for THIS subject. It exists only for DIAGNOSE_CELL_LOSS, which
+% asks what the extrastriate maps' missing cells would do to V1 if V1 had them: the
+% deletion has to happen here, on the analysed vertex set, so that every route sees
+% the same loss. Leaving it out changes nothing.
 %
 % S is a loaded ~/dg_collect/runbetas[_areas]_<subject>_<exp>.mat. Applies the
 % analysis inclusion filter (cfg.eccRange, pRF R2 > cfg.r2min) within `area` and
@@ -31,6 +38,7 @@ function [A, ok] = load_runbetas_area(S, cfg, en, root, area)
 % four cardinal meridians -- see ../STIMULUS_CONVENTIONS.md sections 3 and 5.
 
     ok = false;  A = struct();
+    if nargin < 6, dropWedges = []; end
     R = load(fullfile(root, sprintf('ret_%s.mat', S.subject)), 'eccen','vexpl','angle_adj');
 
     if isfield(S, 'vertIndex')
@@ -60,6 +68,18 @@ function [A, ok] = load_runbetas_area(S, cfg, en, root, area)
     conv = mod(90 - ang, 360);                      % conventional, matches cfg.paBins
     [~, A.wedge] = min(abs(mod(conv - cfg.paBins(:).' + 180, 360) - 180), [], 2);
     A.thetaV = conv(:);                             % continuous, for the harmonic route
+
+    % Simulated cell loss, if asked for. Applied AFTER the wedge assignment, so the
+    % deleted set is exactly the (observer x ROI) cells named, and applied to every
+    % field together, so the continuous and binned representations stay aligned.
+    if ~isempty(dropWedges) && any(dropWedges)
+        keep = ~ismember(A.wedge, find(dropWedges(:).'));
+        if ~any(keep), A = struct(); return; end
+        A.runBeta = A.runBeta(keep, :, :);
+        A.wedge   = A.wedge(keep);
+        A.thetaV  = A.thetaV(keep);
+    end
+
     A.expn = en;
     ok = true;
 end

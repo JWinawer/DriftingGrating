@@ -59,6 +59,13 @@ function S = spec_profiles(varargin)
     p.addParameter('gain', true, @(x) islogical(x) || isnumeric(x));
     p.addParameter('route', 'harmonic', @(x) any(strcmpi(x,{'harmonic','roi'})));
     p.addParameter('verify', true, @islogical);
+    % SIMULATED CELL LOSS, for DIAGNOSE_CELL_LOSS only: nSubj x nPA logical marking
+    % (observer x ROI) cells to empty out. Empty by default, and empty means the
+    % settled specification, unchanged. nBoot is exposed for the same reason -- the
+    % simulation runs this pipeline dozens of times and the run bootstrap is ~75% of
+    % the cost -- and it stays at 500 for anything reported.
+    p.addParameter('dropCells', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
+    p.addParameter('nBoot', 500, @isscalar);
     p.parse(varargin{:});
     opt = p.Results;
 
@@ -69,6 +76,10 @@ function S = spec_profiles(varargin)
     nS    = numel(cfg.subjects);
     nP    = numel(cfg.paBins);
     nF    = opt.nFine;
+    drop  = opt.dropCells;
+    if isempty(drop), drop = false(nS, nP); else, drop = logical(drop); end
+    assert(isequal(size(drop), [nS nP]), 'spec_profiles:dropCells', ...
+           'dropCells must be %d x %d.', nS, nP);
 
     % --- gain, per observer x map, exactly as DIAGNOSE_WITHIN_OBSERVER_ERROR does it
     if opt.gain
@@ -109,7 +120,7 @@ function S = spec_profiles(varargin)
         mdlD = nan(nS, numel(denseCtr), 3);
 
         for si = 1:nS
-            [A, ok] = load_one(cfg, opt.root, cfg.subjects{si}, en, opt.area);
+            [A, ok] = load_one(cfg, opt.root, cfg.subjects{si}, en, opt.area, drop(si,:));
             if ~ok, continue; end
 
             % --- run-averaged demeaned per-vertex responses -----------------
@@ -200,7 +211,8 @@ function S = spec_profiles(varargin)
     % weighting does not, but they are cheap here and reporting both is the point.
     W = diagnose_within_observer_error('root', opt.root, 'area', opt.area, ...
             'eccRange', opt.eccRange, 'route', S.route, 'thetaV', tvSrc(S.route), ...
-            'gain', opt.gain, 'weighting', 'equalcoverage', 'quiet', true);
+            'gain', opt.gain, 'weighting', 'equalcoverage', 'quiet', true, ...
+            'dropCells', drop, 'nBoot', opt.nBoot);
     for ei = 1:2
         en = expn{ei};
         S.(en).sigma = W.seBoot(:,:,ei);
@@ -244,12 +256,12 @@ function v = abc(Y)
 end
 
 % ------------------------------------------------------------------------
-function [A, ok] = load_one(cfg, root, subj, en, area)
+function [A, ok] = load_one(cfg, root, subj, en, area, dropWedges)
     fA = fullfile(root, sprintf('runbetas_areas_%s_%s.mat', subj, en));
     f1 = fullfile(root, sprintf('runbetas_%s_%s.mat',       subj, en));
     if isfile(fA), f = fA; elseif isfile(f1), f = f1;
     else, A = struct(); ok = false; return
     end
-    [A, ok] = load_runbetas_area(load(f), cfg, en, root, area);
+    [A, ok] = load_runbetas_area(load(f), cfg, en, root, area, dropWedges);
 end
 

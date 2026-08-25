@@ -186,6 +186,13 @@ lists.
 
 ### Analysis still to do
 
+- **Calibrate the §7 coverage thresholds against the thing they proxy.** The criterion is written as
+  thresholds on empty cells, median vertices and weight ratio; the quantity behind it — the width of
+  the band on the estimate under a map's actual coverage — is now measured directly, but the
+  thresholds have not been re-derived from it. Nothing reported depends on this: V3 and MT are
+  separated by a factor of seven in band width, nowhere near the boundary.
+  → [`MISSING_DATA.md`](Reproduction/MISSING_DATA.md) §7
+
 - **Finish the run-mismatch calibration.** The sign result is settled and measured on 56 run pairs;
   what a further pull adds is absolute ROI-level magnitude. Check **sub-0201/da** (ρ = 0.36, only 66%
   of pairs negative) before stating the claim over all run pairs.
@@ -216,6 +223,7 @@ them stacks superseded versions.
 | [`Reproduction/SPECIFICATION.md`](Reproduction/SPECIFICATION.md) | **The settled analysis specification** — the model, the four decisions and the evidence for each, the coverage criterion, how to regenerate everything, and the traps in the code. |
 | [`Reproduction/RESULTS.md`](Reproduction/RESULTS.md) | **Every current number** — V1 asymmetries and context effects, results across the visual hierarchy, the tested hierarchy trend, cautions, and what the figures show. |
 | [`Reproduction/METHOD_DECISIONS.md`](Reproduction/METHOD_DECISIONS.md) | Five closed choices and why: no z-scoring, mean not median, no mixed model, precision weighting as a check not a default, *t* intervals not bootstrap. |
+| [`Reproduction/MISSING_DATA.md`](Reproduction/MISSING_DATA.md) | **What empty cells do**, simulated in V1 — the bias from holes and why it is systematic, why a pooled group fit does not help, and why sparsity rather than holes is what keeps MT out of the supplement figure. |
 | [`Reproduction/STIMULUS_CONVENTIONS.md`](Reproduction/STIMULUS_CONVENTIONS.md) | What each stimulus was, what each condition index means, and which polar-angle frame each part of the pipeline uses. Owns every angle convention. |
 | [`Reproduction/local_qc/DATA_QUALITY.md`](Reproduction/local_qc/DATA_QUALITY.md) | GLM data quality, all 8 observers × both experiments — the pink-noise finding, the clearing of both flagged observers, the fixed-seed designs. |
 | [`Reproduction/local_qc/RELIABILITY.md`](Reproduction/local_qc/RELIABILITY.md) | Split-half reliability of the analysed measurements, each effect against its own measurement error, the Figure 4 controls, and draft manuscript text. |

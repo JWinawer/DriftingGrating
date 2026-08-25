@@ -12,6 +12,7 @@ open, and an index of every document here. This file covers only *how the code i
 | [`SPECIFICATION.md`](SPECIFICATION.md) | the settled analysis specification, and the evidence for each choice |
 | [`RESULTS.md`](RESULTS.md) | every current number |
 | [`METHOD_DECISIONS.md`](METHOD_DECISIONS.md) | five closed methodological choices |
+| [`MISSING_DATA.md`](MISSING_DATA.md) | what empty cells do, and why some maps are not reported by polar angle |
 | [`STIMULUS_CONVENTIONS.md`](STIMULUS_CONVENTIONS.md) | stimuli, condition indices, angle frames |
 | [`local_qc/DATA_QUALITY.md`](local_qc/DATA_QUALITY.md) | GLM data quality |
 | [`local_qc/RELIABILITY.md`](local_qc/RELIABILITY.md) | reliability of the analysed measurements |
@@ -86,6 +87,16 @@ the specification builds on:
 | `precision_weighted_table` | the per-observer precision-weighted tables |
 | `asymmetry_tables` | the asymmetry and context-effect tables on the pre-specification ROI route |
 | `splithalf_reliability` | the split-half reliability of the analysed profile |
+
+**The missing-data diagnostics** — run on demand, none of them part of `run_spec_outputs`.
+→ [`MISSING_DATA.md`](MISSING_DATA.md) §8 for what each one answers.
+
+| command | what it does |
+|---|---|
+| `cell_occupancy('area','MT')` | vertices per (observer × polar-angle ROI) for any map, from labels alone |
+| `diagnose_cell_loss('donor','MT')` | delete a map's empty cells from V1 and refit, both routes |
+| `diagnose_loss_structure('donor','MT')` | is the resulting shift systematic, and how much data each map actually has |
+| `diagnose_pooled_fit('donor','MT')` | one pooled group fit versus averaging per-observer fits |
 
 The first call builds the V1 cache (`_cache/v1.mat`, ~10 s); later calls reuse it.
 

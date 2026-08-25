@@ -85,6 +85,14 @@ cell holds 22 vertices. Outside V1 they do not, and two facts make the gaps dang
 Deleting meridian ROIs from V1 in simulation biases the ROI route by **+0.071** on `dg` polc−polo,
 whose true value is 0.040 — cell loss nearly triples it.
 
+**Measured in full 2026-08-25, and the larger effect is on radial−tangential.** Deleting MT's own 30
+empty cells from V1 moves the ROI route's `dg` rad−tang from 0.103 to **−0.070** — a sign flip —
+against 0.120 → 0.186 for the specification. Deleting the vertical meridian and deleting the
+horizontal meridian push the ROI estimate in *opposite* directions (−0.048 and +0.273), which is the
+signature of an unbalanced mean rather than of lost precision. The bias is systematic: it comes
+almost entirely from the loss every observer shares, and randomising the observer-specific part
+leaves the mean shift unchanged. → [`MISSING_DATA.md`](MISSING_DATA.md) §2–4
+
 Note what is *not* broken. The inclusion mask is orientation-independent, so all four orientations of
 a cell vanish together and the within-ROI subtraction is never partially missing. Only the average
 over ROIs breaks.
@@ -208,6 +216,18 @@ Failing the criterion says **this design cannot resolve that map by polar angle*
 has no asymmetries. Whole-ROI analyses of hV4 and MT remain available and are unaffected; that is
 what `local_qc/group_addv4mt.m` already did.
 
+**What the criterion is really screening for, measured 2026-08-25.** The three thresholds are
+proxies; the quantity behind them is now measured directly. Reproducing each map's whole coverage
+profile in V1 — its empty cells *and* its vertex counts, `subsample_cells.m` — gives a 90% band on
+`dg` rad−tang of 0.018 wide under V3's coverage and **0.131 wide under MT's**, against an effect of
+0.119. A map whose band is wider than the effect cannot resolve it however the cells are combined.
+Note that this is **sparsity, not holes**: V1 with MT's 30 cells deleted still holds 7045 vertices,
+MT holds 545, a median of one per cell, and the specification largely absorbs the holes on their own.
+→ [`MISSING_DATA.md`](MISSING_DATA.md) §6
+
+Turning that measurement into a calibration of the thresholds themselves has not been done; nothing
+reported depends on it, since V3 and MT are separated by a factor of seven in band width.
+
 The gain clause matters only in principle: MT and MST lack a per-map gain for some observers, and
 scoring them with a V1 scalar would reintroduce the V1 special-casing §4 removed. They fail on
 coverage anyway, so it changes no map's status.
@@ -284,6 +304,21 @@ what the precision weighting rests on, so it stays at 500.
 | `cleanroom/diagnose_within_observer_error.m` | per-observer σ from bootstrapping runs |
 | `cleanroom/precision_weighted_table.m`, `precision_weighted_cells.m` | the precision-weighted estimates |
 | `server_extract/collect_gain_areas.m`, `collect_runwise_betas_areas.m` | the extractions this needs |
+
+**Missing-data diagnostics**, run on demand and not part of `run_spec_outputs` —
+[`MISSING_DATA.md`](MISSING_DATA.md) §8:
+
+| file | role |
+|---|---|
+| `cleanroom/cell_occupancy.m` | vertices per (observer × ROI) for any map, from labels alone |
+| `cleanroom/diagnose_cell_loss.m` | delete a map's empty cells from V1; both routes, null, class test |
+| `cleanroom/diagnose_loss_structure.m` | is the shift systematic, and how much data does each map have |
+| `cleanroom/diagnose_pooled_fit.m`, `spec_pooled.m` | one group fit versus averaging per-observer fits |
+| `cleanroom/subsample_cells.m` | thin a loaded dataset to a target vertex count per cell |
+
+`spec_profiles`, `diagnose_within_observer_error` and `load_runbetas_area` carry an additive
+`dropCells` argument for these. It defaults to empty, and empty is the specification unchanged: the
+V1 baseline reproduces `supplement/spec_asymmetries_spec_v1_4-8.csv` exactly with the option in place.
 
 **Two guards keep the figures and the tables from drifting apart.** `spec_profiles` asserts that its
 per-observer asymmetries equal the ones `diagnose_within_observer_error` computes (agreement 3e-16 in
