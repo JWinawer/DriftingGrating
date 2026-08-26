@@ -42,6 +42,13 @@ Panels A–D are always the same four asymmetries: **A** horizontal−vertical, 
 fitted model, markers the observed wedge means. Row 2 is each observer's difference with the group
 mean and its interval.
 
+Under `spec` the model line is drawn at 0.5°, the markers at 45°. The fit is continuous in θ_V, so
+sampling it at the eight marker positions would draw an octagon belonging to the display grid rather
+than to the model — and because the second and fourth harmonics have their extrema *between* the
+wedge centres, that octagon understated them. The curve passes exactly through the markers, which
+`spec_profiles` asserts per observer. `roi` and `roipw` fit no model, so their lines still join the
+wedge means and are still eight-sided. Display sampling only: no number in the tables below moved.
+
 | asymmetry | `spec` | `roi` | `roipw` |
 |---|--:|--:|--:|
 | horiz−vert | −0.548 *p*<.001 | −0.548 *p*<.001 | −0.548 *p*<.001 |
