@@ -30,6 +30,9 @@ function L = spec_axis_limits(S)
     expn = {'dg','da'};
 
     % --- polar panels: model traces and observed markers, both experiments -----
+    % The model trace is drawn at 0.5 deg, and the harmonics it is made of have their
+    % extrema BETWEEN the eight wedge centres, so the dense curve can reach further
+    % out than any sampled point. Span it, or the figure clips its own fit.
     v = [];
     for q = 1:numel(Ss)
         for ei = 1:2
@@ -37,6 +40,12 @@ function L = spec_axis_limits(S)
             for f = {'mPro','mCon','oPro','oCon'}
                 m = squeeze(mean(E.(f{1}), 1, 'omitnan'));
                 v = [v; m(:)]; %#ok<AGROW>
+            end
+            if Ss{q}.hasModel && isfield(E,'dense')
+                for f = {'mPro','mCon'}
+                    m = squeeze(mean(E.dense.(f{1}), 1, 'omitnan'));
+                    v = [v; m(:)]; %#ok<AGROW>
+                end
             end
         end
     end

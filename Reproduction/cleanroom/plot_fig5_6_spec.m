@@ -12,13 +12,22 @@ function out = plot_fig5_6_spec(S, en, figNum, figDir, L, V)
 % the one comparison the reader most needs to make. Pass L to fix the limits explicitly;
 % omitted, it is computed from S, which already holds both experiments.
 %
-% Row 1, polar plots: the pro and con class responses at the eight polar-angle ROI
-%   centres. LINES are the fitted four-term harmonic model (continuous thetaV, equal
-%   coverage at 45 deg, per observer x map gain); MARKERS are the observed wedge
-%   means over the same vertices. Where they separate, the difference is the
-%   within-wedge local-orientation term that binning thetaV conflates with context
-%   -- visible here rather than argued
-%   (../supplement/SUPPLEMENT_harmonic_model.md section S5.1).
+% Row 1, polar plots: the pro and con class responses. LINES are the fitted four-term
+%   harmonic model (continuous thetaV, equal coverage at 45 deg, per observer x map
+%   gain); MARKERS are the observed wedge means over the same vertices, at the eight
+%   polar-angle ROI centres. Where they separate, the difference is the within-wedge
+%   local-orientation term that binning thetaV conflates with context -- visible here
+%   rather than argued (../supplement/SUPPLEMENT_harmonic_model.md section S5.1).
+%
+%   THE MODEL IS DRAWN AT 0.5 DEG, the data at 45. The fit is continuous in thetaV,
+%   so sampling it at the eight marker positions and joining the dots would draw an
+%   octagon that is an artefact of the display grid, not of the model -- and the
+%   second and fourth harmonics it is made of have their extrema BETWEEN the wedge
+%   centres, so the octagon understates them. SPEC_PROFILES supplies the curve as
+%   .dense, and asserts that it passes exactly through the eight centres, so the
+%   smooth line and the markers cannot come apart. The data are still shown only
+%   where they were measured. Display sampling only: nothing fitted or tested
+%   changes, and the ROI route (which fits no model) still joins its wedge means.
 %
 %   RADIUS IS DEMEANED. The model is fitted to each vertex's four orientation
 %   responses with that vertex's mean over the four removed, so it carries no overall
@@ -67,7 +76,7 @@ function out = plot_fig5_6_spec(S, en, figNum, figDir, L, V)
                sprintf(['\\rm\\fontsize{9}\\bf%s\\rm  |  equal coverage at 45%s, gain per ' ...
                'observer \\times map, fit per observer then combined'], V.label, char(176)), ...
                [tern(S.hasModel, ...
-                 '\rm\fontsize{9}lines = fitted model, markers = observed wedge means; ', ...
+                 '\rm\fontsize{9}lines = fitted model (0.5\circ), markers = observed wedge means (45\circ); ', ...
                  '\rm\fontsize{9}lines join the observed wedge means (this route fits no model); ') ...
                'radius is the deviation from each vertex''s mean over the four orientations']}, ...
                'Interpreter','tex','FontWeight','bold');
@@ -76,12 +85,27 @@ function out = plot_fig5_6_spec(S, en, figNum, figDir, L, V)
     oPro = squeeze(mean(E.oPro,1,'omitnan'));   oCon = squeeze(mean(E.oCon,1,'omitnan'));
     rmax = L.rmax;
 
+    % The model curve, on its own fine grid. Averaged across observers exactly as
+    % mPro/mCon are -- the mean of eight fitted curves, not a curve through the mean.
+    hasDense = S.hasModel && isfield(E,'dense');
+    if hasDense
+        thD  = deg2rad(E.dense.centres(:));      % 0:0.5:360 already closes the loop
+        dPro = squeeze(mean(E.dense.mPro,1,'omitnan'));
+        dCon = squeeze(mean(E.dense.mCon,1,'omitnan'));
+    end
+
     for i = 1:4
         nexttile(i);
         polarplot(th, zeros(nP+1,1), '-', 'Color', [0.75 0.75 0.75], 'LineWidth', 0.75); hold on;
-        if S.hasModel
-            % Lines are the fitted model, markers the observed wedge means. Where they
-            % separate, the gap is the within-wedge local-orientation term.
+        if hasDense
+            % Lines are the fitted model at 0.5 deg, markers the observed wedge means
+            % at 45. Where they separate, the gap is the within-wedge
+            % local-orientation term.
+            hP = polarplot(thD, dPro(:,i), '-', 'Color', proC{i}, 'LineWidth', 2.2);
+            hC = polarplot(thD, dCon(:,i), '-', 'Color', conC{i}, 'LineWidth', 2.2);
+        elseif S.hasModel
+            % No dense grid in this result (an older SPEC_PROFILES): fall back to the
+            % eight centres, which is what this figure drew before.
             hP = polarplot(th, cl(mPro(:,i)), '-', 'Color', proC{i}, 'LineWidth', 2.2);
             hC = polarplot(th, cl(mCon(:,i)), '-', 'Color', conC{i}, 'LineWidth', 2.2);
         else

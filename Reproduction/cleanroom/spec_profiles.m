@@ -47,6 +47,11 @@ function S = spec_profiles(varargin)
 %   .fine     struct: .centres, .obs, .mdl  (nSubj x nFine x 3) the three contrasts
 %             that are measurable at a single polar angle, data and model, plus
 %             .denseCentres / .mdlDense, the model on a 0.5-deg grid for plotting
+%   .dense    struct: .centres (1 x nDense) and .mPro/.mCon (nSubj x nDense x 4),
+%             the SAME model profile as .mPro/.mCon but on a 0.5-deg polar-angle
+%             grid, so Figures 5/6 can draw the fit as a curve rather than as
+%             straight segments between the eight wedge centres. It passes exactly
+%             through those centres, which is asserted per observer.
 %   .fineLbl  1x3 labels for those contrasts
 %   .nVert    nSubj x nPA vertices per wedge;  .nTot nSubj x 1
 % and at top level .subjects, .paBins, .area, .eccRange, .gainScale, .names.
@@ -118,6 +123,8 @@ function S = spec_profiles(varargin)
         % unaffected -- this is display sampling only.
         denseCtr = 0:0.5:360;
         mdlD = nan(nS, numel(denseCtr), 3);
+        dPro = nan(nS, numel(denseCtr), 4);   % the pro/con classes on that same grid
+        dCon = nan(nS, numel(denseCtr), 4);
 
         for si = 1:nS
             [A, ok] = load_one(cfg, opt.root, cfg.subjects{si}, en, opt.area, drop(si,:));
@@ -168,6 +175,24 @@ function S = spec_profiles(varargin)
             end
             E.nTot(si) = size(Y,1);
 
+            % --- the SAME model profile, on a dense polar-angle grid --------
+            % Read off at the eight wedge centres, mPro/mCon plot as straight
+            % segments between eight points; the model itself is continuous in
+            % thetaV, so it can be drawn as the curve it is. CLASS_PROFILES is
+            % that curve, and the assertion below is what ties it to the points.
+            [pD, cD] = class_profiles(b, denseCtr, cfg, o);
+            dPro(si,:,:) = reshape(pD, [1 size(pD)]);
+            dCon(si,:,:) = reshape(cD, [1 size(cD)]);
+            if opt.verify
+                [p8, c8] = class_profiles(b, cfg.paBins, cfg, o);
+                dChk = max(abs([p8(:) - reshape(E.mPro(si,:,:), [], 1); ...
+                                c8(:) - reshape(E.mCon(si,:,:), [], 1)]));
+                assert(dChk < 1e-12, 'spec_profiles:denseMismatch', ...
+                    ['%s %s: the dense model curve misses the plotted wedge ' ...
+                     'centres by %.3g. The curve and the markers would disagree.'], ...
+                    cfg.subjects{si}, en, dChk);
+            end
+
             % --- the three contrasts measurable at a single polar angle ----
             % Only 3 of the 4 harmonic degrees of freedom are observable per vertex
             % (../supplement/SUPPLEMENT_harmonic_model.md section S2.3), so a profile
@@ -201,6 +226,7 @@ function S = spec_profiles(varargin)
         E.fine = struct('centres', fineCtr, 'obs', obsF, 'mdl', mdlF, ...
                         'denseCentres', denseCtr, 'mdlDense', mdlD, ...
                         'wedgeCentres', cfg.paBins, 'wedge', wedF);
+        E.dense = struct('centres', denseCtr, 'mPro', dPro, 'mCon', dCon);
         S.(en) = E;
     end
 
@@ -218,6 +244,46 @@ function S = spec_profiles(varargin)
         S.(en).sigma = W.seBoot(:,:,ei);
         if opt.verify, checkRoute(S.(en).asym, W.full(:,:,ei), opt.area, en, S.route); end
     end
+end
+
+% ------------------------------------------------------------------------
+function [pro, con] = class_profiles(b, tv, cfg, o)
+% CLASS_PROFILES  The four asymmetries' pro and con classes, continuous in polar angle.
+%
+%   [pro, con] = class_profiles(b, tv, cfg, o)   % pro, con are numel(tv) x 4
+%
+% This is the same quantity COMPUTE_ASYMMETRIES returns as .pro and .con, but readable
+% at any polar angle instead of only at the eight wedge centres. It exists so Figures
+% 5/6 can draw the fitted model as a curve.
+%
+% WHY COMPUTE_ASYMMETRIES CANNOT DO THIS. It labels each presented stimulus by exact
+% equality -- horizontal is local orientation == 0, radial is offset from the radius
+% == 0 -- so a class is populated only where a stimulus lands exactly on it. That is
+% every 45 deg and nowhere in between, and at an intermediate polar angle the label
+% would find no stimulus and return NaN. The classes are not undefined there; the
+% stimulus set simply does not sample them.
+%
+% WHAT IS EVALUATED INSTEAD. The fitted model is a continuous function of the bar
+% orientation theta and the polar angle thetaV,
+%     y = b1*cos(2*theta) + b2*cos(4*theta) + b3*cos(2*(theta-thetaV)) + b4*cos(4*(theta-thetaV))
+% so each class can be read off at the orientation that DEFINES it, for any thetaV:
+%     horizontal theta=0     vertical theta=90    oblique   mean of 45 and 135
+%     radial     theta=thetaV  tangential thetaV+90  polar-oblique mean of +/-45
+% Those two frames are exactly the geometry cfg.dg and cfg.da already carry, so they
+% are used here as FRAMES rather than as experiments: cfg.dg supplies the four fixed
+% Cartesian orientations and cfg.da the four that rotate with the radius, whichever
+% experiment b was fitted to. No new convention is introduced, and none is restated.
+%
+% At the eight wedge centres both frames coincide with the presented stimuli, so this
+% reproduces COMPUTE_ASYMMETRIES exactly -- the curve passes through the plotted
+% markers rather than near them. SPEC_PROFILES asserts that, per observer, to 1e-12.
+%
+% This is display sampling only. Nothing fitted, tabled or tested reads it.
+    Yc = predict_harmonic(b, tv(:), cfg.dg, o);   % Cartesian frame: [H  V  ob ob]
+    Yp = predict_harmonic(b, tv(:), cfg.da, o);   % radial frame:    [R  T  po po]
+    % Columns in COMPUTE_ASYMMETRIES' order: HV, cardObl, radTan, polcardPolobl.
+    pro = [Yc(:,1), mean(Yc(:,1:2),2), Yp(:,1), mean(Yp(:,1:2),2)];
+    con = [Yc(:,2), mean(Yc(:,3:4),2), Yp(:,2), mean(Yp(:,3:4),2)];
 end
 
 % ------------------------------------------------------------------------
