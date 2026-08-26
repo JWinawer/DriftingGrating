@@ -147,9 +147,11 @@ matters is not the density range but its alignment with cos(2θ_V): V1's excess 
 where cos(2θ_V) = +1 and does not cancel; V2's sits at obliques and does.
 
 **45°, not finer.** The bin width controls leverage, since `w = 1/count` gives a bin holding one
-vertex the same total weight as a bin holding two hundred:
+vertex the same total weight as a bin holding two hundred. The ratio below is between **individual
+vertices** — do not confuse it with the *precision*-weight ratio across observers that the §7
+coverage criterion thresholds at 25; they are different quantities on different units:
 
-| map | width | min count | max weight ratio | eff N | r(b1,b3) |
+| map | width | min count | max **vertex**-weight ratio | eff N | r(b1,b3) |
 |---|---|---|---|---|---|
 | V1 | 45° | 33 | **11×** | 1005 | 0.075 |
 | V1 | 15° | 2 | 101× | 742 | 0.016 |
@@ -255,7 +257,8 @@ is only readable if they change one at a time (`cleanroom/spec_variants.m`):
 | `roipw` | eight polar-angle wedges | precision | `roi` vs `roipw` isolates the **weighting** |
 
 There is deliberately no harmonic-plus-precision variant: adding it would leave no pair differing in
-exactly one thing.
+exactly one thing. All twelve resulting figures are laid out side by side, figure by figure, in
+[`supplement/FIGURE_VARIANTS.md`](supplement/FIGURE_VARIANTS.md).
 
 **Outputs.** Figures in `supplement/figures/` (PNG + PDF), tables in `supplement/` (CSV), both
 tracked. `<tag>` ∈ {`spec`, `roi`, `roipw`}:

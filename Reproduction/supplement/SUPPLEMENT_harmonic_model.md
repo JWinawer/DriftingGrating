@@ -2,6 +2,27 @@
 
 *Separating within-ROI stimulus geometry from global context effects*
 
+> **This document is on the model's own route, not the settled specification** *(noted 2026-08-25)*.
+> It is the account of the model that the specification grew out of, and it is kept in that form
+> because its figures, its identification analysis and its adequacy tests were all computed on it.
+> Three things differ from [`../SPECIFICATION.md`](../SPECIFICATION.md), so **numbers here do not
+> match [`../RESULTS.md`](../RESULTS.md) and should not be quoted against it**:
+>
+> | | this document | the specification |
+> |---|---|---|
+> | vertex weighting | equal coverage over **24 bins of 15°** (§S3) | equal coverage over **8 bins of 45°** (§5 there) |
+> | gain rescaling | per observer, V1-derived | per observer × **map** (§4 there) |
+> | intervals | percentile bootstrap | ***t*** on 7 df (§5 of `../METHOD_DECISIONS.md`) |
+>
+> The specification settled on 45° because inverse-count weighting on 15° bins gives a two-vertex bin
+> the same total weight as a two-hundred-vertex one — a ~100× leverage on a single vertex, against
+> 11× at 45°, for a residual design correlation that is already negligible either way. The 15° choice
+> here is not wrong for what it was doing; it is simply superseded.
+>
+> **What this changes:** the point estimates move by up to ~0.05 and the intervals by more. **No
+> conclusion in this document changes.** The current values of every quantity that also appears in
+> the main results are in [`../RESULTS.md`](../RESULTS.md).
+
 ---
 
 ## S1. Motivation
@@ -301,9 +322,14 @@ observers completed both experiments, every comparison here is within-subject: t
 difference is formed first, then summarised across observers (§S5.5). But three checks show the
 polar-frame null is not a result:
 
-- **The interval is wide.** A radial/tangential context effect as large as |0.158| remains
-  compatible with these data — which is larger than the cardinal/oblique context effect (−0.175)
-  that we *do* report as significant, and 59% of the horizontal/vertical one (−0.268).
+- **The interval is wide.** A radial/tangential context effect as large as |0.161| remains
+  compatible with these data — comparable to the cardinal/oblique context effect (−0.175) that we
+  *do* report as significant, and 60% of the horizontal/vertical one (−0.268). *(Corrected
+  2026-08-25: this had read |0.158|, which matched neither this route's interval nor the
+  specification's, and it was stated as "larger than" a quantity it is smaller than. Under the
+  settled specification the bound is 0.215 against a cardinal/oblique effect of −0.181, where
+  "larger than" does hold — [`../RESULTS.md`](../RESULTS.md) §4 is the current version of this
+  check.)*
 - **It rests on one observer.** Six of eight observers show the polar experiment's radial/tangential
   asymmetry exceeding the Cartesian one (sign test *p* = 0.29). Removing sub-0395 — whose polar
   radial/tangential value, −0.244, is the only negative one in the sample — makes the difference

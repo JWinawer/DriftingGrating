@@ -140,14 +140,21 @@ produced it:
 - **The spirals were swapped** in `cleanroom/config_repro.m` (ccspiral→45°, cspiral→135°; §2 has it
   the other way). At the four oblique wedges the spirals supply the locally-horizontal and
   locally-vertical stimuli, so this flipped the sign of `da` (H−V) there.
-- **The bridge fed the wrong frame** — `bridge/build_group_matrices_fromCSV.m` built `medianBOLDpa`
-  in *conventional* order and handed it to the repo's Benson-expecting functions. That relation is a
-  reflection about 45°, so it flipped exactly the four cardinal wedges.
+- **The bridge fed the wrong frame** — the since-deleted `bridge/build_group_matrices_fromCSV.m`
+  built `medianBOLDpa` in *conventional* order and handed it to the repo's Benson-expecting
+  functions. That relation is a reflection about 45°, so it flipped exactly the four cardinal wedges.
 
 Combined they flip all eight wedges, turning `da` H−V from −0.446 into +0.446 — the unexplained sign
 flip the original report noticed and set aside as a "plotting-sign convention". Both are fixed;
 neither ever existed in `AnalysisCode`. Recomputing all eight asymmetries directly from the CSV with
 the §2 semantics reproduces the draft's values.
+
+**The bridge then confirmed the fix from the other side.** With both errors corrected it rebuilt the
+group arrays and ran the original `AnalysisCode` stage-04 functions unedited: existing code,
+clean-room and draft agreed on all eight asymmetries. That closed the question, nothing depended on
+the bridge afterwards, and `Reproduction/bridge/` was deleted 2026-08-25 — git history is the record.
+**The warning survives the code:** anything that hands a polar-angle-indexed array to those functions
+must emit it in **Benson** order (§3), and getting that backwards is what produced the false alarm.
 
 ## 6. End-to-end verification (sub-0255)
 
@@ -170,4 +177,4 @@ for `dg`, 416 (8 runs) for `da`, **36 / 32 trials per condition, perfectly balan
 Benson ordering it produces is re-derived by hand in three separate downstream files. Storing the
 wedge centres alongside the data — or converting once at the source and updating the three
 `[90,45,0,…]` literals together — would remove the trap. That is a refactor; the current code's
-*output* is correct, so it is optional.
+*output* is correct, so it is optional. Tracked in [`../AGENTS.md`](../AGENTS.md) §5.

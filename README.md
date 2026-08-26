@@ -14,7 +14,7 @@ INSTRUCTIONS BEFORE RUNNING
 It is advised to open the scrConfig.m script (inside config folder) and add the screen specs for correct presentation.
 
 INSTRUCTIONS TO RUN
-run expLauncher.m from inside the ExperimentCode folder
+With the ExperimentCode folder as the working directory, run Main/expLauncher.m
 
 TESTED ON
 MATLAB R2020a
@@ -23,17 +23,22 @@ MATLAB R2020a
 
 MATLAB pipeline that turns the preprocessed fMRI data into the orientation
 asymmetry statistics and figures reported in the manuscript. See
-`AnalysisCode/README.rtf` for a per-script description, and `AGENTS.md` for
-pipeline order and known gotchas (ROI ordering, observer gain correction,
-required working directory).
+`AnalysisCode/README.rtf` for a per-script description, and `AGENTS.md` §4 for
+the pipeline order and §2 for the standing facts a reader needs before touching
+any of it (polar-angle wedge ordering, the observer gain rescaling, and why
+nothing is z-scored).
 
 ## Models
 
 `Models/model_DriftingGratings.ipynb` is a **Jupyter notebook** implementing
 the image-computable normalization simulations described in the manuscript's
-Methods subsection "Normalization as a description of contextual suppression"
-(see `AGENTS.md` for details on what it does and its current, unfinished
-state).
+Methods subsection "Normalization as a description of contextual suppression".
+It runs a steerable pyramid over both stimulus sets and compares six
+normalization variants. **It is unfinished, and its own first markdown cell is
+the record of that** — it carries the current DONE / open-questions / TO-DO
+lists for the modelling, which are maintained there rather than in `AGENTS.md`.
+This strand is independent of the fMRI analyses; nothing in `Reproduction/`
+depends on it.
 
 ### Installation
 
@@ -83,7 +88,7 @@ against NumPy 1.x's ABI (installing NumPy 2.x alongside it produces a
 importing cleanly). Intel Macs are therefore capped at Python 3.11 +
 `torch==2.2.2` + `numpy<2` + an older `opencv-python` release (`4.12.0.88`+
 requires `numpy>=2`, which conflicts). Apple Silicon has no such ceiling and
-can use current releases of everything. See `AGENTS.md` for the full story.
+can use current releases of everything.
 
 Also important: **`plenoptic` must be `<2.0`** (both requirements files pin
 `1.3.1`) — `plenoptic>=2.0` removed the `plenoptic.simulate` module this

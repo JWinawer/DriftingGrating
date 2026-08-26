@@ -14,22 +14,26 @@ open, and an index of every document here. This file covers only *how the code i
 | [`METHOD_DECISIONS.md`](METHOD_DECISIONS.md) | five closed methodological choices |
 | [`MISSING_DATA.md`](MISSING_DATA.md) | what empty cells do, and why some maps are not reported by polar angle |
 | [`STIMULUS_CONVENTIONS.md`](STIMULUS_CONVENTIONS.md) | stimuli, condition indices, angle frames |
+| [`supplement/FIGURE_VARIANTS.md`](supplement/FIGURE_VARIANTS.md) | all twelve output figures, grouped by figure so the three variants can be compared |
 | [`local_qc/DATA_QUALITY.md`](local_qc/DATA_QUALITY.md) | GLM data quality |
 | [`local_qc/RELIABILITY.md`](local_qc/RELIABILITY.md) | reliability of the analysed measurements |
 
-## The four code paths
+## The three code paths
 
 - **`cleanroom/`** — the primary one. Standalone MATLAB: CSV → filter → per-vertex
   orientation−blank contrasts → polar-angle aggregates → the four asymmetries → the figures. It does
   **not** call the original `AnalysisCode` analysis functions, so it is an independent check. The
   settled specification, the per-vertex harmonic model, the precision-weighted tables and every
   diagnostic live here.
-- **`bridge/`** — regenerates the group `.mat` arrays the original `AnalysisCode` stage-04 scripts
-  expect, then runs that original code. Built after the clean-room validated; cross-path arrays are
-  identical (0.0 difference).
 - **`server_extract/`** — self-contained, read-only extractions to run on the machine with
   `/Volumes/Vision` mounted. Deliberately filter nothing. See its [`README.md`](server_extract/README.md).
 - **`local_qc/`** — the data-quality review built on those extractions.
+
+*(There was a fourth, `bridge/`, deleted 2026-08-25. It rebuilt the group `.mat` arrays the original
+`AnalysisCode` stage-04 scripts expect and ran that original code unedited, to check the clean-room
+against it. It did its job — the two paths' arrays were identical, 0.0 difference, on all eight
+asymmetries — and that result is recorded in [`STIMULUS_CONVENTIONS.md`](STIMULUS_CONVENTIONS.md).
+Nothing depended on it afterwards. Git history is the record.)*
 
 Outputs land in `figures/` and `cleanroom/_cache/` (both git-ignored); tables and figures that are
 meant to be kept are committed under `supplement/`.
@@ -80,7 +84,7 @@ the specification builds on:
 | command | what it does |
 |---|---|
 | `run_all_repro` | Figs 5–8 (both variants) + the validation table |
-| `run_fig5_6`, `run_fig7`, `run_fig8` | individual figures |
+| `run_fig5_6`, `run_fig7`, `run_fig8` | individual figures (`run_fig7` still runs; Figure 7 itself is being removed — [`METHOD_DECISIONS.md`](METHOD_DECISIONS.md) §3) |
 | `validate_against_manuscript` | the eight asymmetries against the draft's values |
 | `test_harmonic_model` | assertions guarding the harmonic model — **run before interpreting it** |
 | `run_harmonic_model(false)` | the per-vertex harmonic model (`true` = z-scored sensitivity check) |
@@ -99,14 +103,6 @@ the specification builds on:
 | `diagnose_pooled_fit('donor','MT')` | one pooled group fit versus averaging per-observer fits |
 
 The first call builds the V1 cache (`_cache/v1.mat`, ~10 s); later calls reuse it.
-
-**The bridge** — from `bridge/` in MATLAB (`AnalysisCode/` is added to the path automatically):
-
-| command | what it does |
-|---|---|
-| `run_pathB_values` | all 8 asymmetries through the real repo functions; prints existing-code vs. clean-room vs. draft |
-| `run_pathB_figures` | regenerates Figs 5/6 through the real `plot1`/`plot2` |
-| `resolve_da_HV` | runs the real `compute_derivativeDirections.m`; prints the per-θ `da` H−V comparison |
 
 ## One thing not to repeat
 

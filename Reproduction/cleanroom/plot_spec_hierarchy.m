@@ -10,7 +10,7 @@ function out = plot_spec_hierarchy(A, figDir)
 %
 % Maps that fail the criterion are absent by design, not by oversight: the criterion
 % is a statement about what this design can resolve BY POLAR ANGLE (../SPECIFICATION.md
-% section 6), and their numbers are still in spec_areas_*.csv with a reportable flag.
+% section 7), and their numbers are still in spec_areas_*.csv with a reportable flag.
 %
 % SCALES ARE SHARED WITHIN EACH ROW, and deliberately not between them. All four top
 % panels are asymmetries and all four bottom panels are context effects, so within a

@@ -227,6 +227,13 @@ not.)*
 
 *Keep the existing Fig 4A–C paragraphs as illustration; these follow them.*
 
+> **Before transcribing:** the SNRs and *p* values in the third paragraph are §3.2's, i.e. the
+> **pre-specification ROI route** the split-half work was built on, not the settled specification.
+> They are within 0.03 of the specification's values and change nothing qualitatively
+> ([`../RESULTS.md`](../RESULTS.md) §2), but re-read them off the current numbers before they go
+> into the manuscript. The reliabilities in §3.1 are unaffected — a per-observer scalar cancels in a
+> within-observer correlation, so they do not depend on the route or the gain at all.
+
 > Because the reference condition was full-field pink noise rather than a mean-luminance screen, and
 > this background was present continuously throughout each run, the variance explained by the GLM
 > reflects differentiation among the stimulus conditions rather than overall responsiveness: a region
@@ -274,7 +281,7 @@ not.)*
 
 **Fig 4D suggestion.** A split-half scatter — the 32 orientation-differential profile values from one
 half against the other, one colour per observer — puts the reliability claim in the same "show the
-data" register as 4A–C.
+data" register as 4A–C. Tracked in [`../../AGENTS.md`](../../AGENTS.md) §5.
 
 **Supplementary tables.** Table SX = `splithalf_reliability.csv`. Table SY = the MT / V4 columns of
 `glm_summary.csv` ([`DATA_QUALITY.md`](DATA_QUALITY.md) §2.4).

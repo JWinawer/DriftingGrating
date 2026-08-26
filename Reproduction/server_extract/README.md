@@ -84,7 +84,8 @@ nothing here touches it.
 
 ## Two questions still unanswered from off-server
 
-Worth a sentence in your reply if you know:
+Worth a sentence in your reply if you know. Also tracked in
+[`../../AGENTS.md`](../../AGENTS.md) §5:
 
 1. **Are `/Volumes/Vision/UsersShare/Rania/Project_dg/` and `/Volumes/server/Projects/Project_dg/`
    the same data, or two copies?** Different scripts in `AnalysisCode` point at each — `setup.json`,

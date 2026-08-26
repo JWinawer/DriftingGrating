@@ -1,9 +1,15 @@
 # Results
 
-Every number here is produced by one command (`run_spec_outputs`) under the settled specification —
-[`SPECIFICATION.md`](SPECIFICATION.md). Estimates are 2·b in **percent signal change**, equal-weighted
-across the 8 observers, with ***t* intervals on 7 df**. `dg` = Cartesian gratings, `da` = polar
-gratings.
+Every number here is under the settled specification — [`SPECIFICATION.md`](SPECIFICATION.md).
+Estimates are 2·b in **percent signal change**, equal-weighted across the 8 observers, with
+***t* intervals on 7 df**. `dg` = Cartesian gratings, `da` = polar gratings.
+
+**Where each number comes from.** §2, §3, §5, §7 and §8 are regenerated wholesale by one command,
+`run_spec_outputs`, and are transcribed from its CSVs. §4 is derived from one of those CSVs
+(`spec_perobserver_spec_v1_4-8.csv`) by tests the driver does not itself run. §6 comes from the
+harmonic-model diagnostics, which are run on demand and are **not** part of `run_spec_outputs` —
+those numbers are on the model's own route, not the specification's, and the difference is stated
+where it matters.
 
 ---
 
@@ -57,18 +63,29 @@ reported everywhere ([`METHOD_DECISIONS.md`](METHOD_DECISIONS.md) §3).
 
 ## 4. Why the polar-frame null is not a result
 
-Three checks, all on the harmonic model (`cleanroom/diagnose_context_asymmetry.m`; full account in
-[`supplement/SUPPLEMENT_harmonic_model.md`](supplement/SUPPLEMENT_harmonic_model.md) §S5.3):
+Three checks, computed from the per-observer values in `spec_perobserver_spec_v1_4-8.csv` under the
+settled specification, with *t* intervals on 7 df. The argument was first made on the harmonic
+model's own route (`cleanroom/diagnose_context_asymmetry.m`, bootstrap intervals, no per-map gain);
+[`supplement/SUPPLEMENT_harmonic_model.md`](supplement/SUPPLEMENT_harmonic_model.md) §S5.3 is that
+version and its numbers differ — see the note at the head of that document.
 
-- **The interval is wide.** A radial/tangential context effect as large as |0.158| remains
-  compatible with the data — larger than the cardinal/oblique context effect that *is* reported as
-  significant, and 59% of the horizontal/vertical one.
-- **It rests on one observer.** Six of eight show `da` rad−tang exceeding `dg` (sign test *p* = 0.29).
-  Dropping sub-0395 — the only observer with a negative `da` radial−tangential value, −0.244 — makes
-  the difference significant (−0.113 [−0.182, −0.036]). No other leave-one-out does.
+- **The interval is wide.** A radial/tangential context effect as large as |0.215| remains
+  compatible with the data — larger than the cardinal/oblique context effect of −0.181 that *is*
+  reported as significant, and 68% of the horizontal/vertical one.
+- **It rests on one observer.** Seven of eight show `da` rad−tang exceeding `dg` (sign test
+  *p* = 0.07). Dropping sub-0395 — the only observer with a negative `da` radial−tangential value,
+  −0.180 — makes the difference significant (−0.110 [−0.157, −0.062], *p* = .001). No other
+  leave-one-out comes close: the next smallest *p* is .68.
 - **The frames are not reliably different from each other.** A within-subject difference of
-  differences comparing the two frames' context effects is not significant: horiz−vert vs rad−tang
-  0.106 [−0.033, 0.275], *p* = 0.26; card−obl vs rad−tang −0.004, *p* = 0.92.
+  differences comparing the two frames' context effects, on |effect| so the two are comparable, is
+  not significant: horiz−vert vs rad−tang 0.160 [−0.068, 0.389], *p* = 0.14; card−obl vs rad−tang
+  0.047 [−0.062, 0.156], *p* = 0.34.
+
+*(Re-derived under the specification 2026-08-25. All three checks had been carried over unchanged
+from the pre-specification harmonic route. The bound had read 0.158, which was **smaller** than the
+cardinal/oblique effect it was being compared against, so the first check did not hold arithmetically
+as written; under the specification it does. The conclusion did not change, and the leave-one-out
+check got stronger.)*
 
 **Consequence for the draft.** The abstract's "the radial asymmetry is 50% larger for polar gratings"
 should not be quoted as a quantity. The direction holds (`da` 0.155 vs `dg` 0.119), but the
@@ -86,7 +103,7 @@ unequal size needs more observers.
 Coverage measured, not assumed, on the [`SPECIFICATION.md`](SPECIFICATION.md) §7 criterion.
 `spec_areas_coverage_spec.csv`.
 
-| map | band | empty cells /64 | median vertices/cell | max weight ratio | reportable |
+| map | band | empty cells /64 | median vertices/cell | max **precision**-weight ratio | reportable |
 |---|---|--:|--:|--:|---|
 | V1 | 4–8° | 0 | 150 | 17.1 | **yes** |
 | V1 | 2–10° | 0 | 326 | 18.1 | **yes** |
@@ -307,6 +324,16 @@ show three curves and no more. The fourth coefficient is identified *across* ver
 modulation of the first and third — which is what the tilt of these curves is. In the `roi` variant
 the curve becomes a step function, showing what wedge-binning assumes about polar-angle structure.
 
+**`Figure_S5_spec_hierarchy`, the extrastriate supplement figure.** Same four asymmetries, same four
+panel order, across the maps §5 says can be resolved by polar angle. Top row is each asymmetry in
+each experiment; bottom row is the context effect (`dg − da`) over the same maps. Filled markers are
+V1, V2 and V3 at 4–8°; the open marker is V3a, which qualifies only at 2–10° and so is not on the
+same footing. **Scales are shared within each row and deliberately not between them** — within a row
+the panels are the same quantity, across rows they are an asymmetry and a difference of asymmetries,
+and one scale there would assert a comparison nobody is making. Maps that fail the criterion are
+absent by design, not oversight; their numbers stay in `spec_areas_*.csv` behind the `reportable`
+flag, which is what `plot_spec_hierarchy.m` filters on.
+
 **Figure 7 (joint LME) is being removed** — it is exactly redundant with Figures 5/6
 ([`METHOD_DECISIONS.md`](METHOD_DECISIONS.md) §3).
 
@@ -318,7 +345,9 @@ oppose each other. Its red curve is the Fig-7 LME, so whether it keeps the overl
 
 ---
 
-## 10. Not done
+## 10. Scope — what these results deliberately do not cover
+
+Not a TODO list; open items are in [`../AGENTS.md`](../AGENTS.md) §5.
 
 - **The 2–10° band is computed but not used for the main figures.** Figures 5/6 are V1 4–8°, the band
   where spatial frequency is matched between the experiments. The 2–10° numbers are in the CSVs, and

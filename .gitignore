@@ -24,7 +24,7 @@ dg_collect/
 *.mat
 
 # Supplement figures are deliverables, not build output: they are the figures the
-# manuscript and SPEC_FIGURES.md refer to, so they are tracked despite the blanket
+# manuscript and Reproduction/SPECIFICATION.md refer to, so they are tracked despite the blanket
 # *.png / *.pdf rules above. cleanroom/run_spec_outputs writes them here DIRECTLY --
 # Reproduction/figures/ stays ignored and holds no copy of them, so there is exactly
 # one of each image.

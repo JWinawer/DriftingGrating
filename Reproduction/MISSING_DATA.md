@@ -256,14 +256,10 @@ The excluded numbers stay in `supplement/spec_areas_*.csv` behind a `reportable`
 
 ## 7. What is still open
 
-- **The §7 criterion is stated as thresholds on empty cells, median vertices and weight ratio.**
-  Those are sensible proxies, and §6 above measures directly what they stand in for. Turning the
-  measurement into a calibration — what per-cell count is needed for a given band width, and whether
-  the current thresholds sit where they should — has not been done. Nothing currently reported
-  depends on it: V3 and MT are separated by a factor of seven in band width, nowhere near the
-  threshold.
-- **Whether `equalcell` weighting helps in the maps that are reported** (§5, last paragraph) is
-  untested outside this simulation.
+Two things, both listed with everything else in [`../AGENTS.md`](../AGENTS.md) §5: calibrating the
+[`SPECIFICATION.md`](SPECIFICATION.md) §7 thresholds against the band width §6 measures directly, and
+testing whether `equalcell` weighting (§5, last paragraph) helps in the maps that are actually
+reported. Nothing currently reported depends on either.
 
 ---
 

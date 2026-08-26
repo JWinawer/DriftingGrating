@@ -32,10 +32,16 @@ stimuli (1 cpd at 6° eccentricity):
 - **Polar gratings** — pinwheel, annulus, CW spiral, CCW spiral. Project code name **`da`**.
 
 Only **stationary** gratings are analysed here; the GLM also estimates 8 motion directions, reported
-in a future study. Vertices are binned into **8 polar-angle wedges** (centred 0, 45, …, 315°, each
-±22.5°), restricted to **4–8° eccentricity** and **pRF R² > 0.1**. The 4–8° band is where spatial
-frequency is most closely matched between the two experiments — it is *not* the stimulated extent,
-which was roughly 0.5–12°.
+in a future study. Vertices are restricted to **4–8° eccentricity** and **pRF R² > 0.1**. The 4–8°
+band is where spatial frequency is most closely matched between the two experiments — it is *not*
+the stimulated extent, which was roughly 0.5–12°.
+
+**Polar angle enters continuously, not in bins.** The settled specification fits each vertex at its
+own pRF polar angle (§3). The eight 45° wedges (centred 0, 45, …, 315°, each ±22.5°) are still
+everywhere in the project — they are the earlier route, they are the `roi` variant kept for
+comparison, they are the unit the coverage criterion counts, and they are what the original
+`AnalysisCode` computes — so "wedge" and "ROI" in these documents mean that binning, and it is
+never the primary analysis.
 
 **Four orientation asymmetries**, in two reference frames:
 
@@ -141,16 +147,18 @@ Analysis is MATLAB (R2022b). Paths in the original scripts point at a mounted da
 
 **Reproduction (`Reproduction/`)** — an independent recomputation from a single tidy table, and where
 every follow-up analysis now lives. `cleanroom/` is the primary route and holds the settled
-specification; `bridge/` runs the original `AnalysisCode` functions for cross-checking;
-`server_extract/` holds read-only extractions for whoever has the data volume mounted; `local_qc/`
-holds the data-quality review. → [`Reproduction/README.md`](Reproduction/README.md)
+specification; `server_extract/` holds read-only extractions for whoever has the data volume mounted;
+`local_qc/` holds the data-quality review. (A fourth path, `bridge/`, ran the original
+`AnalysisCode` functions for cross-checking; it agreed exactly, nothing depended on it afterwards,
+and it was deleted 2026-08-25.) → [`Reproduction/README.md`](Reproduction/README.md)
 
 ---
 
 ## 5. Open items
 
-Everything still live, in one place. The topic documents point here rather than keeping their own
-lists.
+**Everything still live, in one place.** The topic documents do not keep parallel lists; each item
+below points at the document that has the detail. If something is open and is not here, it is a gap
+in this list, not a second list somewhere else.
 
 ### Where the draft and the analysis have diverged — Rania owns these
 
@@ -183,6 +191,10 @@ lists.
   quantitative claim attached — the R²-by-eccentricity profile is flat, for reasons that are
   properties of the measure and the design.
   → [`local_qc/RELIABILITY.md`](Reproduction/local_qc/RELIABILITY.md) §4
+- **A Figure 4D is proposed and not drawn.** A split-half scatter — the 32 orientation-differential
+  profile values from one half of the runs against the other, one colour per observer — would put
+  the reliability claim in the same "show the data" register as 4A–C. Nothing depends on it.
+  → [`local_qc/RELIABILITY.md`](Reproduction/local_qc/RELIABILITY.md) §5
 
 ### Analysis still to do
 
@@ -198,6 +210,12 @@ lists.
   of pairs negative) before stating the claim over all run pairs.
   → [`local_qc/RELIABILITY.md`](Reproduction/local_qc/RELIABILITY.md) §4
 
+- **Does `equalcell` weighting help in the maps that *are* reported?** In the missing-data
+  simulation, declining to compensate an observer for their missing ROIs beat compensating them on
+  the Cartesian terms. That is a lead from one simulation, untested on V1, V2, V3 and V3a as
+  analysed, and it is not a recommendation until it is.
+  → [`MISSING_DATA.md`](Reproduction/MISSING_DATA.md) §5
+
 ### Loose ends, low priority
 
 - **A GLM-`R2` column in `allsubjectsTable.csv`**, so the vertex filter could screen on it alongside
@@ -209,6 +227,20 @@ lists.
   extracted.
 - **Cross-run design order** was not byte-matched against each session's data-run order. Run counts
   and per-run R² already rule out a mispaired run.
+- **The normalization modelling in `Models/` is a separate, unfinished strand** with its own
+  open questions and TO-DO list, kept in the first markdown cell of
+  `Models/model_DriftingGratings.ipynb`. Nothing in `Reproduction/` depends on it, so it is not
+  itemised here. → [`README.md`](README.md)
+- **The Benson-order wedge centres are re-derived by hand in three downstream files.** Storing them
+  alongside the data, or converting once at the source, would remove the trap that caused the
+  retracted bug report. The current code's *output* is correct, so this is optional.
+  → [`STIMULUS_CONVENTIONS.md`](Reproduction/STIMULUS_CONVENTIONS.md) §7
+- **Two questions only answerable at the server.** Are
+  `/Volumes/Vision/UsersShare/Rania/Project_dg/` and `/Volumes/server/Projects/Project_dg/` the same
+  data or two copies — different `AnalysisCode` scripts point at each, and if they have drifted then
+  some figures were made from different data than others. And what machine actually hosts them;
+  nothing in the code records anything but a local mount point.
+  → [`server_extract/README.md`](Reproduction/server_extract/README.md)
 
 ---
 
@@ -227,7 +259,8 @@ them stacks superseded versions.
 | [`Reproduction/STIMULUS_CONVENTIONS.md`](Reproduction/STIMULUS_CONVENTIONS.md) | What each stimulus was, what each condition index means, and which polar-angle frame each part of the pipeline uses. Owns every angle convention. |
 | [`Reproduction/local_qc/DATA_QUALITY.md`](Reproduction/local_qc/DATA_QUALITY.md) | GLM data quality, all 8 observers × both experiments — the pink-noise finding, the clearing of both flagged observers, the fixed-seed designs. |
 | [`Reproduction/local_qc/RELIABILITY.md`](Reproduction/local_qc/RELIABILITY.md) | Split-half reliability of the analysed measurements, each effect against its own measurement error, the Figure 4 controls, and draft manuscript text. |
-| [`Reproduction/supplement/SUPPLEMENT_harmonic_model.md`](Reproduction/supplement/SUPPLEMENT_harmonic_model.md) | The per-vertex harmonic model written for readers, with four committed figures — geometry vs. context, the cross-experiment prediction, and the pRF-angle-error control. |
+| [`Reproduction/supplement/FIGURE_VARIANTS.md`](Reproduction/supplement/FIGURE_VARIANTS.md) | **All twelve figures `run_spec_outputs` produces**, laid out figure by figure so the three variants can be compared by eye, each with the numbers behind it and what to look for. |
+| [`Reproduction/supplement/SUPPLEMENT_harmonic_model.md`](Reproduction/supplement/SUPPLEMENT_harmonic_model.md) | The per-vertex harmonic model written for readers, with four committed figures — geometry vs. context, the cross-experiment prediction, and the pRF-angle-error control. **On the model's own route, not the settled specification** — see the note at its head. |
 | [`Reproduction/server_extract/README.md`](Reproduction/server_extract/README.md) | The read-only server extractions, one per script, for whoever has `/Volumes/Vision` mounted. |
 | [`Reproduction/_archive/README.md`](Reproduction/_archive/README.md) | Two retired working documents, kept only because current code cites them. **Nothing there is current.** |
 
@@ -238,6 +271,8 @@ them stacks superseded versions.
   including stages upstream and downstream of Figures 5–8.
 - [`AnalysisCode/01_calculate_observer_gain/README.md`](AnalysisCode/01_calculate_observer_gain/README.md)
   — what pRF gain means here and how it is computed.
+- [`Simulations/README.md`](Simulations/README.md) — two optic-flow illustration scripts. Nothing in
+  the analyses depends on them.
 
 ---
 

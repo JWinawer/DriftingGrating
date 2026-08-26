@@ -6,7 +6,7 @@ superseding document first. Start from [`../../AGENTS.md`](../../AGENTS.md).
 
 | document | what it was | why it is still here |
 |---|---|---|
-| `FINDINGS.md` | reported a polar-angle-ordering bug in `compute_derivativeDirections.m` | **Fully retracted.** The original code is correct; the discrepancy came from two bugs inside the reproduction itself. [`../STIMULUS_CONVENTIONS.md`](../STIMULUS_CONVENTIONS.md) is the correct account. Kept because `test_harmonic_model.m`, `validate_against_manuscript.m` and `run_pathB_figures.m` refer back to it as the thing they guard against. |
+| `FINDINGS.md` | reported a polar-angle-ordering bug in `compute_derivativeDirections.m` | **Fully retracted.** The original code is correct; the discrepancy came from two bugs inside the reproduction itself. [`../STIMULUS_CONVENTIONS.md`](../STIMULUS_CONVENTIONS.md) is the correct account. Kept because `test_harmonic_model.m` and `validate_against_manuscript.m` refer back to it as the thing they guard against. Its own references to `bridge/` are to code deleted 2026-08-25. |
 | `ZSCORE_FIG7.md` | why z-scoring reverses the radial/tangential vs. horizontal/vertical rank order | **Closed** — z-scoring was abandoned 2026-07-24 ([`../METHOD_DECISIONS.md`](../METHOD_DECISIONS.md) §1). §1–§5 remain the only account of the *mechanism* of that reversal, which is why the file survives; §7–§8 are superseded, and its §6 precision table was corrected in 2026-08 (the original within-observer SEs came from resampling vertices, which is invalid). |
 
 Other working documents from this phase — `NEXT_STEPS.md`, `GLM_QUALITY.md`, and the reproduction
