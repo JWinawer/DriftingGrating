@@ -136,11 +136,28 @@ if strcmp(projectName, 'dg')
     projectSettings.dgSubjectMode = dg_subjectMode; % 'all' or 'matched' -- traceable alongside subjects/figureDir above
 end
 
-% per-observer mean pRF gain (prfvista_mov/prfvista average), used to
-% gain-weight each observer's contribution in plot1_experimentalCond.m and
-% plot2_experimentalCond.m -- see retrieveObserverGainWeights.m
+% per-observer, per-ROI pRF gain, used to gain-weight each observer's
+% contribution in plot1_experimentalCond.m and plot2_experimentalCond.m --
+% see retrieveObserverGainWeights2.m / computeObserverGainWeightsByROI.m.
+% gainSummaryFile is kept (still the old V1-only file) purely because
+% several downstream scripts derive bidsDir from its directory via
+% fileparts(); it is no longer used to compute gain values directly.
+% gainWeightsSource is the ROI-aware table (subject/roi/weight columns);
+% unlike precisionWeightsSource there's no [] placeholder -- gain
+% correction is not optional, so each script looks this table up per ROI
+% inside its own loop, same pattern as precision.
 projectSettings.gainSummaryFile = fullfile(bidsDir, 'derivatives', 'summaryTables', 'gainSummary.mat');
-projectSettings.observerGain = retrieveObserverGainWeights(subjects, projectSettings.gainSummaryFile);
+Ggain = load(fullfile(bidsDir, 'derivatives', 'summaryTables', 'gainSummaryByROI.mat'), 'gainTable');
+projectSettings.gainWeightsSource = Ggain.gainTable;
+
+% Precision weight source -- ROI-specific (reliability genuinely varies
+% by cortical area, unlike gain), looked up per (subject, roi) via
+% retrieveObserverPrecisionWeights.m in plot1_experimentalCond.m and
+% plot2_experimentalCond.m. [] is the PLACEHOLDER (uniform/no-op, every
+% (subject, roi) gets weight 1) until the precision-weighting method is
+% finalized -- swap in a table with columns subject/roi/weight once it
+% is; no other change needed in the scripts that read this.
+projectSettings.precisionWeightsSource = [];
 
 
 %% MAIN CONDITION: Plot pairwise plots (JUST FOR SANITY CHECK)

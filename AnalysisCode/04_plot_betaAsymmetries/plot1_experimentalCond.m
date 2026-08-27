@@ -155,7 +155,7 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         % high-gain observers and up-weights low-gain observers, and all
         % downstream stats/bootstrapped error bars below inherit the
         % adjustment automatically since they are computed from these
-        % arrays. See projectSettings.observerGain / retrieveObserverGainWeights.m
+        % arrays. See projectSettings.gainWeightsSource / retrieveObserverGainWeights2.m
         %
         % The across-observer average gain is then multiplied back in, so
         % the plotted scale/units resemble the original (unweighted) data.
@@ -173,14 +173,35 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         % the factor actually is) -- arithmetic mean does not have this
         % property. Implemented via exp(mean(log(.))) to avoid a
         % dependency on the Statistics and Machine Learning Toolbox.
-        gainWeights = projectSettings.observerGain;
+        gainWeights = retrieveObserverGainWeights2(projectSettings.subjects, rois{ri}, projectSettings.gainWeightsSource);
         if any(gainWeights <= 0)
             error('gainWeights must be strictly positive to take log() for the geometric mean (found %d non-positive value(s))', ...
                 sum(gainWeights <= 0));
         end
-        groupGain = exp(mean(log(gainWeights)));
+        groupGain = exp(mean(log(gainWeights), 'omitnan')); % omitnan: see retrieveObserverGainWeights2.m
         avgConditions1 = avgConditions1 .* (groupGain ./ gainWeights);
         avgConditions2 = avgConditions2 .* (groupGain ./ gainWeights);
+
+        % Precision-weight each observer for THIS cortical area --
+        % ROI-specific (reliability genuinely varies by cortical area,
+        % unlike gain), via retrieveObserverPrecisionWeights.m.
+        % projectSettings.precisionWeightsSource is currently [] everywhere
+        % this is called (PLACEHOLDER: every (subject, roi) gets weight 1,
+        % a no-op) -- defaults gracefully if that field isn't set at all,
+        % so existing call sites keep working unchanged.
+        %
+        % This is a fundamentally different operation from gain
+        % correction above: gain rescales each observer's VALUES before
+        % averaging; precision weighting changes how much each observer's
+        % (already gain-corrected) value COUNTS in the average -- applied
+        % below as a proper weighted mean (point estimates) and weighted
+        % paired bootstrap (CIs), not another data rescale.
+        if isfield(projectSettings, 'precisionWeightsSource')
+            precisionSource = projectSettings.precisionWeightsSource;
+        else
+            precisionSource = [];
+        end
+        precisionWeights = retrieveObserverPrecisionWeights(projectSettings.subjects, rois{ri}, precisionSource);
 
         % Extract polar angles
         %anglevals = [90, 135, 180, 225, 270, 315, 0, 45];
@@ -189,9 +210,13 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         nBoot = 1000;
         nLoc  = size(avgConditions1,1);
 
-        vals_1 = nanmean(avgConditions1,2)';
+        % Precision-weighted mean across observers (identical to nanmean
+        % when precisionWeights is uniform, as it currently is -- see
+        % weightedNanMean at the end of this file). Transposed to match
+        % nanmean(...,2)''s previous row-vector shape (nLoc columns).
+        vals_1 = weightedNanMean(avgConditions1, precisionWeights)';
         %sem1 = nanstd(avgConditions1,0,2)' ./ sqrt(sum(~isnan(avgConditions1),2)');
-        vals_2 = nanmean(avgConditions2,2)';
+        vals_2 = weightedNanMean(avgConditions2, precisionWeights)';
         %sem2 = nanstd(avgConditions2,0,2)' ./ sqrt(sum(~isnan(avgConditions2),2)');
  
         disp('Testing consistency with permutation')
@@ -215,19 +240,33 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
             valid = ~isnan(x1) & ~isnan(x2);
             x1 = x1(valid);
             x2 = x2(valid);
-        
+            % Forced to a row (x1/x2 are rows): MATLAB vector indexing
+            % preserves the INDEXED array's own orientation, not idx's, so
+            % if w_loc stayed a column (precisionWeights' native shape)
+            % while x1/x2 are rows, wb.*x1(idx) below would silently
+            % broadcast into an nSub x nSub matrix instead of an
+            % elementwise product.
+            w_loc = precisionWeights(valid);
+            w_loc = w_loc(:)';
+
             nSub = numel(x1);
-        
+
             bootDiff = zeros(nBoot,1);
-        
+
             for b = 1:nBoot
-        
+
                 % Bootstrap subjects WITH replacement
                 idx = randi(nSub,nSub,1);
-        
-                % Difference of means for this bootstrap sample
-                bootDiff(b) = mean(x1(idx)) - mean(x2(idx));
-        
+
+                % Precision-weighted difference of means for this
+                % bootstrap sample (identical to the previous plain
+                % mean(x1(idx))-mean(x2(idx)) when precisionWeights is
+                % uniform, as it currently is). Weights renormalized
+                % within each draw since resampling can duplicate/omit
+                % subjects, changing which weights are in play.
+                wb = w_loc(idx); wb = wb / sum(wb);
+                bootDiff(b) = sum(wb.*x1(idx)) - sum(wb.*x2(idx));
+
             end
         
             % 95% percentile confidence interval
@@ -311,10 +350,18 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
         polarplot(deg2rad(anglevals),vals_2, 'LineStyle', conLineStyle, 'Color', conEdgeColor, 'LineWidth',conLineWidth)
         hold on
 
-        % markers only, exactly once per location (no line)
+        % markers only, exactly once per location (no line). Both use
+        % proLineWidth for the marker edge (not conLineWidth, which
+        % COLORS.json sets to half of pro's) so the con/unfilled dot's
+        % outline reads at the same thickness as pro's, matching the same
+        % fix applied to the pairwise plots' dots in
+        % plot2_experimentalCond.m -- dot SIZE was already matched
+        % (markerSize here is the same 6*0.8 value plot2_experimentalCond.m
+        % converts to its scatter()-equivalent area, per that file's
+        % comment), only the con outline width was thinner.
         polarplot(deg2rad(anglevals),vals_1, 'o', 'LineStyle', 'none', 'MarkerSize', markerSize, 'MarkerFaceColor', proFaceColor, 'MarkerEdgeColor', proEdgeColor, 'LineWidth',proLineWidth)
         hold on
-        polarplot(deg2rad(anglevals),vals_2, 'o', 'LineStyle', 'none', 'MarkerSize', markerSize, 'MarkerFaceColor', conFaceColor, 'MarkerEdgeColor', conEdgeColor, 'LineWidth',conLineWidth)
+        polarplot(deg2rad(anglevals),vals_2, 'o', 'LineStyle', 'none', 'MarkerSize', markerSize, 'MarkerFaceColor', conFaceColor, 'MarkerEdgeColor', conEdgeColor, 'LineWidth',proLineWidth)
         hold on
 
         % Plot 68% CI per point -- top layer. Error bar color/alpha
@@ -490,4 +537,21 @@ function plot1_experimentalCond(medianBOLDpa, asymmetryName, projectSettings, va
     print(gcf_edit, filename, '-dpdf', '-vector'); %'-painters');
     close all;
 
+end
+
+function m = weightedNanMean(X, w)
+% WEIGHTEDNANMEAN  Precision-weighted mean of X (nLoc x nSubj) across
+% subjects (dim 2), ignoring NaNs, using per-subject weights w (nSubj x 1
+% or 1 x nSubj). Returns an nLoc x 1 column. Identical to nanmean(X,2)
+% when w is uniform (as it currently is, pending finalized precision
+% weights) -- NaN entries get zero weight in both the numerator and the
+% weight-sum denominator, so each location's mean is taken only over that
+% location's own valid (non-NaN) subjects, same as nanmean.
+    w = w(:)'; % row, so it broadcasts against X's columns (subjects)
+    validMask = ~isnan(X);
+    Wexpanded = repmat(w, size(X,1), 1);
+    Wexpanded(~validMask) = 0;
+    Xz = X;
+    Xz(~validMask) = 0;
+    m = sum(Xz .* Wexpanded, 2) ./ sum(Wexpanded, 2);
 end
