@@ -15,7 +15,7 @@ is needed.
 
 | script | feeds | status |
 |---|---|---|
-| `collect_everything.m` | the GLM quality review — the main extraction | **done** 2026-07-24, all 8 observers |
+| `collect_everything.m` | the GLM quality review — the main extraction | **done** 2026-07-24 (the 8 who did both experiments) and 2026-08-27 (the 5 `dg`-only observers) — **all 13** |
 | `collect_prf_replicate.m` | the pRF polar-angle precision control (second, independent pRF solution) | **done** |
 | `collect_runwise_betas.m` | per-run condition betas, V1, for the within-observer error estimate | **done** |
 | `collect_runwise_betas_areas.m` | the same for eight maps — V1 V2 V3 V3a V3b hV4 MT MST | **done** |
@@ -73,6 +73,40 @@ collect_everything([],[],[],struct('includeBetas',true))  % adds ~8 GB, usually 
 collect_everything([],[],[],struct('force',true))         % collect what is reachable despite preflight
 collect_everything([],[],'/path/to/output')               % somewhere other than ~/dg_collect
 ```
+
+**Collecting a different observer set.** `dg` was run on 13 observers and `da` on 8; the script's
+built-in list is the 8 who did both. Pass `subjects` and `projects` for any other set — this is how
+the five `dg`-only observers were added on 2026-08-27:
+
+```matlab
+collect_everything([],[],[],struct( ...
+    'subjects', {{'sub-0442','sub-wlsubj121','sub-wlsubj127','sub-0397','sub-0427'}}, ...
+    'projects', {{'dg'}}, ...
+    'collectDesign', false))
+```
+
+Three behaviours worth knowing:
+
+- **`skipExisting` is on by default**, so an interrupted run resumes without re-reading what it
+  already has. It treats a file at or below `emptyMB` (0.5 MB) as absent, because a dropped mount
+  writes an empty file rather than erroring.
+- **`collectDesign` is on by default but the design tree is subject-independent.** `collect_design`
+  globs `expOutDir/<proj>/**` and never uses the subject in the path, so it is now collected **once
+  per project** rather than once per observer. Set it `false` when the design tree is already
+  collected.
+- **`Total written` counts only rows marked `ok`.** The manifest also logs each `modelOutput.mat`
+  as `present-not-copied` — on record, deliberately not copied — and those are reported on their own
+  line. Before 2026-08-27 they were added into the total, which reported ~10 GB written for a run
+  that wrote 452 MB, and made five ordinary rows look like five failures.
+
+**`manifest.csv` is overwritten by each run.** It describes only the observers in that call, so copy
+it aside first if it holds a record you want to keep. The current file is the merge of the two runs
+and covers all 13; the individual runs are kept as `manifest_8subj_2026-07-24.csv` and
+`manifest_5subj_2026-08-27.csv` in `~/dg_collect/`.
+
+**`collect_gain_areas` rewrites `gain_areas_summary.csv` from whatever subjects it is given**, so
+run it on the **whole** set, not just the new observers, or the summary silently loses the rest. Its
+per-subject `.mat` files are cached and reloaded, so already-collected observers cost no server reads.
 
 ## Deliberately avoided: polar angle
 

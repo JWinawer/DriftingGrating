@@ -262,6 +262,17 @@ in this list, not a second list somewhere else.
   3. **Two `dg` numbers, and they must not be mixed.** `dg` on 13 is the within-experiment result;
      `dg` on the matched 7 is the only one that may be differenced against `da`. The context effects —
      the core claim — are within-observer differences, so they stay on the matched 7 throughout.
+
+  **The trap, and it fails silently.** `cleanroom` has a single `cfg.subjects`
+  ([`config_repro.m`](Reproduction/cleanroom/config_repro.m)) used in ~104 places across 31 files, and
+  the cross-experiment code pairs observers **by position, not by name** — `harmonic_crossexp.m`
+  allocates `nan(nS,1)` and uses the same index `si` for both experiments. That is correct only while
+  the two lists are identical. Give `dg` 13 entries and `da` 7 and it will **not** error: it will
+  quietly pair the wrong observers and return numbers that look fine. So the fix is not "make the list
+  longer" — it is to split `cfg.subjects` into `dg`/`da`/`matched`, make every cross-experiment path
+  use the matched set and **match by subject name**, and keep the 13-observer `dg` result on a route
+  that cannot reach a difference. Almost nothing hardcodes `8` (the code says `numel(cfg.subjects)`),
+  so the count is not the problem; the shared-list assumption is.
   Upstream's `plot_NeuralAsymmetries.m` carries this as a single `dg_subjectMode` switch (`'all'` vs
   `'matched'`), which is the pattern to copy rather than reinvent.
 

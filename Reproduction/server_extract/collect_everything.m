@@ -74,10 +74,26 @@ function collect_everything(bidsDir, expOutDir, outDir, opts)
     if ~isfield(opts,'username'),          opts.username          = ''; end
     if ~isfield(opts,'preflightOnly'),     opts.preflightOnly     = false; end
     if ~isfield(opts,'force'),             opts.force             = false; end
+    % skipExisting makes an interrupted run cheap to resume: any per-subject
+    % output already present is left alone rather than re-read across the mount.
+    % A dropped mount writes an EMPTY file rather than erroring, so "present"
+    % is not enough -- a file at or below emptyMB is treated as absent.
+    if ~isfield(opts,'skipExisting'),      opts.skipExisting      = true;  end
+    if ~isfield(opts,'emptyMB'),           opts.emptyMB           = 0.5;   end
+    % collectDesign off skips the design tree, which is subject-independent and
+    % already collected once. See collect_design's note below.
+    if ~isfield(opts,'collectDesign'),     opts.collectDesign     = true;  end
+    if ~isfield(opts,'subjects'),          opts.subjects          = {};    end
+    if ~isfield(opts,'projects'),          opts.projects          = {};    end
 
     subjects = {'sub-0037','sub-0201','sub-0255','sub-wlsubj123', ...
                 'sub-wlsubj124','sub-0395','sub-0426','sub-0250'};
     projects = {'dg','da'};
+    % dg was run on 13 observers and da on 8; the eight above are the set that
+    % did both. Pass opts.subjects/opts.projects to collect any other set --
+    % e.g. the five dg-only observers, with projects={'dg'}.
+    if ~isempty(opts.subjects), subjects = opts.subjects; end
+    if ~isempty(opts.projects), projects = opts.projects; end
     hRF_setting = 'glmsingle';
 
     % outDir must be absolute BEFORE setup_user runs, because setup_user may cd.
@@ -111,25 +127,46 @@ function collect_everything(bidsDir, expOutDir, outDir, opts)
         subj = subjects{si};
         fprintf('%s\n', subj);
 
-        manifest = [manifest; collect_retinotopy(bidsDir, subj, outDir)]; %#ok<AGROW>
-        manifest = [manifest; collect_labels(bidsDir, subj, outDir)];     %#ok<AGROW>
+        manifest = [manifest; collect_retinotopy(bidsDir, subj, outDir, opts)]; %#ok<AGROW>
+        manifest = [manifest; collect_labels(bidsDir, subj, outDir, opts)];     %#ok<AGROW>
 
         for pj = 1:numel(projects)
             proj = projects{pj};
             manifest = [manifest; collect_glm(bidsDir, subj, proj, hRF_setting, outDir, opts)]; %#ok<AGROW>
-            manifest = [manifest; collect_design(expOutDir, subj, proj, outDir, opts)];         %#ok<AGROW>
         end
+    end
+
+    % Design ONCE per project, not once per subject. collect_design globs
+    % expOutDir/<proj>/** and never uses subj in the path, so calling it inside
+    % the subject loop re-copied the whole tree for every observer -- eight
+    % identical passes over the mount, and the slowest avoidable cost in the run.
+    if opts.collectDesign
+        fprintf('design (once per project)\n');
+        for pj = 1:numel(projects)
+            manifest = [manifest; collect_design(expOutDir, '(all)', projects{pj}, outDir, opts)]; %#ok<AGROW>
+        end
+    else
+        fprintf('design      skipped (opts.collectDesign = false)\n');
     end
 
     M = cell2table(manifest, 'VariableNames', ...
         {'subject','project','item','status','detail','sizeMB'});
     writetable(M, fullfile(outDir,'manifest.csv'));
 
-    total = sum(M.sizeMB(isfinite(M.sizeMB)));
+    % Only rows actually written count toward the total. The manifest also carries
+    % 'present-not-copied' rows for the huge modelOutput.mat files, which are logged
+    % so their existence is on record but are deliberately NOT copied -- summing every
+    % finite sizeMB reported ~10 GB written for a run that wrote 452 MB.
+    written = M.sizeMB(strcmp(M.status,'ok') & isfinite(M.sizeMB));
+    total = sum(written);
+    noted = M.sizeMB(strcmp(M.status,'present-not-copied') & isfinite(M.sizeMB));
     fprintf('\n---------------------------------------------\n');
     fprintf('%d items, %d ok, %d missing/skipped\n', height(M), ...
             sum(strcmp(M.status,'ok')), sum(~strcmp(M.status,'ok')));
     fprintf('Total written: %.0f MB\n', total);
+    if ~isempty(noted)
+        fprintf('(%.0f MB of modelOutput.mat noted on the server, deliberately not copied)\n', sum(noted));
+    end
     fprintf('Zip or rsync and return: %s\n', outDir);
     fprintf('Check manifest.csv for any row whose status is not "ok".\n\n');
 end
@@ -279,6 +316,13 @@ end
 function rows = collect_glm(bidsDir, subj, proj, hRF_setting, outDir, opts)
 % Whole-surface GLMsingle output, everything except the betas.
     rows = {};
+    outFile = fullfile(outDir, sprintf('glm_%s_%s.mat', subj, proj));
+    [skip, mb] = already_have(outFile, opts);
+    if skip
+        fprintf('    %-3s glm       skipped  %5.0f MB  (already present)\n', proj, mb);
+        rows(end+1,:) = {subj, proj, 'glm', 'skipped-exists', outFile, mb};
+        return
+    end
     glmDir = fullfile(bidsDir,'derivatives',strcat(proj,'GLM'), ...
                       strcat('hRF_',hRF_setting), subj);
     f = dir(fullfile(glmDir,'**','results.mat'));
@@ -335,7 +379,6 @@ function rows = collect_glm(bidsDir, subj, proj, hRF_setting, outDir, opts)
     end
     g.resultsTopFields = fieldnames(S.results);
 
-    outFile = fullfile(outDir, sprintf('glm_%s_%s.mat', subj, proj));
     save(outFile, '-struct', 'g', '-v7.3');
     mb = fileMB(outFile);
     fprintf('    %-3s glm       ok  %5.0f MB  (%d fields, skipped: %s)\n', ...
@@ -353,9 +396,16 @@ function rows = collect_glm(bidsDir, subj, proj, hRF_setting, outDir, opts)
 end
 
 % ---------------------------------------------------------------------
-function rows = collect_retinotopy(bidsDir, subj, outDir)
+function rows = collect_retinotopy(bidsDir, subj, outDir, opts)
 % EVERY prfvista_mov map, as full whole-surface vectors.
     rows = {};
+    outFile = fullfile(outDir, sprintf('ret_%s.mat', subj));
+    [skip, mb] = already_have(outFile, opts);
+    if skip
+        fprintf('    ret       skipped  %5.0f MB  (already present)\n', mb);
+        rows(end+1,:) = {subj, '', 'retinotopy', 'skipped-exists', outFile, mb};
+        return
+    end
     d = dir(fullfile(bidsDir,'derivatives','prfvista_mov',subj,'**','stimfiles.mat'));
     if isempty(d)
         d = dir(fullfile(bidsDir,'derivatives','prfvista_mov',subj,'**','lh.eccen.mgz'));
@@ -385,7 +435,6 @@ function rows = collect_retinotopy(bidsDir, subj, outDir)
     end
     R.mapsSaved = ok;
 
-    outFile = fullfile(outDir, sprintf('ret_%s.mat', subj));
     save(outFile, '-struct', 'R', '-v7.3');
     mb = fileMB(outFile);
     fprintf('    ret       ok  %5.0f MB  (%s)\n', mb, strjoin(ok,','));
@@ -393,10 +442,19 @@ function rows = collect_retinotopy(bidsDir, subj, outDir)
 end
 
 % ---------------------------------------------------------------------
-function rows = collect_labels(bidsDir, subj, outDir)
+function rows = collect_labels(bidsDir, subj, outDir, opts)
 % EVERY label under the subject's FreeSurfer label dir, as vertex index lists.
 % Not just V1 -- other ROIs cost nothing and we have already wanted V2 once.
+% This is the slowest item per subject: ~517 label files, each a full round
+% trip over the mount, so skipping an already-collected observer matters.
     rows = {};
+    outFile = fullfile(outDir, sprintf('labels_%s.mat', subj));
+    [skip, mb] = already_have(outFile, opts);
+    if skip
+        fprintf('    labels    skipped  %5.0f MB  (already present)\n', mb);
+        rows(end+1,:) = {subj, '', 'labels', 'skipped-exists', outFile, mb};
+        return
+    end
     labelDir = fullfile(bidsDir,'derivatives','freesurfer',subj,'label');
     if ~isfolder(labelDir)
         fprintf('    labels    MISSING %s\n', labelDir);
@@ -422,7 +480,6 @@ function rows = collect_labels(bidsDir, subj, outDir)
     end
     L.labelsSaved = names;
 
-    outFile = fullfile(outDir, sprintf('labels_%s.mat', subj));
     save(outFile, '-struct', 'L', '-v7.3');
     mb = fileMB(outFile);
     fprintf('    labels    ok  %5.0f MB  (%d labels)\n', mb, numel(names));
@@ -470,6 +527,18 @@ function rows = collect_design(expOutDir, subj, proj, outDir, opts)
     end
     fprintf('    %-3s design    ok  %5.0f MB  (%d files)\n', proj, mb, n);
     rows(end+1,:) = {subj, proj, 'design', 'ok', fullfile(expOutDir,proj), mb};
+end
+
+% ---------------------------------------------------------------------
+function [skip, mb] = already_have(outFile, opts)
+% True when outFile is present AND large enough to be real. A dropped mount
+% makes reads return empty rather than erroring, so a tiny file is a partial
+% from a failed run, not a completed item -- re-collect it.
+    skip = false; mb = NaN;
+    if ~isfield(opts,'skipExisting') || ~opts.skipExisting, return, end
+    if ~isfile(outFile), return, end
+    d = dir(outFile); mb = d.bytes/1e6;
+    skip = mb > opts.emptyMB;
 end
 
 % ---------------------------------------------------------------------
