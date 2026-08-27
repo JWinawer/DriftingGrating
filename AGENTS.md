@@ -36,6 +36,15 @@ in a future study. Vertices are restricted to **4–8° eccentricity** and **pRF
 band is where spatial frequency is most closely matched between the two experiments — it is *not*
 the stimulated extent, which was roughly 0.5–12°.
 
+**Acquisition and design.** 3T Siemens Prisma, multiband EPI, TR = 1 s, 2 mm isotropic; fMRIPrep and
+FreeSurfer, so every analysis is vertex-wise on the cortical surface rather than voxel-wise. Each run
+is 52 trials — 13 conditions × 4 repeats, 3 s stimulus and 2 s inter-trial interval — at 50% Michelson
+contrast in an aperture of 12.2° radius. pRF parameters come from a separate retinotopy protocol fitted
+with `vistasoft`. **Thirteen** observers were run on `dg` and 8 on `da`; which of them enters which
+analysis is standing fact 7, and it is no longer the plain "8 in both" that the hardcoded `[1:8]`
+index in the older scripts assumes. (Recorded 2026-08-27, merged from upstream; these protocol details
+are not stated anywhere else in this repository.)
+
 **Polar angle enters continuously, not in bins.** The settled specification fits each vertex at its
 own pRF polar angle (§3). The eight 45° wedges (centred 0, 45, …, 315°, each ±22.5°) are still
 everywhere in the project — they are the earlier route, they are the `roi` variant kept for
@@ -63,7 +72,7 @@ evidence, not evidence of absence. → [`Reproduction/RESULTS.md`](Reproduction/
 
 ---
 
-## 2. Six standing facts
+## 2. Seven standing facts
 
 Each changes how everything else should be read. Each is settled.
 
@@ -72,9 +81,12 @@ Each changes how everything else should be read. Each is settled.
    anywhere**. A low GLM R² means weak *differentiation among* stimuli, not an absent response. The
    orientation asymmetries are unaffected — the common blank term cancels in each.
    → [`local_qc/DATA_QUALITY.md`](Reproduction/local_qc/DATA_QUALITY.md) §1
-2. **No bad observers, no processing errors; all 8 observers are retained.** The two once flagged as
-   anomalous (sub-0037, sub-0201) show normal MT motion-selectivity and V4 grating preference in the
-   same sessions. The exclusion once argued for is **withdrawn**.
+2. **No observer is excluded for data quality.** The two once flagged as anomalous (sub-0037,
+   sub-0201) show normal MT motion-selectivity and V4 grating preference in the same sessions. The
+   exclusion once argued for is **withdrawn**. This is about *data quality only*; sub-0395 is
+   separately excluded from `da` because it was run on the wrong stimulus, which is a fact about the
+   session and not a judgement about its data (fact 7). (Reworded 2026-08-27: this used to read "all 8
+   observers are retained", which is no longer true of `da`.)
    → [`local_qc/DATA_QUALITY.md`](Reproduction/local_qc/DATA_QUALITY.md) §2
 3. **Analyses are raw % signal change — not z-scored.** `beta_std` is not a gain when there is no
    baseline, and dividing the blank-independent asymmetries by it puts the blank back in.
@@ -91,6 +103,13 @@ Each changes how everything else should be read. Each is settled.
    across the 8 observers. The Figure-7 LME is not an alternative: it returns the identical estimate
    and only changes the standard error, in the anti-conservative direction (DF = 502, not 7).
    → [`METHOD_DECISIONS.md`](Reproduction/METHOD_DECISIONS.md) §3
+7. **The observer set is no longer "the same 8 in both experiments".** Settled 2026-08-27.
+   **sub-0395's `da` session used a pilot stimulus** whose annuli did **not** scale spatial period
+   with eccentricity, so those data are not comparable with the other observers' and the observer is
+   **excluded from `da`**. Separately, **13 observers were run on `dg`**, not 8. The agreed scheme is:
+   **`dg` = all 13, `da` = the valid 7, and any contrast between the two experiments = those same 7.**
+   Upstream implements this (see §4); **`Reproduction/` on this side does not yet** — every number in
+   these documents is still the old 8-and-8, including sub-0395 in `da` (§5).
 
 ---
 
@@ -145,6 +164,41 @@ Analysis is MATLAB (R2022b). Paths in the original scripts point at a mounted da
    `plot_NeuralAsymmetries.m` (Figs 5 and 6), `lme1_fit.m` (Fig 7, being removed),
    `lme2_ploteachDirLoc.m` (Fig 8).
 
+**New upstream material, merged 2026-08-27.** Rania's side has added a large body of code that the
+analyses above do not depend on, but that anyone reading `AnalysisCode/` will now meet:
+
+- **`02_ttave/`** — run time-series QC. Observed against GLMsingle-predicted BOLD for each run
+  (`run_runTimeseries.m`), the cross-subject group average of the same (`run_groupAverageRunTimeseries.m`,
+  which refits a canonical HRF to the group-mean trace because per-vertex HRF fits cannot be averaged),
+  a within-run against across-run comparison, and full-model GLM R² on the surface
+  (`computeGLMsingleR2.m`).
+- **`01_calculate_observer_gain/computeObserverGainWeightsByROI.m`** — pRF gain per observer × cortical
+  area rather than V1 only, on the same 4–8° and R² ≥ 0.1 vertex criteria.
+- **`01_calculate_observer_precisionWeights/`** — per-observer measurement reliability, computed by the
+  same across-run resampling as this side's precision weighting, which its header cites.
+- **`04_plot_betaAsymmetries/fitAsymmetryRegression.m`** and the plots that read its cache — a weighted
+  least-squares successor to `lme1_fit.m`, one joint fit per experiment × cortical area with a fixed
+  sum-to-zero observer intercept. It is parallel to `lme1_fit.m`, not a replacement: neither reads the
+  other. → [`REGRESSION.md`](AnalysisCode/04_plot_betaAsymmetries/REGRESSION.md)
+
+Note that `REGRESSION.md` uses **"ROI" for cortical area and "location" for polar-angle wedge** — the
+code's convention, which is the opposite of the manuscript's. These documents use "wedge" for the
+polar-angle bin (§1).
+
+**`da`/sub-wlsubj124 presented the same trial sequence twice — do not "fix" it.** Runs 1 and 2 of that
+one observer share a byte-identical `expDes.trialMat`, and this is baked into `matrices_onset{1..2}`
+in their `rawInfo.mat`. No other observer × experiment pair is affected. Upstream checked this against
+the data (each run's BOLD correlates best with its own run's model) and concluded the sequence really
+was presented twice and was recorded correctly — a quirk of the session, **not** a mislabelling bug, so
+GLMsingle should not be re-run and `modelOutput.mat` should not be edited. It matters only where runs
+are averaged as if independent: `findDuplicateDesignRuns.m` detects the case and
+`run_groupAverageRunTimeseries.m` drops the later run of a duplicate pair. Nothing in the asymmetry
+analyses averages runs this way, so none of the results in `Reproduction/` are affected.
+
+**Figure-export loops need `drawnow` before `print()`.** Two figures made back-to-back in one loop can
+otherwise be written with identical content, because `print()` grabs a stale render. Any new
+figure-generating loop should call `drawnow;` immediately before each `print(...)`.
+
 **Reproduction (`Reproduction/`)** — an independent recomputation from a single tidy table, and where
 every follow-up analysis now lives. `cleanroom/` is the primary route and holds the settled
 specification; `server_extract/` holds read-only extractions for whoever has the data volume mounted;
@@ -172,16 +226,44 @@ in this list, not a second list somewhere else.
   — `da` card−obl, bootstrap [−0.083, −0.002] excluding zero against *t* [−0.092, 0.011], *p* = .105.
   *t* is primary. Context effects are unaffected.
   → [`METHOD_DECISIONS.md`](Reproduction/METHOD_DECISIONS.md) §5
-- **Geometric vs. arithmetic mean gain.** The Methods say geometric; `lme1_fit.m`,
-  `plot1_experimentalCond.m` and `plot2_experimentalCond.m` use `mean(gainWeights)` and should be
-  `exp(mean(log(gainWeights)))`. Worth ~1% on every effect size; changes no *t* or *p*. The clean-room
-  already defaults to geometric.
+- **Geometric vs. arithmetic mean gain — closed.** `lme1_fit.m`, `plot1_experimentalCond.m` and
+  `plot2_experimentalCond.m` now use `exp(mean(log(gainWeights)))`, matching the Methods and the
+  clean-room. Worth ~1% on every effect size and no change to any *t* or *p*, as expected. (Was an open
+  request to Rania; fixed upstream and merged here 2026-08-27.)
   → [`METHOD_DECISIONS.md`](Reproduction/METHOD_DECISIONS.md) §2
 - **"Both Cartesian effects decline monotonically up the hierarchy" is established for one of the
   two.** The within-observer V1 − V3 difference of the context effect is significant for horiz−vert
   (−0.215, *p* = .028) and not for card−obl (−0.066, *p* = .153). The cells fall in order in each
   map, but the difference *between* maps is resolved for only one asymmetry.
   → [`RESULTS.md`](Reproduction/RESULTS.md) §5
+- **The reproduction still runs the old 8-and-8 observer set — this is the big open job.** Standing
+  fact 7 settled the observer scheme on 2026-08-27: `dg` = all 13, `da` = the valid 7 (sub-0395 out,
+  pilot stimulus), cross-experiment contrasts = those same 7. **Nothing in `Reproduction/` has been
+  re-run against it.** Every number in [`RESULTS.md`](Reproduction/RESULTS.md),
+  [`SPECIFICATION.md`](Reproduction/SPECIFICATION.md),
+  [`FIGURE_VARIANTS.md`](Reproduction/supplement/FIGURE_VARIANTS.md) and the `local_qc/` documents is
+  still 8 observers per experiment with sub-0395 included in `da`. Three consequences to work through,
+  in order:
+  1. **`da` loses its dissenting observer.** sub-0395 is the one observer with a negative `da`
+     radial−tangential value, and dropping it was previously reported as a *sensitivity check*
+     ([`RESULTS.md`](Reproduction/RESULTS.md) §3,
+     [`SUPPLEMENT_harmonic_model.md`](Reproduction/supplement/SUPPLEMENT_harmonic_model.md)). It is now
+     an exclusion rule with a stimulus-design reason behind it, which is a different and much stronger
+     footing. The polar-frame conclusion — currently "uninformative rather than absent" — has to be
+     re-derived on 7, not quoted from a sensitivity check, and the *n* = 7 within-observer tests lose a
+     degree of freedom.
+  2. **`dg` gains five observers, but only if the data are here.** The local extraction
+     (`~/dg_collect`) holds the original 8. Running `dg` on 13 means extracting sub-0442,
+     sub-wlsubj121, sub-wlsubj127, sub-0397 and sub-0427 from the mounted volume first — see
+     [`server_extract/README.md`](Reproduction/server_extract/README.md). Only the `dg` side is needed
+     for them (they have no `da` session): `glm`, `runbetas`, `runbetas_areas`, `ret`, `ret_prfvista`,
+     `labels` and `gain_areas`, about 84 MB per observer, so roughly 0.4 GB for the five. Until that
+     extraction is done, this side can implement the exclusion but not the expansion.
+  3. **Two `dg` numbers, and they must not be mixed.** `dg` on 13 is the within-experiment result;
+     `dg` on the matched 7 is the only one that may be differenced against `da`. The context effects —
+     the core claim — are within-observer differences, so they stay on the matched 7 throughout.
+  Upstream's `plot_NeuralAsymmetries.m` carries this as a single `dg_subjectMode` switch (`'all'` vs
+  `'matched'`), which is the pattern to copy rather than reinvent.
 
 ### Figure decisions on this side
 
@@ -269,6 +351,9 @@ them stacks superseded versions.
 - [`README.md`](README.md) — experiment (stimulus-presentation) overview and the `Models/` notebook.
 - `AnalysisCode/README.rtf` — near function-by-function description of the full analysis pipeline,
   including stages upstream and downstream of Figures 5–8.
+- [`AnalysisCode/04_plot_betaAsymmetries/REGRESSION.md`](AnalysisCode/04_plot_betaAsymmetries/REGRESSION.md)
+  — upstream's weighted-least-squares successor to the Fig-7 LME: the model, the weighting, and its
+  subject selection. Nothing in `Reproduction/` depends on it. Read the terminology note first (§4).
 - [`AnalysisCode/01_calculate_observer_gain/README.md`](AnalysisCode/01_calculate_observer_gain/README.md)
   — what pRF gain means here and how it is computed.
 - [`Simulations/README.md`](Simulations/README.md) — two optic-flow illustration scripts. Nothing in

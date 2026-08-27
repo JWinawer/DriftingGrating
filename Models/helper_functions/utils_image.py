@@ -953,20 +953,28 @@ def plot_energy_per_location_polar(stim_energy, representative_chIdx, analysis_n
         
 def canonical_normalization(stim_energy, pixpdeg, representative_chIdx=0, p_exp = 1, q_exp = 1, tuned=False):
 
-    # note that inversion occurs with tuned=False, sigma=0.01 or 0.1, p_exp=1, q_exp=2, std_deg=3
-    
-    # normalization strength (when sigma is large --> less normalization; approaching 0 is strong normalization)
-    sigma = 0.1
-    
+    # note that inversion occurs with tuned=False, sigma_sq=0.01 or 0.1, p_exp=1, q_exp=2, sigma_x_deg=sigma_y_deg=3
+
+    # normalization strength -- this is already sigma-SQUARED (sigma^2 in d = L^2 / (sigma^2 + ...));
+    # stim_energy is itself already squared magnitude (L^2) from an earlier step, so nothing here
+    # re-squares it. (when this is large --> less normalization; approaching 0 is strong normalization)
+    sigma_sq = 0.1
+
     # p_exp: exponent on numerator often 1 or 2
-    # q_exp: The exponent q > 1 makes suppression superlinear, meaning strong signals get disproportionately more 
-                  # normalized than weak ones. This matches divisive gain control models in which suppressive drive grows faster 
+    # q_exp: The exponent q > 1 makes suppression superlinear, meaning strong signals get disproportionately more
+                  # normalized than weak ones. This matches divisive gain control models in which suppressive drive grows faster
                   # than linear with local contrast. Excitation grows slower than suppression
-    
-    # std of spatial gaussian
-    std_deg = 3                  # make this 1 to 5
-    std_pix = std_deg * pixpdeg
-    
+
+    # std of spatial gaussian, one constant per spatial dimension (in degrees, converted to pixels
+    # via pixpdeg). Unlike div_normalization, there's no SF-octave/orientation-radian conversion
+    # needed here: the SF and orientation axes are collapsed by a plain sum() below (pooling across
+    # orientations, and using only one representative SF channel), before gaussian_filter ever runs
+    # -- so every gaussian_filter call here blurs a 2D (X,Y) spatial map only.
+    sigma_x_deg = 3
+    sigma_y_deg = 3               # make either of these 1 to 5
+    std_pix_x = sigma_x_deg * pixpdeg
+    std_pix_y = sigma_y_deg * pixpdeg
+
     #std_pix = np.shape(stim_energy[1,1][1,1])[0]
     
     [n_set, n_stimuli, n_ori, n_sf] = retrieve_dim(stim_energy)
@@ -997,7 +1005,7 @@ def canonical_normalization(stim_energy, pixpdeg, representative_chIdx=0, p_exp 
             # this will be used to compute the overall suppressive drive accounting for all orientations
             pooled = np.sum(stim_energy[i,j][0,:] ** q_exp, axis=0)     # pool across orientations first
             #np.shape(stim_energy)
-            Z = gaussian_filter(pooled, sigma=std_pix)             # convolve pooled energy across all orientation channels
+            Z = gaussian_filter(pooled, sigma=(std_pix_y, std_pix_x))  # convolve pooled energy across all orientation channels
             
             for h in range(n_ori):          # orientation
 
@@ -1022,7 +1030,7 @@ def canonical_normalization(stim_energy, pixpdeg, representative_chIdx=0, p_exp 
                     # ----------------------------------------
 
                     # 1) Orientation-tuned spatial surround for orientation h
-                    S_h = gaussian_filter(stim_energy[i,j][0,h] ** q_exp, sigma=std_pix)
+                    S_h = gaussian_filter(stim_energy[i,j][0,h] ** q_exp, sigma=(std_pix_y, std_pix_x))
 
                     # 2) Cross-orientation suppression for orientation h
                     other_oris = [o for o in range(n_ori) if o != h]
@@ -1031,8 +1039,8 @@ def canonical_normalization(stim_energy, pixpdeg, representative_chIdx=0, p_exp 
                     # 3) Total suppression
                     suppression_field[i,j][0,h] = S_h + C_h
 
-                norm_energy[i,j][0,h] = energy[i,j][0,h] ** p_exp / (sigma + suppression_field[i,j][0,h])
-                
+                norm_energy[i,j][0,h] = energy[i,j][0,h] ** p_exp / (sigma_sq + suppression_field[i,j][0,h])
+
     return norm_energy
 
 
@@ -1041,19 +1049,84 @@ def canonical_normalization(stim_energy, pixpdeg, representative_chIdx=0, p_exp 
 
 def div_normalization(stim_energy, pixpdeg, p_exp = 1, q_exp = 1, tuned=False, device=None):
 
-    # normalization strength (when sigma is large --> less normalization; approaching 0 is strong normalization)
-    sigma = 0.01
-    
+    # normalization strength -- this is already sigma-SQUARED (sigma^2 in d = L^2 / (sigma^2 + ...));
+    # stim_energy is itself already squared magnitude (L^2) from an earlier step, so nothing here
+    # re-squares it. (when this is large --> less normalization; approaching 0 is strong normalization)
+    sigma_sq = 0.01
+
     # p_exp: exponent on numerator often 1 or 2
-    # q_exp: The exponent q > 1 makes suppression superlinear, meaning strong signals get disproportionately more 
-                  # normalized than weak ones. This matches divisive gain control models in which suppressive drive grows faster 
+    # q_exp: The exponent q > 1 makes suppression superlinear, meaning strong signals get disproportionately more
+                  # normalized than weak ones. This matches divisive gain control models in which suppressive drive grows faster
                   # than linear with local contrast. Excitation grows slower than suppression
-    
-    # std of spatial gaussian
-    std_deg = 3                  # make this 1 to 5
-    std_pix = std_deg * pixpdeg
-    print(std_pix)
-    
+
+    # ------------------------------------------------------------------------
+    # k1/k2 gaussian bandwidth, one constant per dimension in that dimension's
+    # own natural unit -- converted below to units of pyramid array-index-steps
+    # (what gaussian_filter_gpu actually needs) using the pyramid's own known
+    # channel spacing:
+    #   - SF: exactly 1 octave per index step by construction (peak SF of
+    #     level i is img_size/2**(i+2), a clean power-of-2/octave progression
+    #     -- see pyrmodel.SteerablePyramidSF.find_sf_preference_for_each_filter;
+    #     confirmed empirically too, feeding a grating at each channel's own
+    #     peak frequency puts >99.9% of energy in that one channel).
+    #   - orientation: exactly pi/4 rad per index step, but only if treated as
+    #     CIRCULAR with period pi -- the pyramid's 4 channel indices are NOT in
+    #     monotonic angle order (empirically confirmed: index 0,1,2,3 -> 0,
+    #     135, 90, 45 deg, i.e. -45 deg per step with wraparound). A plain
+    #     (non-circular) index-distance blur -- like the reflect-boundary one
+    #     used here -- is therefore not quite correct for this axis regardless
+    #     of sigma, but at the width used below it makes no practical
+    #     difference (the blur already spans several multiples of the whole
+    #     4-channel axis).
+    #   - x, y: pixpdeg (already a function argument) converts degrees to pixels directly.
+    #
+    # The SF/orientation constants below (~93.7 octaves / ~73.6 radians) are
+    # backed out from the *previous* hardcoded std_pix so this is a pure
+    # relabeling -- output is unchanged for the current pixpdeg. Note these
+    # numbers are themselves evidence that the "untuned" width was never
+    # literally 12 octaves or tied to a specific radian value (as stated in
+    # the manuscript): it was just "far larger than the 6-level/4-channel
+    # axis it's applied to", which is what actually makes it untuned, and
+    # would remain true for a wide range of other constants too.
+    sigma_x_deg = 3
+    sigma_y_deg = 3
+    sigma_sf_octaves = 93.68852459016394
+    sigma_ori_radians = 73.58279514453143
+
+    # k2 (tuned branch only): the cross-orientation suppression term's kernel, expressed in
+    # its own natural unit like the other constants above -- degrees, for the x,y axes -- as
+    # the smallest meaningful nonzero angular range: the size of a single pixel (1/pixpdeg).
+    # NOTE: because every gaussian call here (including k1) truncates its kernel at 4 sigma,
+    # a sigma of exactly "1 pixel" still produces a real (if narrow) 9-tap blur spanning 4
+    # neighboring pixels each side -- it is empirically negligible on this pipeline's smooth,
+    # pyramid-derived energy maps (median relative difference vs. an exact delta ~2e-7 on real
+    # stimuli), but it is not a literal no-op. If an exact no-op is wanted instead, anything
+    # below 0.125 pixels (0.125/pixpdeg deg) rounds its kernel radius down to 0 in this
+    # implementation and reproduces sigma=0 bit-for-bit.
+    #
+    # SF and orientation stay at sigma=0 (a true delta), NOT also "1 unit" of their own natural
+    # width (1 octave / 1 orientation-step) -- confirmed empirically that unlike 1 pixel out of
+    # 896, "1 unit" on these 6- and 4-element axes is not a small perturbation: with the same
+    # 4-sigma truncation, sigma=1 there gives a kernel radius of 4, i.e. it mixes across nearly
+    # the entire axis (correlation with the delta case drops to ~0.74, and energy that was
+    # >98% concentrated in one SF channel spreads to be roughly uniform across all 6). That
+    # would reintroduce real cross-SF/cross-orientation pooling into what's supposed to be the
+    # perfectly-local cross term, duplicating what k1 and the explicit sum over other
+    # orientations already do.
+    sigma_k2_xy_deg = 1 / pixpdeg
+
+    octaves_per_sf_step = 1.0
+    radians_per_ori_step = np.pi / 4
+
+    std_pix_x = sigma_x_deg * pixpdeg
+    std_pix_y = sigma_y_deg * pixpdeg
+    std_index_sf = sigma_sf_octaves / octaves_per_sf_step
+    std_index_ori = sigma_ori_radians / radians_per_ori_step
+    std_pix_k2_xy = sigma_k2_xy_deg * pixpdeg
+    print(f"k1: sf={std_index_sf} (octaves-equiv), ori={std_index_ori} (radians-equiv), "
+          f"x={std_pix_x}px, y={std_pix_y}px | "
+          f"k2: sf=0, ori=0, xy={sigma_k2_xy_deg:.6f} deg ({std_pix_k2_xy}px)")
+
     [n_set, n_stimuli, n_ori, n_sf] = retrieve_dim(stim_energy)
 
     # initialized output -- will be [i,h][1,j]
@@ -1079,7 +1152,7 @@ def div_normalization(stim_energy, pixpdeg, p_exp = 1, q_exp = 1, tuned=False, d
                 # apply 4D gaussian filter across 4D matrix (all SFs, ORIs, X, Y)
                 Z[i,j] = gaussian_filter_gpu(
                     stim_energy[i, j] ** q_exp,
-                    sigma=(std_pix, std_pix, std_pix, std_pix),
+                    sigma=(std_index_sf, std_index_ori, std_pix_x, std_pix_y),
                     device=device,
                 )
 
@@ -1096,24 +1169,30 @@ def div_normalization(stim_energy, pixpdeg, p_exp = 1, q_exp = 1, tuned=False, d
                     # 1) Orientation-tuned spatial surround for orientation h ((6, 1, 896, 896))
                     S_h = gaussian_filter_gpu(
                         stim_energy[i,j][:,h:h+1] ** q_exp,
-                        sigma=(std_pix, 1, std_pix, std_pix),
+                        sigma=(std_index_sf, 1, std_pix_x, std_pix_y),
                         device=device,
                     )
 
-                    # 2) Cross-orientation suppression for orientation h
+                    # 2) Cross-orientation suppression for orientation h: sum_{om != oh} L^2(SF,om,x,y) * k2
                     other_oris = [o for o in range(n_ori) if o != h]
 
-                    # no filter b/c no spatial spread at all (perfectly local)
-                    C_h = np.sum(
+                    C_h_summed = np.sum(
                         [stim_energy[i,j][:, o:o+1] for o in other_oris],  # each (6, 1, 896, 896)
                         axis=0
-                    ) 
+                    )
+                    # k2: a real gaussian, as narrow as possible (1px) on x,y; delta (sigma=0)
+                    # on SF/orientation -- see the sigma_k2_xy_deg comment above for why.
+                    C_h = gaussian_filter_gpu(
+                        C_h_summed,
+                        sigma=(0, 0, std_pix_k2_xy, std_pix_k2_xy),
+                        device=device,
+                    )
 
                     # 3) Total suppression (equivalent to F(x',y',θ,θ') but decomposed)
                     Z[i,j][:,h:h+1] = S_h + C_h
 
-            norm_energy[i,j] = stim_energy[i, j] ** p_exp / (sigma + Z[i,j])
-            
+            norm_energy[i,j] = stim_energy[i, j] ** p_exp / (sigma_sq + Z[i,j])
+
     return norm_energy
 
 
@@ -1167,7 +1246,7 @@ def normalization_byAnisotropy(stim_energy, pixpdeg):
     return norm_energy
 
 
-def normalization_byAnisotropy_NOA(stim_energy, pixpdeg):
+def normalization_byAnisotropy_NOA_SFcollapse(stim_energy, pixpdeg):
 
     # STD in denominator is NON-SPATIAL
 
@@ -1176,12 +1255,21 @@ def normalization_byAnisotropy_NOA(stim_energy, pixpdeg):
         (spatialFreqChannel, orientation, x, y)
 
     Returns norm_energy with the *same shape*.
+
+    NOTE: this is the original implementation, kept for comparison against
+    normalization_byAnisotropy_NOA (which now preserves the SF dimension in
+    the numerator instead of averaging it away before dividing). Since the
+    denominator here is a single scalar shared across all SF channels,
+    averaging this function's per-SF-preserved counterpart across SF
+    afterward is mathematically identical to this function's output --
+    division by a constant commutes with averaging. Kept as a separate,
+    named function so both can be plotted and compared directly.
     """
-    
-    p_exp = 1,
-    sigma = 0.01,
+
+    p_exp = 1
+    sigma = 0.01
     #sigma_NOA=75
-    
+
     # std of NOA
     #sigma_NOA_deg = 3                  # make this 1 to 5
     #sigma_NOA = sigma_NOA_deg * pixpdeg
@@ -1197,10 +1285,10 @@ def normalization_byAnisotropy_NOA(stim_energy, pixpdeg):
     }
 
     [n_set, n_stimuli, n_ori, n_sf] = retrieve_dim(stim_energy_SFave)
-    
+
     # Allocate output with SAME shape
     norm_energy = {
-        key: np.zeros((n_sf, n_ori, X, Y))  
+        key: np.zeros((n_sf, n_ori, X, Y))
         for key in stim_energy_SFave.keys()
     }
 
@@ -1224,11 +1312,75 @@ def normalization_byAnisotropy_NOA(stim_energy, pixpdeg):
 
             # scalar suppressive drive s_val
             s_val = std_E
-            
+
             # E_ch: shape (n_ori, X, Y)
             R_full = E_full ** p_exp / (s_val + sigma)   # shape (n_ori, X, Y)
 
             # Store output (add channel dimension back)
+            norm_energy[i,j] = R_full
+
+    return norm_energy
+
+
+def normalization_byAnisotropy_NOA(stim_energy, pixpdeg):
+
+    # STD in denominator is NON-SPATIAL
+
+    """
+    stim_energy[(i,j)] has shape (n_sf, n_ori, X, Y)
+        (spatialFreqChannel, orientation, x, y)
+
+    Returns norm_energy with the SAME shape -- unlike
+    normalization_byAnisotropy_NOA_SFcollapse, the SF dimension is preserved
+    in the numerator (matching how models 1-3 retain full SF resolution)
+    rather than averaged away before dividing. The denominator (a single
+    scalar per stimulus, pooling energy across SF, x, and y into L^2_theta,
+    then taking its Std across theta) is computed identically to the
+    SFcollapse version -- only the numerator differs. Collapsing this
+    function's output across SF afterward (e.g. via condense_energy) should
+    reproduce normalization_byAnisotropy_NOA_SFcollapse's output exactly,
+    since dividing by a constant commutes with averaging.
+    """
+
+    p_exp = 1
+    sigma = 0.01
+
+    sample_arr = next(iter(stim_energy.values()))
+    n_sf, _, X, Y = sample_arr.shape
+
+    [n_set, n_stimuli, n_ori, _] = retrieve_dim(stim_energy)
+
+    # Allocate output with SAME shape as the input (SF preserved)
+    norm_energy = {
+        key: np.zeros((n_sf, n_ori, X, Y))
+        for key in stim_energy.keys()
+    }
+
+    # Loop over stimuli
+    for i in range(n_set):
+        for j in range(n_stimuli):
+
+            E_full = stim_energy[i, j]        # shape (n_sf, n_ori, X, Y) -- SF preserved
+
+            # L^2_theta: pool energy across SF, x, and y (mean, to match the
+            # SFcollapse version) -- shape (n_ori,)
+            Eori = np.mean(E_full, axis=(0, 2, 3))
+
+            # mean across orientations
+            Ebar = np.mean(Eori)
+
+            # orientation variance and std
+            diffsq = (Eori - Ebar)**2
+            var_E  = np.mean(diffsq)
+            std_E  = np.sqrt(var_E)
+
+            # scalar suppressive drive s_val (shared across every SF channel)
+            s_val = std_E
+
+            # E_full: shape (n_sf, n_ori, X, Y), each SF channel divided by the same scalar
+            R_full = E_full ** p_exp / (s_val + sigma)
+
+            # Store output (SF dimension preserved)
             norm_energy[i,j] = R_full
 
     return norm_energy
@@ -1249,19 +1401,46 @@ def normalization_byStimHomogeneity(stim_energy, pixpdeg, device=None):
     Returns norm_energy with the *same shape*.
     """
 
-    sigma = 0.01
+    # normalization strength -- this is already sigma-SQUARED (sigma^2 in d = L^2 / (sigma^2 + ...));
+    # stim_energy is itself already squared magnitude (L^2) from an earlier step, so nothing here
+    # re-squares it.
+    sigma_sq = 0.01
     p_exp = 1
+    # NOTE: these two are unused/dead (superseded by sigma_c/sigma_s below) -- kept only
+    # because removing them silently could be mistaken for "3 deg center, 10 deg surround"
+    # being the real values. They are not; see sigma_c_deg/sigma_s_deg below for the values
+    # actually used.
     sigma_center_deg = 3
     sigma_surround_deg = 10
-    
-    # Convert degrees → pixels
-    #sigma_c = sigma_center_deg * pixpdeg
-    #sigma_s = sigma_surround_deg * pixpdeg
 
-    sigma_c = 1 # make as small as possible (1 pixel)
-    sigma_s = 3 * pixpdeg
-    
-    
+    # k1 for the Z (suppressive drive) computation below: this is meant to emulate
+    # Model 3 (div_normalization, untuned + exponential suppression) with a spatially-
+    # varying exponent instead of a fixed q_exp=2 -- so it needs the SAME "untuned" k1
+    # blur widths used there, not sigma_c (which is this function's own, unrelated,
+    # narrow "center" pooling width used a few lines below for the homogeneity measure
+    # itself). Duplicated here (rather than imported) since div_normalization defines
+    # these as local constants, not shared state; keep in sync with that function.
+    sigma_x_deg = 3
+    sigma_y_deg = 3
+    sigma_sf_octaves = 93.68852459016394
+    sigma_ori_radians = 73.58279514453143
+    octaves_per_sf_step = 1.0
+    radians_per_ori_step = np.pi / 4
+    std_pix_x_k1 = sigma_x_deg * pixpdeg
+    std_pix_y_k1 = sigma_y_deg * pixpdeg
+    std_index_sf_k1 = sigma_sf_octaves / octaves_per_sf_step
+    std_index_ori_k1 = sigma_ori_radians / radians_per_ori_step
+
+    # center/surround widths actually used, named in degrees (the natural unit for x,y)
+    # and converted to pixels, matching the pattern used elsewhere for k1/k2.
+    sigma_c_deg = 1 / pixpdeg   # as small as possible: the size of a single pixel
+    sigma_s_deg = 3
+    sigma_c = sigma_c_deg * pixpdeg
+    sigma_s = sigma_s_deg * pixpdeg
+    print(f"stimHomogeneity: sigma_c={sigma_c_deg:.6f} deg ({sigma_c}px), "
+          f"sigma_s={sigma_s_deg} deg ({sigma_s}px)")
+
+
     # average across SF?
     # stim_energy_SFave = {
     #     key: np.mean(val, axis=0, keepdims=True)
@@ -1336,13 +1515,15 @@ def normalization_byStimHomogeneity(stim_energy, pixpdeg, device=None):
             # Store (0 ---> very different channel distribution; 1 --> very similar channel distribution between center/surround)
             q_exp[i, j] = H_map + 1 # added plus one because this will be used for the q exponent, which should range from 1-2 not 0-1
 
-            # apply 4D gaussian filter across 4D matrix (all SFs, ORIs, X, Y) -- exponent scaled based on surround similarity
-            Z[i,j] = gaussian_filter(
+            # apply the SAME k1 blur used by Models 1/3 (all SFs, ORIs, X, Y) -- exponent
+            # scaled based on surround similarity instead of fixed at q_exp=2
+            Z[i,j] = gaussian_filter_gpu(
                 stim_energy[i, j] ** q_exp[i,j],
-                sigma=(sigma_c, sigma_c, sigma_c, sigma_c)
+                sigma=(std_index_sf_k1, std_index_ori_k1, std_pix_x_k1, std_pix_y_k1),
+                device=device,
                 )
 
-            norm_energy[i,j] = stim_energy[i, j] ** p_exp / (sigma + Z[i,j])
+            norm_energy[i,j] = stim_energy[i, j] ** p_exp / (sigma_sq + Z[i,j])
             
     return norm_energy
 
