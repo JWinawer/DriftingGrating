@@ -252,13 +252,24 @@ in this list, not a second list somewhere else.
      footing. The polar-frame conclusion — currently "uninformative rather than absent" — has to be
      re-derived on 7, not quoted from a sensitivity check, and the *n* = 7 within-observer tests lose a
      degree of freedom.
-  2. **`dg` gains five observers, but only if the data are here.** The local extraction
-     (`~/dg_collect`) holds the original 8. Running `dg` on 13 means extracting sub-0442,
-     sub-wlsubj121, sub-wlsubj127, sub-0397 and sub-0427 from the mounted volume first — see
-     [`server_extract/README.md`](Reproduction/server_extract/README.md). Only the `dg` side is needed
-     for them (they have no `da` session): `glm`, `runbetas`, `runbetas_areas`, `ret`, `ret_prfvista`,
-     `labels` and `gain_areas`, about 84 MB per observer, so roughly 0.4 GB for the five. Until that
-     extraction is done, this side can implement the exclusion but not the expansion.
+  2. **`dg` gains five observers — the data are now here (done 2026-08-27).** `~/dg_collect` held only
+     the original 8; sub-0442, sub-wlsubj121, sub-wlsubj127, sub-0397 and sub-0427 have been extracted
+     on the `dg` side (they have no `da` session), 452 MB, and **all 13 observers now have all seven
+     artifacts** — `ret`, `labels`, `glm_dg`, `ret_prfvista`, `runbetas`, `runbetas_areas`,
+     `gain_areas`. `collect_gain_areas` reproduces the independent V1 gain path for all 13 to 5e-15.
+     So nothing is blocked on data any more; what remains is the code change in item 1.
+     → [`server_extract/README.md`](Reproduction/server_extract/README.md)
+
+     **Two things about the new observers to carry into the analysis.** Run counts are not uniform —
+     sub-wlsubj121 has 12 runs and sub-wlsubj127 has 9, against 8 for the rest, so equal weighting
+     across observers is not equal weighting across data. And **sub-wlsubj121 is an outlier on four
+     axes at once**: those 12 runs, 32,477 vertices against ~20,000 for everyone else, duplicate
+     FreeSurfer label generations (`V1_new`, `V1_old`, `V1_ben_0001`, `V1_inf_0001`), and 451
+     overlapping vertices where the worst of the original 8 has 23. Of those, 318 are V1 or V2
+     colliding with V3a or V3b — areas that are not adjacent, so that is mislabelling, not boundary
+     ambiguity. It is ~1% of its V1 and will not move the V1 asymmetries, but the extrastriate
+     supplement treats V1/V2/V3/V3a as separate maps and for this observer they are not. Check this
+     one first if a 13-observer `dg` result looks strange.
   3. **Two `dg` numbers, and they must not be mixed.** `dg` on 13 is the within-experiment result;
      `dg` on the matched 7 is the only one that may be differenced against `da`. The context effects —
      the core claim — are within-observer differences, so they stay on the matched 7 throughout.
