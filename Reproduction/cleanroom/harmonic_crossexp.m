@@ -58,7 +58,20 @@ function res = harmonic_crossexp(Ddg, Dda, cfg, thetaVsource, opts)
     if ~isfield(opts,'weighting'),    opts.weighting    = 'equalcoverage'; end
     if ~isfield(opts,'weightSource'), opts.weightSource = thetaVsource;    end
 
-    nS = numel(cfg.subjects);
+    % THIS FUNCTION PAIRS THE TWO EXPERIMENTS BY POSITION: the same si indexes Ddg
+    % and Dda below, so element si of every output is only meaningful if it is the
+    % same person in both. That used to be guaranteed, because dg and da shared one
+    % cfg.subjects. It is not guaranteed now -- dg can carry 13 observers and da 7 --
+    % and the failure is silent, producing a full set of plausible numbers from
+    % mismatched people. So refuse rather than assume.
+    if isfield(Ddg, 'subjects') && isfield(Dda, 'subjects')
+        assert_same_observers(Ddg.subjects, Dda.subjects, 'dg', 'da');
+        subs = Ddg.subjects;
+    else
+        subs = cfg.subjects;   % older callers; no list to check against
+    end
+    res.subjects = subs;
+    nS = numel(subs);
     res.names = {'hVv','cVo','rVt','pcVpo'};
     res.thetaVsource = thetaVsource;
     res.weighting    = lower(opts.weighting);

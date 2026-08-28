@@ -78,6 +78,17 @@ function S = spec_profiles(varargin)
     if ~isempty(opt.eccRange), cfg.eccRange = opt.eccRange; end
     wBins = 8;                                   % 45 deg -- the specification
     expn  = {'dg','da'};
+
+    % ONE observer list is used for BOTH experiments below: si indexes cfg.subjects
+    % and the experiment is the inner loop, so every dg cell and da cell at the same
+    % si must be the same person. That holds only for the matched set. Since the dg
+    % and da lists were split, ask for the matched set explicitly rather than
+    % inheriting whatever cfg.subjects happens to be -- and check it, because a
+    % mismatch here would not error, it would quietly compare different people across
+    % the two experiments. See SUBJECTS_FOR and ASSERT_SAME_OBSERVERS.
+    cfg.subjects = subjects_for(cfg, 'matched');
+    assert_same_observers(subjects_for(cfg,'da'), cfg.subjects, 'da', 'the profile subject list');
+
     nS    = numel(cfg.subjects);
     nP    = numel(cfg.paBins);
     nF    = opt.nFine;

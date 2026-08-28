@@ -77,7 +77,15 @@ function res = fit_harmonic_vertex(D, cfg, expCfg, thetaVsource, opts)
         tvW = pick_thetaV(D, opts.weightSource);
         wSrc = opts.weightSource;
     end
-    nS = numel(cfg.subjects);
+    % Prefer the observer list carried by D: D.subj indexes into THAT list, and it is
+    % the experiment's own, which cfg.subjects need not be. Falling back to
+    % cfg.subjects keeps older callers working.
+    if isfield(D, 'subjects') && ~isempty(D.subjects)
+        subs = D.subjects;
+    else
+        subs = cfg.subjects;
+    end
+    nS = numel(subs);
 
     % Predictor names/count from a one-vertex probe.
     [~, probe] = harmonic_predictors(0, expCfg, opts);

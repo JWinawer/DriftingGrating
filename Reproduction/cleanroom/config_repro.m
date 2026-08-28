@@ -32,9 +32,41 @@ function cfg = config_repro()
     cfg.eccRange  = [4 8];      % degrees, inclusive
     cfg.r2min     = 0.1;        % pRF variance explained (fraction), strictly greater than
 
-    % --- subjects (fixed order; those who completed both experiments) ---
-    cfg.subjects = {'sub-0037','sub-0201','sub-0255','sub-wlsubj123', ...
-                    'sub-wlsubj124','sub-0395','sub-0426','sub-0250'};
+    % --- subjects -------------------------------------------------------------
+    % THERE IS NO LONGER ONE SUBJECT LIST. dg was run on 13 observers and da on 8,
+    % and one of those 8 is not usable:
+    %
+    %   sub-0395's da session used a PILOT stimulus whose annuli did not scale
+    %   spatial period with eccentricity, so its polar gratings are not the ones
+    %   every other observer saw. Excluded from da. Its dg session is fine.
+    %
+    % The agreed scheme (settled 2026-08-27, see ../../AGENTS.md standing fact 7):
+    %   dg  = all 13                      within-experiment only
+    %   da  = the 7 valid observers
+    %   any dg-vs-da contrast = the matched 7, and ONLY those
+    %
+    % Ask for a list with SUBJECTS_FOR(cfg, 'dg'|'da'|'matched') or
+    % SUBJECTS_FOR(cfg, expCfg) -- do not index these fields by hand, and never
+    % assume the dg and da subject dimensions line up. They do not.
+    cfg.subjects_dg = {'sub-0037','sub-0201','sub-0255','sub-wlsubj123', ...
+                       'sub-wlsubj124','sub-0395','sub-0426','sub-0250', ...
+                       'sub-0442','sub-wlsubj121','sub-wlsubj127','sub-0397','sub-0427'};
+    cfg.subjects_da = {'sub-0037','sub-0201','sub-0255','sub-wlsubj123', ...
+                       'sub-wlsubj124','sub-0426','sub-0250'};
+    % The matched set is DERIVED, never typed twice: whoever has a valid session in
+    % both. Written this way so it cannot drift out of step with the two lists above.
+    cfg.subjects_matched = cfg.subjects_dg(ismember(cfg.subjects_dg, cfg.subjects_da));
+
+    % Which dg set a dg-only analysis uses. 'matched' (default) keeps dg comparable
+    % with da; 'all' is the 13-observer within-experiment result, which must never be
+    % differenced against da. Mirrors dg_subjectMode in the repo's
+    % plot_NeuralAsymmetries.m so the two sides describe the same thing.
+    cfg.dgSubjectMode = 'matched';      % 'matched' | 'all'
+
+    % Legacy alias. Much existing code reads cfg.subjects directly; it resolves to the
+    % MATCHED set, which is the conservative choice -- valid for dg, for da, and for the
+    % contrast between them. Prefer SUBJECTS_FOR in anything new or edited.
+    cfg.subjects = cfg.subjects_matched;
 
     % --- polar-angle wedges --------------------------------------------------
     % Order of the PA dimension in the CLEAN-ROOM arrays. The CSV's pRF_angle has

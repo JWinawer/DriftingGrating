@@ -24,7 +24,10 @@ function D = harmonic_vertex_data(T, cfg, expCfg, doZscore)
 %   .Y       nVertex x nOri, demeaned per-vertex responses (the regression target).
 %   .tvCont  nVertex x 1, continuous pRF polar angle  (Fit B).
 %   .tvBin   nVertex x 1, wedge-centre polar angle    (Fit A).
-%   .subj    nVertex x 1, index into cfg.subjects.
+%   .subj    nVertex x 1, index into D.subjects (NOT into cfg.subjects -- the two
+%            differ whenever the experiment's own observer list does).
+%   .subjects the observer list this D was built on, carried WITH the data so a
+%            consumer never has to guess which list its subject indices refer to.
 %   .rowIdx  nVertex x 1, row index into the FILTERED table (for later joins).
 %   .T       the filtered table itself.
 %   .nOri, .expName
@@ -41,11 +44,18 @@ function D = harmonic_vertex_data(T, cfg, expCfg, doZscore)
     tvCont = double(T.pRF_angle);
     tvBin  = double(T.pRF_angle_bin);
 
-    % Subject index in cfg.subjects order.
+    % Subject index, in the order of THIS EXPERIMENT'S observer list. dg and da no
+    % longer share one list, so an index built against cfg.subjects would mean
+    % different people in the two experiments. Resolve once, rebind the local cfg so
+    % anything downstream still reading cfg.subjects stays aligned, and carry the list
+    % out in D.subjects so consumers can check rather than assume.
+    subs = subjects_for(cfg, expCfg);
+    cfg.subjects = subs;
+
     subjStr = string(T.subject);
     subj    = zeros(height(T), 1);
-    for si = 1:numel(cfg.subjects)
-        subj(subjStr == cfg.subjects{si}) = si;
+    for si = 1:numel(subs)
+        subj(subjStr == subs{si}) = si;
     end
 
     ok = all(isfinite(Y), 2) & isfinite(tvCont) & isfinite(tvBin) & subj > 0;
@@ -62,4 +72,5 @@ function D = harmonic_vertex_data(T, cfg, expCfg, doZscore)
     D.T       = T(ok, :);
     D.nOri    = size(Y, 2);
     D.expName = expCfg.name;
+    D.subjects = subs;   % the observer list D.subj indexes into
 end

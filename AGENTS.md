@@ -236,56 +236,43 @@ in this list, not a second list somewhere else.
   (−0.215, *p* = .028) and not for card−obl (−0.066, *p* = .153). The cells fall in order in each
   map, but the difference *between* maps is resolved for only one asymmetry.
   → [`RESULTS.md`](Reproduction/RESULTS.md) §5
-- **The reproduction still runs the old 8-and-8 observer set — this is the big open job.** Standing
-  fact 7 settled the observer scheme on 2026-08-27: `dg` = all 13, `da` = the valid 7 (sub-0395 out,
-  pilot stimulus), cross-experiment contrasts = those same 7. **Nothing in `Reproduction/` has been
-  re-run against it.** Every number in [`RESULTS.md`](Reproduction/RESULTS.md),
-  [`SPECIFICATION.md`](Reproduction/SPECIFICATION.md),
-  [`FIGURE_VARIANTS.md`](Reproduction/supplement/FIGURE_VARIANTS.md) and the `local_qc/` documents is
-  still 8 observers per experiment with sub-0395 included in `da`. Three consequences to work through,
-  in order:
-  1. **`da` loses its dissenting observer.** sub-0395 is the one observer with a negative `da`
-     radial−tangential value, and dropping it was previously reported as a *sensitivity check*
-     ([`RESULTS.md`](Reproduction/RESULTS.md) §3,
-     [`SUPPLEMENT_harmonic_model.md`](Reproduction/supplement/SUPPLEMENT_harmonic_model.md)). It is now
-     an exclusion rule with a stimulus-design reason behind it, which is a different and much stronger
-     footing. The polar-frame conclusion — currently "uninformative rather than absent" — has to be
-     re-derived on 7, not quoted from a sensitivity check, and the *n* = 7 within-observer tests lose a
-     degree of freedom.
-  2. **`dg` gains five observers — the data are now here (done 2026-08-27).** `~/dg_collect` held only
-     the original 8; sub-0442, sub-wlsubj121, sub-wlsubj127, sub-0397 and sub-0427 have been extracted
-     on the `dg` side (they have no `da` session), 452 MB, and **all 13 observers now have all seven
-     artifacts** — `ret`, `labels`, `glm_dg`, `ret_prfvista`, `runbetas`, `runbetas_areas`,
-     `gain_areas`. `collect_gain_areas` reproduces the independent V1 gain path for all 13 to 5e-15.
-     So nothing is blocked on data any more; what remains is the code change in item 1.
-     → [`server_extract/README.md`](Reproduction/server_extract/README.md)
+- **The observer scheme is now implemented in `cleanroom`, but nothing has been re-run, and
+  `dg`-on-13 is still blocked.** Started 2026-08-27. What exists now:
+  - `cfg.subjects` is split into `cfg.subjects_dg` (13), `cfg.subjects_da` (7) and
+    `cfg.subjects_matched` (**derived**, never typed twice), with `cfg.dgSubjectMode`
+    (`'matched'` default, `'all'` for the 13) mirroring the repo's `dg_subjectMode`.
+    `cfg.subjects` survives as a legacy alias resolving to the **matched 7**, so the ~104
+    existing readers get the conservative set rather than a silent change of meaning.
+  - [`subjects_for.m`](Reproduction/cleanroom/subjects_for.m) resolves the list for an
+    experiment; [`assert_same_observers.m`](Reproduction/cleanroom/assert_same_observers.m)
+    refuses to pair two results that are not the same people in the same order.
+  - `bin_and_aggregate` and `harmonic_vertex_data` resolve per experiment and **rebind
+    `cfg.subjects` locally**, which keeps positional consumers such as
+    `observer_gain_weights` aligned without editing every call site. `harmonic_vertex_data`
+    now carries `D.subjects` out with the data, and `fit_harmonic_vertex` indexes by it.
+  - The guard is wired into `harmonic_crossexp` (the site that pairs `si` across both
+    experiments) and `spec_profiles` (one list, experiment on the inner loop).
+  - Asking for the 13 against the current table now **errors** with what to do about it,
+    rather than aggregating five observers to silent NaN rows.
 
-     **Two things about the new observers to carry into the analysis.** Run counts are not uniform —
-     sub-wlsubj121 has 12 runs and sub-wlsubj127 has 9, against 8 for the rest, so equal weighting
-     across observers is not equal weighting across data. And **sub-wlsubj121 is an outlier on four
-     axes at once**: those 12 runs, 32,477 vertices against ~20,000 for everyone else, duplicate
-     FreeSurfer label generations (`V1_new`, `V1_old`, `V1_ben_0001`, `V1_inf_0001`), and 451
-     overlapping vertices where the worst of the original 8 has 23. Of those, 318 are V1 or V2
-     colliding with V3a or V3b — areas that are not adjacent, so that is mislabelling, not boundary
-     ambiguity. It is ~1% of its V1 and will not move the V1 asymmetries, but the extrastriate
-     supplement treats V1/V2/V3/V3a as separate maps and for this observer they are not. Check this
-     one first if a 13-observer `dg` result looks strange.
-  3. **Two `dg` numbers, and they must not be mixed.** `dg` on 13 is the within-experiment result;
-     `dg` on the matched 7 is the only one that may be differenced against `da`. The context effects —
-     the core claim — are within-observer differences, so they stay on the matched 7 throughout.
+  **`dg` on 13 is blocked on the data table, not the code.** `Support/allsubjectsTable.csv`
+  is built by [`createTables.m`](AnalysisCode/01_process_singlesubjectGLM/createTables.m) with
+  its own hardcoded list of the same 8, one row per vertex carrying *both* experiments'
+  betas. It has to be rebuilt to hold 13, with the `polexp_*` columns empty for the five who
+  have no `da` session. The inputs are all in `~/dg_collect` now, so this can be done locally
+  without the mount, but it is a real piece of work and has not been started.
 
-  **The trap, and it fails silently.** `cleanroom` has a single `cfg.subjects`
-  ([`config_repro.m`](Reproduction/cleanroom/config_repro.m)) used in ~104 places across 31 files, and
-  the cross-experiment code pairs observers **by position, not by name** — `harmonic_crossexp.m`
-  allocates `nan(nS,1)` and uses the same index `si` for both experiments. That is correct only while
-  the two lists are identical. Give `dg` 13 entries and `da` 7 and it will **not** error: it will
-  quietly pair the wrong observers and return numbers that look fine. So the fix is not "make the list
-  longer" — it is to split `cfg.subjects` into `dg`/`da`/`matched`, make every cross-experiment path
-  use the matched set and **match by subject name**, and keep the 13-observer `dg` result on a route
-  that cannot reach a difference. Almost nothing hardcodes `8` (the code says `numel(cfg.subjects)`),
-  so the count is not the problem; the shared-list assumption is.
-  Upstream's `plot_NeuralAsymmetries.m` carries this as a single `dg_subjectMode` switch (`'all'` vs
-  `'matched'`), which is the pattern to copy rather than reinvent.
+  **Every number in `Reproduction/` is still the old 8-and-8** — nothing has been regenerated.
+  Two things measured while wiring this up, on the wedge route, `da`, equal weighting:
+  - Dropping sub-0395 changes each *per-observer* value by a single **uniform factor of
+    1.0215** — the group gain is a property of the set, so this is unit restoration and moves
+    no *t*, *p* or CI.
+  - The *group* estimates do move, and radial−tangential moves most: **0.150 → 0.195**.
+    sub-0395 alone is **−0.196**, the only negative observer. This was previously reported as
+    a *sensitivity check* ([`RESULTS.md`](Reproduction/RESULTS.md) §3); it is now the analysis,
+    because that observer saw the wrong stimulus. These are point estimates from the wedge
+    route with no CIs, **not** the settled specification — they say the polar-frame conclusion
+    has to be re-derived on 7, not what it will say.
 
 ### Figure decisions on this side
 
