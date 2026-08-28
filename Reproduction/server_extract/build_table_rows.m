@@ -48,15 +48,27 @@ function T = build_table_rows(subject, opts)
     % labels overwrite earlier ones where they overlap, so changing this list changes
     % which area a shared vertex reports.
     %
-    % V2d IS DELIBERATELY OMITTED, and this is required to match the existing table.
-    % createTables.m lists V2d last (renamed left_V2d, left hemisphere only), but the
-    % shipped allsubjectsTable.csv contains ZERO left_V2d rows -- it was built without
-    % that label ever being applied. V2d is largely a subset of V2 and also overlaps V1,
-    % so applying it moves 1,190 V2 vertices and clips 66 from V1 for sub-0037 alone.
-    % Including it here would append new observers under a different area definition
-    % from the 8 already in the table, which is worse than either choice applied
-    % consistently. Set opts.roinames to override -- but if you add V2d, rebuild ALL
-    % observers, not just the new ones.
+    % V2d IS DELIBERATELY OMITTED, and it should never be added back.
+    %
+    % left_V2d is not an analysis ROI. It was requested (JW) as a DIAGNOSTIC, to check
+    % the polar-angle convention: V1/V2/V3 are bilateral and span dorsal and ventral, so
+    % between them they cover the whole visual field and cannot discriminate one angle
+    % convention from another. LEFT V2d is dorsal and one hemisphere, so it should
+    % represent only the LOWER RIGHT visual field -- 270-360 deg if angles are
+    % conventional (0 at the right horizontal, increasing counterclockwise), and 90-180
+    % if they are still Benson. It came out at 96-99% in 270-360 with a circular mean
+    % near 315, which is the confirmation recorded in ../STIMULUS_CONVENTIONS.md section
+    % 3, point 3. Its job was to answer that question, and it did.
+    %
+    % It is also probably ATLAS-derived rather than hand-drawn, unlike every other label
+    % here, so its boundaries need not agree with the hand-drawn V2. createTables.m lists
+    % it last, which means applying it would OVERWRITE hand-drawn V2 with atlas
+    % boundaries -- 1,190 V2 vertices and 66 V1 vertices for sub-0037 alone. The shipped
+    % allsubjectsTable.csv contains zero left_V2d rows, which is the correct state, not
+    % an omission to be reproduced for consistency's sake.
+    %
+    % opts.roinames can override this, but adding V2d to an analysis table is a mistake
+    % rather than a preference.
     roinames = {'V1','V2','V3','hV4','V3a','V3b','hMTcomplex','pMT','pMST'};
     if isfield(opts,'roinames') && ~isempty(opts.roinames), roinames = opts.roinames; end
 

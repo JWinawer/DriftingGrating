@@ -293,10 +293,19 @@ in this list, not a second list somewhere else.
   only boundary vertices move to the neighbouring area. And comparing NaN columns with `max()`
   silently reports a perfect match, because `max` ignores NaN.
 
-  **`V2d` is deliberately not applied**, because the shipped table contains zero `left_V2d`
-  rows — it was built without that label. `V2d` is largely a subset of V2 and also clips V1, so
-  applying it to new observers only would have appended them under a different area definition
-  from the 8 already there.
+  **`V2d` is deliberately not applied, and should never be added.** `left_V2d` is not an
+  analysis ROI — it is a **diagnostic**, requested to check the polar-angle convention. V1, V2
+  and V3 are bilateral and span dorsal and ventral, so together they cover the whole visual
+  field and cannot tell one angle convention from another; **left** V2d is dorsal and
+  one-hemisphere, so it should represent only the **lower right** visual field — 270–360° if
+  angles are conventional, 90–180° if they are still Benson. It comes out 96–99% in 270–360°
+  with a circular mean near 315°, which is the confirmation recorded in
+  [`STIMULUS_CONVENTIONS.md`](Reproduction/STIMULUS_CONVENTIONS.md) §3 point 3. It answered its
+  question. It is also probably **atlas-derived rather than hand-drawn**, unlike every other
+  label used here, and `createTables.m` lists it last — so applying it would overwrite
+  hand-drawn V2 with atlas boundaries (1,190 V2 vertices and 66 V1 vertices for sub-0037 alone).
+  The shipped table's zero `left_V2d` rows are the **correct** state, not an omission being
+  copied for consistency.
 
   **First result on 13.** All four `dg` asymmetries replicate with tighter intervals: horiz−vert
   −0.465 *p*<.001, card−obl −0.186 *p*=.003, rad−tang 0.095 *p*=.001, polc−polo 0.035 *p*=.007
