@@ -274,12 +274,39 @@ in this list, not a second list somewhere else.
   - Asking for the 13 against the current table now **errors** with what to do about it,
     rather than aggregating five observers to silent NaN rows.
 
-  **`dg` on 13 is blocked on the data table, not the code.** `Support/allsubjectsTable.csv`
-  is built by [`createTables.m`](AnalysisCode/01_process_singlesubjectGLM/createTables.m) with
-  its own hardcoded list of the same 8, one row per vertex carrying *both* experiments'
-  betas. It has to be rebuilt to hold 13, with the `polexp_*` columns empty for the five who
-  have no `da` session. The inputs are all in `~/dg_collect` now, so this can be done locally
-  without the mount, but it is a real piece of work and has not been started.
+  **`dg` on 13 now runs — the table was rebuilt 2026-08-27.**
+  [`build_table_rows.m`](Reproduction/server_extract/build_table_rows.m) reproduces
+  `createTables.m` for one observer from the already-collected local files, so no mount is
+  needed, and the five `dg`-only observers were appended to
+  `Support/allsubjectsTable.csv` (now 13 observers, 3.79M rows, 2.0 GB) with the `polexp_*`
+  columns NaN. `cfg.dgSubjectMode = 'all'` then gives a 13-observer `dg` fit on both routes.
+
+  **It is validated, not assumed.** [`validate_table_rows.m`](Reproduction/server_extract/validate_table_rows.m)
+  rebuilds an observer already in the table and compares all 38 columns. Three observers —
+  sub-0037, sub-0250, sub-wlsubj123 — reproduce the shipped rows exactly (worst difference
+  5e-13, CSV text precision). After appending, the original 8 observers' V1 rows are
+  **bit-identical** to the previous cache, so nothing already published moved.
+
+  Two traps that a count-based check would have passed, both now covered by the validator:
+  `collect_labels` stores label indices **already** 1-based while `createTables.m` adds the 1
+  itself, so adding it again shifts every vertex by one — every label keeps its exact size and
+  only boundary vertices move to the neighbouring area. And comparing NaN columns with `max()`
+  silently reports a perfect match, because `max` ignores NaN.
+
+  **`V2d` is deliberately not applied**, because the shipped table contains zero `left_V2d`
+  rows — it was built without that label. `V2d` is largely a subset of V2 and also clips V1, so
+  applying it to new observers only would have appended them under a different area definition
+  from the 8 already there.
+
+  **First result on 13.** All four `dg` asymmetries replicate with tighter intervals: horiz−vert
+  −0.465 *p*<.001, card−obl −0.186 *p*=.003, rad−tang 0.095 *p*=.001, polc−polo 0.035 *p*=.007
+  (wedge route, equal weighting; against −0.520/−0.193/0.080/0.025 on the matched 7). Six added
+  observers, every asymmetry confirmed, every *p* smaller.
+
+  **Not yet done on 13:** `spec_profiles` forces the matched set, because it uses one observer
+  list with the experiment on the inner loop, so the 13-observer result is not yet available
+  through `run_spec_outputs` or the hierarchy sweep — which is where it would settle the
+  underpowered V1 − V3 comparison. That is the next piece of work.
 
   **`SPECIFICATION.md`, `FIGURE_VARIANTS.md` and the `local_qc/` documents have NOT been updated** —
   their numbers are still the 8-observer set and they contradict `RESULTS.md` until someone goes
