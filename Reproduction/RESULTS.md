@@ -1,8 +1,15 @@
 # Results
 
 Every number here is under the settled specification — [`SPECIFICATION.md`](SPECIFICATION.md).
-Estimates are 2·b in **percent signal change**, equal-weighted across the 8 observers, with
-***t* intervals on 7 df**. `dg` = Cartesian gratings, `da` = polar gratings.
+Estimates are 2·b in **percent signal change**, equal-weighted across the **7** observers, with
+***t* intervals on 6 df**. `dg` = Cartesian gratings, `da` = polar gratings.
+
+**The observer set changed on 2026-08-27, and every number below moved with it.** sub-0395's `da`
+session used a pilot stimulus whose annuli did not scale spatial period with eccentricity, so that
+observer is excluded from `da` and from every `dg`-vs-`da` contrast — see `../AGENTS.md` standing
+fact 7. The previous version of this document reported 8 observers. Two conclusions changed, in
+opposite directions: the radial−tangential context effect became detectable (§4), and the
+V1−V3 hierarchy difference stopped being (§5).
 
 **Where each number comes from.** §2, §3, §5, §7 and §8 are regenerated wholesale by one command,
 `run_spec_outputs`, and are transcribed from its CSVs. §4 is derived from one of those CSVs
@@ -22,10 +29,13 @@ absent when it does not**.
   oblique — are substantially larger with Cartesian gratings than with polar gratings. This survives
   computing each vertex's exact local orientation, equalising response gain, tightening the pRF
   quality floor, changing the aggregation route, and changing the observer weighting.
-- **Uninformative, not absent.** The two *polar-frame* asymmetries — radial vs. tangential, and
-  polar-cardinal vs. polar-oblique — show **no detectable difference** between experiments. This is
-  absence of evidence, not evidence of absence: the interval admits a polar-frame context effect
-  larger than the cardinal/oblique one that *is* significant. §4 gives the three reasons.
+- **Established for radial vs. tangential too** (changed 2026-08-27). It is larger with polar
+  gratings than with Cartesian ones — context effect **−0.107** [−0.154, −0.061], *p* = .001, with
+  **all 7** observers in the same direction. On the previous 8-observer set this was −0.036,
+  *p* = .65, and was reported as uninformative; §4 says what changed and why the change is credible.
+- **Still nothing for polar-cardinal vs. polar-oblique.** +0.006 [−0.053, 0.065], *p* = .81, 4 of 7
+  observers. This one remains absence of evidence rather than evidence of absence, and the caution
+  in §4 continues to apply to it.
 
 ---
 
@@ -35,64 +45,81 @@ absent when it does not**.
 
 | exp | asymmetry | estimate | *t* 95% CI | *p* | observers agreeing |
 |---|---|--:|---|--:|--:|
-| dg | horiz−vert | **−0.548** | [−0.685, −0.411] | <.001 | 8/8 |
-| dg | card−obl | **−0.221** | [−0.356, −0.086] | .006 | 7/8 |
-| dg | rad−tang | **0.119** | [0.046, 0.192] | .006 | 8/8 |
-| dg | polc−polo | **0.072** | [0.030, 0.113] | .005 | 8/8 |
-| da | horiz−vert | **−0.232** | [−0.382, −0.081] | .008 | 7/8 |
-| da | card−obl | −0.041 | [−0.092, 0.011] | .105 | 6/8 |
-| da | rad−tang | **0.155** | [0.023, 0.287] | .028 | 7/8 |
-| da | polc−polo | 0.033 | [−0.045, 0.110] | .352 | 4/8 |
+| dg | horiz−vert | **−0.514** | [−0.662, −0.366] | <.001 | 7/7 |
+| dg | card−obl | **−0.193** | [−0.337, −0.050] | .016 | 6/7 |
+| dg | rad−tang | **0.091** | [0.044, 0.138] | .003 | 7/7 |
+| dg | polc−polo | **0.056** | [0.027, 0.085] | .003 | 7/7 |
+| da | horiz−vert | **−0.212** | [−0.384, −0.041] | .023 | 6/7 |
+| da | card−obl | −0.044 | [−0.103, 0.015] | .119 | 5/7 |
+| da | rad−tang | **0.198** | [0.119, 0.277] | .001 | 7/7 |
+| da | polc−polo | 0.050 | [−0.023, 0.124] | .146 | 4/7 |
 
 Note the direction of the Cartesian-frame effects: BOLD is **lower** for horizontal than vertical,
 and **lower** for cardinal than oblique — the "inverted" direction relative to behavioural
 oblique effects.
 
+Note also `da` rad−tang (**0.198**) against `dg` rad−tang (0.091): the radial asymmetry is more than
+twice as large for polar gratings, and every observer shows it in both experiments.
+
 ## 3. V1, 4–8° — the four context effects
 
 `spec_context_spec_v1_4-8.csv`. Each observer's `dg − da` difference is formed first, then tested
-across the 8 observers — the correct analysis for a balanced within-subject design, and the one
+across the 7 observers — the correct analysis for a balanced within-subject design, and the one
 reported everywhere ([`METHOD_DECISIONS.md`](METHOD_DECISIONS.md) §3).
 
 | asymmetry | estimate | *t* 95% CI | *p* | observers agreeing |
 |---|--:|---|--:|--:|
-| horiz−vert | **−0.316** | [−0.520, −0.113] | **.008** | 8/8 |
-| card−obl | **−0.181** | [−0.311, −0.050] | **.014** | 7/8 |
-| rad−tang | −0.036 | [−0.215, 0.143] | .647 | 7/8 |
-| polc−polo | +0.039 | [−0.054, 0.132] | .354 | 5/8 |
+| horiz−vert | **−0.302** | [−0.538, −0.065] | **.021** | 7/7 |
+| card−obl | **−0.149** | [−0.281, −0.018] | **.032** | 6/7 |
+| rad−tang | **−0.107** | [−0.154, −0.061] | **.001** | 7/7 |
+| polc−polo | +0.006 | [−0.053, 0.065] | .815 | 4/7 |
 
-## 4. Why the polar-frame null is not a result
+## 4. The radial−tangential context effect, and the one that is still null
 
-Three checks, computed from the per-observer values in `spec_perobserver_spec_v1_4-8.csv` under the
-settled specification, with *t* intervals on 7 df. The argument was first made on the harmonic
-model's own route (`cleanroom/diagnose_context_asymmetry.m`, bootstrap intervals, no per-map gain);
-[`supplement/SUPPLEMENT_harmonic_model.md`](supplement/SUPPLEMENT_harmonic_model.md) §S5.3 is that
-version and its numbers differ — see the note at the head of that document.
+**Changed 2026-08-27.** This section used to be titled "Why the polar-frame null is not a result" and
+argued that *both* polar-frame asymmetries were uninformative. That is no longer the position for
+radial−tangential. The change is the observer set, not the method: sub-0395's `da` session used a
+pilot stimulus (standing fact 7), and with that observer excluded the effect is
+**−0.107 [−0.154, −0.061], *p* = .001, 7 of 7 observers**.
 
-- **The interval is wide.** A radial/tangential context effect as large as |0.215| remains
-  compatible with the data — larger than the cardinal/oblique context effect of −0.181 that *is*
-  reported as significant, and 68% of the horizontal/vertical one.
-- **It rests on one observer.** Seven of eight show `da` rad−tang exceeding `dg` (sign test
-  *p* = 0.07). Dropping sub-0395 — the only observer with a negative `da` radial−tangential value,
-  −0.180 — makes the difference significant (−0.110 [−0.157, −0.062], *p* = .001). No other
-  leave-one-out comes close: the next smallest *p* is .68.
-- **The frames are not reliably different from each other.** A within-subject difference of
-  differences comparing the two frames' context effects, on |effect| so the two are comparable, is
-  not significant: horiz−vert vs rad−tang 0.160 [−0.068, 0.389], *p* = 0.14; card−obl vs rad−tang
-  0.047 [−0.062, 0.156], *p* = 0.34.
+**The previous version of this document had already computed this number.** Its leave-one-out check
+read: "Dropping sub-0395 — the only observer with a negative `da` radial−tangential value, −0.180 —
+makes the difference significant (−0.110 [−0.157, −0.062], *p* = .001). No other leave-one-out comes
+close: the next smallest *p* is .68." That is the result now obtained as the primary analysis; the
+remaining difference (−0.110 against −0.107) is the group-gain constant, which is computed over
+whichever observers are in the set.
 
-*(Re-derived under the specification 2026-08-25. All three checks had been carried over unchanged
-from the pre-specification harmonic route. The bound had read 0.158, which was **smaller** than the
-cardinal/oblique effect it was being compared against, so the first check did not hold arithmetically
-as written; under the specification it does. The conclusion did not change, and the leave-one-out
-check got stronger.)*
+**Why this is not a result found by dropping an inconvenient observer.** Three things have to line up,
+and they do. The exclusion was decided on **stimulus grounds and independently of any result** — the
+pilot annuli did not scale spatial period with eccentricity. The asymmetry that changed is exactly
+the one that error would corrupt: radial versus tangential depends directly on the annulus geometry
+that was wrong. And sub-0395 was not adding symmetric noise — its `da` rad−tang was **−0.180**, the
+only negative value among the eight, pulling against every other observer.
+
+**Still null: polar-cardinal versus polar-oblique.** +0.006 [−0.053, 0.065], *p* = .815, 4 of 7
+observers. The cautions below were written about both polar-frame asymmetries and **continue to apply
+to this one**:
+
+- **The interval admits a real effect.** A polc−polo context effect of |0.065| stays compatible with
+  the data, which is not negligible against the card−obl effect of −0.149 that *is* reported.
+- **Absence of evidence is not evidence of absence.** Distinguishing a genuinely one-sided context
+  effect from a two-sided one of unequal size needs more observers, and n = 7 is fewer than before.
+- **`tau` estimates as exactly 0 for both polar-frame asymmetries at n = 7**, and the precision
+  weight ratio reaches 15:1. That affects the precision-weighted *variant* only — equal weighting is
+  primary and is what the tables above report — but a zero between-observer variance component is a
+  small-sample artifact, not a finding, and should not be quoted as one.
 
 **Consequence for the draft.** The abstract's "the radial asymmetry is 50% larger for polar gratings"
-should not be quoted as a quantity. The direction holds (`da` 0.155 vs `dg` 0.119), but the
-difference is not detectable (*p* = .65). Replace it with the statement about *evidence*: the
-Cartesian-frame asymmetries show robust context dependence, while for the polar-frame ones these
-data are uninformative. Distinguishing a genuinely one-sided context effect from a two-sided one of
-unequal size needs more observers.
+is now **supported, and understated**: `da` 0.198 against `dg` 0.091 is a factor of 2.2, with the
+context effect itself significant at *p* = .001. What should *not* be carried over is the companion
+claim that the polar-cardinal asymmetry is unchanged between experiments — that one is still
+uninformative rather than shown to be equal.
+
+*(Earlier history: the three checks in this section were re-derived under the specification on
+2026-08-25, having been carried over from the pre-specification harmonic route. The argument was
+first made on the harmonic model's own route in
+[`supplement/SUPPLEMENT_harmonic_model.md`](supplement/SUPPLEMENT_harmonic_model.md) §S5.3, whose
+numbers differ — see the note at the head of that document.)*
 
 ---
 
@@ -140,14 +167,14 @@ while MT holds 545. → [`MISSING_DATA.md`](MISSING_DATA.md)
 
 | exp | asymmetry | V1 | V2 | V3 |
 |---|---|--:|--:|--:|
-| dg | horiz−vert | −0.548 *p*<.001 | −0.343 *p*<.001 | −0.143 *p*=.004 |
-| dg | card−obl | −0.221 *p*=.006 | −0.167 *p*=.007 | −0.113 *p*=.022 |
-| dg | rad−tang | 0.119 *p*=.006 | 0.193 *p*<.001 | 0.074 *p*=.002 |
-| dg | polc−polo | 0.072 *p*=.005 | 0.072 *p*=.019 | 0.027 *p*=.347 |
-| da | horiz−vert | −0.232 *p*=.008 | −0.082 *p*=.006 | −0.041 *p*=.059 |
-| da | card−obl | −0.041 *p*=.105 | −0.006 *p*=.438 ⚠ | 0.002 *p*=.901 |
-| da | rad−tang | 0.155 *p*=.028 | 0.148 *p*<.001 ⚠ | 0.134 *p*<.001 ⚠ |
-| da | polc−polo | 0.033 *p*=.352 | 0.026 *p*=.236 ⚠ | −0.007 *p*=.661 ⚠ |
+| dg | horiz−vert | −0.514 *p*<.001 | −0.330 *p*<.001 | −0.128 *p*=.010 |
+| dg | card−obl | −0.193 *p*=.016 | −0.137 *p*=.012 | −0.084 *p*=.036 |
+| dg | rad−tang | 0.091 *p*=.003 | 0.184 *p*=.002 | 0.068 *p*=.006 |
+| dg | polc−polo | 0.056 *p*=.003 | 0.055 *p*=.027 | 0.007 *p*=.738 |
+| da | horiz−vert | −0.212 *p*=.023 | −0.085 *p*=.011 | −0.037 *p*=.118 |
+| da | card−obl | −0.044 *p*=.119 | −0.002 *p*=.765 ⚠ | −0.009 *p*=.445 |
+| da | rad−tang | 0.198 *p*=.001 ⚠ | 0.146 *p*<.001 ⚠ | 0.132 *p*<.001 ⚠ |
+| da | polc−polo | 0.050 *p*=.146 | 0.033 *p*=.173 ⚠ | −0.001 *p*=.959 ⚠ |
 
 **The Cartesian asymmetries attenuate up the hierarchy in both experiments; radial−tangential in the
 polar experiment stays large and significant in all three maps.**
@@ -156,15 +183,26 @@ polar experiment stays large and significant in all three maps.**
 
 | asymmetry | V1 | V2 | V3 | V3a (2–10°) |
 |---|---|---|---|---|
-| horiz−vert | −0.316 [−0.520, −0.113] *p*=.008 | −0.260 [−0.369, −0.152] *p*=.001 | −0.102 [−0.186, −0.018] *p*=.024 | −0.084 *p*=.074 |
-| card−obl | −0.181 [−0.311, −0.050] *p*=.014 | −0.161 [−0.256, −0.066] *p*=.005 | −0.115 [−0.220, −0.010] *p*=.036 | −0.152 [−0.259, −0.046] *p*=.012 |
-| rad−tang | −0.036 *p*=.647 | +0.045 *p*=.304 | −0.060 *p*=.055 ⚠ | −0.154 [−0.207, −0.101] *p*<.001 ⚠ |
-| polc−polo | +0.039 *p*=.354 | +0.046 *p*=.259 | +0.035 *p*=.380 | +0.037 *p*=.046 ⚠ |
+| horiz−vert | −0.302 [−0.538, −0.065] *p*=.021 | −0.245 [−0.369, −0.122] *p*=.003 | −0.090 [−0.185, 0.004] *p*=.058 | −0.077 *p*=.126 |
+| card−obl | −0.149 [−0.281, −0.018] *p*=.032 | −0.135 [−0.224, −0.046] *p*=.010 | −0.075 [−0.139, −0.012] *p*=.028 | −0.132 [−0.248, −0.016] *p*=.031 |
+| rad−tang | **−0.107 [−0.154, −0.061] *p*=.001 ⚠** | +0.038 [−0.074, 0.151] *p*=.434 | −0.064 [−0.134, 0.006] *p*=.067 ⚠ | −0.156 [−0.208, −0.105] *p*<.001 ⚠ |
+| polc−polo | +0.006 [−0.053, 0.065] *p*=.815 ⚠ | +0.021 [−0.058, 0.101] *p*=.534 | +0.008 [−0.063, 0.080] *p*=.791 | +0.041 [0.004, 0.077] *p*=.035 ⚠ |
 
 V3a is shown at 2–10°, the only band where it qualifies, so it is not on the same footing as the
 other three. Its two significant polar-frame *context* effects both sit in τ̂² = 0 rows and should not
-be read as findings. Its per-experiment values continue the pattern: `dg` horiz−vert −0.099
-*p*=.027, `dg` card−obl −0.150 *p*=.010, `da` rad−tang 0.189 [0.116, 0.262] *p*<.001.
+be read as findings.
+
+**A caution that now applies to the V1 radial−tangential result too.** That cell is significant
+(*p* = .001) but its row is also τ̂² = 0 — the between-observer variance component is pinned at zero at
+n = 7, which narrows the interval. Equal weighting, which is primary, does not use τ̂², so the estimate
+and *t* interval in the table stand; but the τ̂² = 0 flag is why the precision-weighted variant gives
+*p* = .024 rather than .001 for the same cell, and that gap is a small-sample property rather than a
+disagreement about the effect. Read the V1 rad−tang context effect as established in **direction and
+sign** (7/7 observers) and as **less precisely bounded** than its interval alone suggests.
+
+**Note the V2 reversal.** rad−tang context at V2 is +0.038 (*p* = .43) — the opposite sign to V1 and
+V3, and not significant in either direction. The polar-frame context effect is not a smooth gradient
+up the hierarchy the way the Cartesian ones are.
 
 **The context dependence is a V1-weighted phenomenon that weakens but does not disappear through V2
 and V3.**
@@ -173,30 +211,39 @@ and V3.**
 
 The monotonic decline was originally read off six individually significant cells falling in order.
 It was **computed** on 2026-08-24, *within observer* — for each observer, the difference of the
-context effect between two maps, then a *t* test across the 8 — and it holds for one asymmetry, not
-both. `spec_areas_trend_spec.csv`.
+context effect between two maps, then a *t* test across observers. `spec_areas_trend_spec.csv`.
+
+**Re-run on the corrected 7 observers, 2026-08-27. The V1 − V3 result no longer reaches
+significance**, and this is the one conclusion that the observer correction weakened rather than
+strengthened.
 
 | comparison | asymmetry | mean | *t* 95% CI | *p* | obs |
 |---|---|--:|---|--:|--:|
-| V1 − V2 | horiz−vert | −0.056 | [−0.211, 0.099] | .422 | 5/8 |
-| V1 − V2 | card−obl | −0.019 | [−0.092, 0.053] | .547 | 5/8 |
-| V2 − V3 | horiz−vert | **−0.159** | [−0.256, −0.061] | **.006** | 8/8 |
-| V2 − V3 | card−obl | −0.046 | [−0.092, −0.001] | .047 | 6/8 |
-| V2 − V3 | rad−tang | 0.105 | [0.008, 0.202] | .037 | 7/8 |
-| **V1 − V3** | **horiz−vert** | **−0.215** | [−0.398, −0.031] | **.028** | 7/8 |
-| **V1 − V3** | **card−obl** | −0.066 | [−0.162, 0.031] | .153 | 5/8 |
+| V1 − V2 | rad−tang | −0.146 | [−0.264, −0.028] | .023 | 6/7 |
+| V2 − V3 | horiz−vert | **−0.155** | [−0.269, −0.041] | **.016** | 7/7 |
+| V2 − V3 | card−obl | −0.059 | [−0.098, −0.021] | .009 | 6/7 |
+| V2 − V3 | rad−tang | 0.102 | [−0.011, 0.216] | .070 | 6/7 |
+| **V1 − V3** | **horiz−vert** | −0.211 | [−0.426, 0.003] | **.053** | 6/7 |
+| **V1 − V3** | card−obl | −0.074 | [−0.184, 0.036] | .150 | 5/7 |
+| V1 − V3 | rad−tang | −0.044 | [−0.109, 0.022] | .155 | 6/7 |
 
-(The four polc−polo rows and the two remaining rad−tang rows are all *p* > .3.)
+(polc−polo rows are all *p* > .9.)
 
-**What this establishes.** The context effect on **horizontal−vertical** genuinely attenuates from V1
-to V3 (−0.215, *p* = .028, 7/8 observers), with the V2 → V3 step carrying most of it (*p* = .006,
-8/8).
+**What this establishes.** The **V2 → V3** step is solid for horizontal−vertical (−0.155, *p* = .016,
+7/7 observers) and for cardinal−oblique (−0.059, *p* = .009).
 
-**What it does not.** For **cardinal−oblique** the V1 − V3 trend is not significant (−0.066,
-*p* = .153); only the V2 − V3 step reaches *p* = .047, one of twelve uncorrected tests. So "both
-Cartesian effects decline monotonically up the hierarchy" is established for **horizontal−vertical
-only**. The individual cells are each significant in each map and do fall in order; the *difference
-between maps* is resolved for one asymmetry.
+**What it does not.** The **V1 − V3** difference for horizontal−vertical is now *p* = **.053** and its
+interval includes zero by a hair — on the previous 8-observer set it was −0.215, *p* = .028. The
+estimate barely moved (−0.215 → −0.211); what changed is the degrees of freedom, from 7 to 6. So the
+claim "the horizontal−vertical context effect attenuates from V1 to V3" is now **suggestive rather
+than established**, and should not be stated as demonstrated. Nothing about V1 − V3 for
+cardinal−oblique changed: it was not significant before and is not now.
+
+**Do not read the *p* = .053 as "nearly significant" and report it as a decline.** The honest summary
+is that a real V1→V3 attenuation is likely — the individual cells do fall in order in each map, and
+the V2 → V3 step is resolved — but the V1-to-V3 *difference* is not resolved by these data at n = 7.
+Recovering it is one of the concrete gains that the 13-observer `dg` set could deliver, since the
+hierarchy comparison is within-experiment and does not need `da`.
 
 The trend is **always equal-weighted**, whatever variant is requested, so the `roi` and `roipw` trend
 tables are byte-identical (asserted, not assumed). Precision weighting it would need the
@@ -247,7 +294,7 @@ Full account, with figures and the model-adequacy tests:
   Cartesian context effects survive comfortably; the marginal cells do not.
 - **One interval-method disagreement remains.** For `da` card−obl the percentile bootstrap
   [−0.083, −0.002] excludes zero and the *t* interval [−0.092, 0.011] does not (*p* = .105). **Report
-  the *t* reading**: at n = 8 the percentile bootstrap has poor coverage and does not account for
+  the *t* reading**: at n = 7 the percentile bootstrap has poor coverage and does not account for
   uncertainty in the spread. Both columns are in `spec_asymmetries_spec_v1_4-8.csv` with a
   `ci_methods_disagree` flag, so the choice stays visible rather than being made silently.
   (`da` rad−tang used to disagree too; under the specification both intervals now exclude zero.)
@@ -261,19 +308,26 @@ Full account, with figures and the model-adequacy tests:
 Same vertices, same gain, same observers; only the named thing differs.
 
 **The route** (`spec` → `roi`, i.e. continuous θ_V → wedge-centre θ_V, both equal-weighted). Largest
-movement in V1 is 0.033 (`dg` polc−polo, 0.072 → 0.039); `dg` horiz−vert and card−obl are identical
-to three decimals because their regressors are θ_V-free, so the route cannot touch them. Context
-effects: horiz−vert −0.316 → −0.330, card−obl −0.181 → −0.192, rad−tang −0.036 → −0.046, polc−polo
-+0.039 → −0.001. **No cell changes significance.**
+movement in V1 is 0.031 (`dg` polc−polo); `dg` horiz−vert and card−obl are identical to three decimals
+because their regressors are θ_V-free, so the route cannot touch them. Context effects:
+horiz−vert −0.302 → −0.321, card−obl −0.149 → −0.165, rad−tang −0.107 → −0.114, polc−polo
++0.006 → −0.035. **No cell changes significance.**
 
-**The weighting** (`roi` → `roipw`, equal → precision). Largest change 0.025, on `da` rad−tang
-(0.150 → 0.175). Every context effect unchanged to within 0.015. **No cell changes significance.**
-That is what [`METHOD_DECISIONS.md`](METHOD_DECISIONS.md) §4 predicts: τ² is common to every observer
-and here exceeds the mean σᵢ², so a 14× spread in *reliability* compresses into a ~3× spread in
-*weight*.
+**The weighting** (`roi` → `roipw`, equal → precision). Largest change 0.017, on `da` rad−tang
+(0.195 → 0.212). **No cell changes significance.**
 
-**The hierarchy trend is unaffected by either**: V1 − V3 horiz−vert −0.215 *p*=.028 (`spec`) vs
-−0.221 *p*=.030 (`roi`); card−obl −0.066 *p*=.153 vs −0.084 *p*=.060.
+**The radial−tangential context effect survives both**, which is the check that matters most for the
+conclusion that changed on 2026-08-27: −0.107 *p*=.001 (`spec`), −0.114 *p*=.007 (`roi`),
+−0.129 *p*=.021 (`roipw`). Significant on all three, same sign, same order of magnitude. The *p*
+weakens under precision weighting for the reason given in §5 — τ̂² = 0 at n = 7 — but the effect does
+not depend on the choice.
+
+**The hierarchy trend is now the one place a variant crosses *p* = .05** (changed 2026-08-27, with
+the observer correction). V1 − V3 horiz−vert is −0.211 *p*=**.053** under `spec` and −0.231
+*p*=**.044** under `roi`; card−obl is −0.074 *p*=.150 vs −0.090 *p*=.072. The estimates agree to
+within 0.02 and the conclusion should not be taken from whichever side of .05 a given route lands on
+— **the honest reading is that this comparison is underpowered at n = 7**, not that the route
+matters. Previously, at n = 8, both routes agreed the V1 − V3 horiz−vert trend was significant.
 
 **The two routes are the same estimator at matched θ_V**, and they agree to **7.5e-16** (V1) and
 **9.4e-16** (V2) where every cell is populated, diverging only in proportion to empty cells —

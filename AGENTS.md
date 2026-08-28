@@ -66,9 +66,19 @@ or absent when it does not**. Cartesian asymmetries — BOLD *lower* for horizon
 the "inverted" direction — appear for Cartesian gratings and weaken for polar; polar asymmetries
 (radial > tangential, polar-cardinal > polar-oblique) appear for polar gratings.
 
-**Where the claim stands.** The **Cartesian-frame** context effects are established and survive every
-test run against them. The **polar-frame** ones are *uninformative rather than absent* — absence of
-evidence, not evidence of absence. → [`Reproduction/RESULTS.md`](Reproduction/RESULTS.md)
+**Where the claim stands** (re-derived on the corrected 7 observers, 2026-08-27). **Three of the four
+asymmetries now show detectable context dependence**: horizontal−vertical (−0.302, *p* = .021),
+cardinal−oblique (−0.149, *p* = .032) and **radial−tangential (−0.107, *p* = .001, 7/7 observers)**.
+Only **polar-cardinal versus polar-oblique** remains uninformative (+0.006, *p* = .81) — absence of
+evidence, not evidence of absence. The radial−tangential result is new: on the previous 8-observer set
+it was *p* = .65 and was reported as uninformative. What changed is the observer set, not the method —
+sub-0395's `da` session used the wrong stimulus (fact 7), and that observer was the only one whose
+`da` radial−tangential ran the other way.
+
+**One conclusion went backwards in the same re-run.** The V1 − V3 attenuation of the
+horizontal−vertical context effect is now *p* = .053, against *p* = .028 before; the estimate barely
+moved (−0.215 → −0.211) but a degree of freedom was lost. It is **suggestive, not established** — do
+not quote it as demonstrated. → [`Reproduction/RESULTS.md`](Reproduction/RESULTS.md)
 
 ---
 
@@ -216,12 +226,15 @@ in this list, not a second list somewhere else.
 
 ### Where the draft and the analysis have diverged — Rania owns these
 
-- **The abstract's polar-frame claim has moved.** The draft reads "the radial asymmetry is 50% larger
-  for polar gratings and the polar cardinal asymmetry is the same." The direction holds (`da`
-  rad−tang 0.155 vs `dg` 0.119) but **the difference is not detectable** (*p* = .65), so the ratio
-  should not be quoted as a quantity. The statement to replace it with is about *evidence*: the
-  Cartesian-frame asymmetries show robust context dependence; for the polar-frame ones these data are
-  uninformative. → [`RESULTS.md`](Reproduction/RESULTS.md) §4
+- **The abstract's polar-frame claim: half of it is now supported, half is not.** The draft reads
+  "the radial asymmetry is 50% larger for polar gratings and the polar cardinal asymmetry is the
+  same." Re-derived on the corrected 7 observers 2026-08-27: the **radial** half is **supported and
+  understated** — `da` 0.198 against `dg` 0.091 is a factor of 2.2, with the context effect
+  significant at *p* = .001 and all 7 observers agreeing. The **polar-cardinal** half should still not
+  be quoted: "the same" claims equality, and +0.006 [−0.053, 0.065] *p* = .81 is an absence of
+  evidence, not a demonstration that the two are equal. (This item previously said the radial claim
+  was not quotable either; that was the 8-observer result, *p* = .65.)
+  → [`RESULTS.md`](Reproduction/RESULTS.md) §4
 - **Report *t* intervals, or say which method is used.** One V1 cell still disagrees between methods
   — `da` card−obl, bootstrap [−0.083, −0.002] excluding zero against *t* [−0.092, 0.011], *p* = .105.
   *t* is primary. Context effects are unaffected.
@@ -231,13 +244,19 @@ in this list, not a second list somewhere else.
   clean-room. Worth ~1% on every effect size and no change to any *t* or *p*, as expected. (Was an open
   request to Rania; fixed upstream and merged here 2026-08-27.)
   → [`METHOD_DECISIONS.md`](Reproduction/METHOD_DECISIONS.md) §2
-- **"Both Cartesian effects decline monotonically up the hierarchy" is established for one of the
-  two.** The within-observer V1 − V3 difference of the context effect is significant for horiz−vert
-  (−0.215, *p* = .028) and not for card−obl (−0.066, *p* = .153). The cells fall in order in each
-  map, but the difference *between* maps is resolved for only one asymmetry.
+- **"Both Cartesian effects decline monotonically up the hierarchy" is now established for
+  *neither*.** Re-run on 7 observers 2026-08-27: V1 − V3 horiz−vert is −0.211, *p* = **.053**, and
+  card−obl −0.074, *p* = .150. The horiz−vert estimate barely moved (−0.215 → −0.211); it lost a
+  degree of freedom. It also straddles the routes — *p* = .053 under `spec`, .044 under `roi` — which
+  is a sign of an underpowered comparison rather than a route effect, and neither side of .05 should
+  be quoted. The **V2 → V3 step** is solid for both (*p* = .016 and .009); it is the V1-to-V3
+  difference that is unresolved. This is the clearest thing the 13-observer `dg` set could fix, since
+  the hierarchy comparison is within-experiment and needs no `da`.
   → [`RESULTS.md`](Reproduction/RESULTS.md) §5
-- **The observer scheme is now implemented in `cleanroom`, but nothing has been re-run, and
-  `dg`-on-13 is still blocked.** Started 2026-08-27. What exists now:
+- **The observer scheme is implemented and the specification outputs have been regenerated on the
+  corrected 7; `dg`-on-13 is still blocked.** 2026-08-27. All twelve figures and every CSV under
+  `Reproduction/supplement/` are now the 7-observer result, and `RESULTS.md` has been rewritten around
+  them — see the top of that document for what moved. What exists in the code:
   - `cfg.subjects` is split into `cfg.subjects_dg` (13), `cfg.subjects_da` (7) and
     `cfg.subjects_matched` (**derived**, never typed twice), with `cfg.dgSubjectMode`
     (`'matched'` default, `'all'` for the 13) mirroring the repo's `dg_subjectMode`.
@@ -262,17 +281,16 @@ in this list, not a second list somewhere else.
   have no `da` session. The inputs are all in `~/dg_collect` now, so this can be done locally
   without the mount, but it is a real piece of work and has not been started.
 
-  **Every number in `Reproduction/` is still the old 8-and-8** — nothing has been regenerated.
-  Two things measured while wiring this up, on the wedge route, `da`, equal weighting:
-  - Dropping sub-0395 changes each *per-observer* value by a single **uniform factor of
-    1.0215** — the group gain is a property of the set, so this is unit restoration and moves
-    no *t*, *p* or CI.
-  - The *group* estimates do move, and radial−tangential moves most: **0.150 → 0.195**.
-    sub-0395 alone is **−0.196**, the only negative observer. This was previously reported as
-    a *sensitivity check* ([`RESULTS.md`](Reproduction/RESULTS.md) §3); it is now the analysis,
-    because that observer saw the wrong stimulus. These are point estimates from the wedge
-    route with no CIs, **not** the settled specification — they say the polar-frame conclusion
-    has to be re-derived on 7, not what it will say.
+  **`SPECIFICATION.md`, `FIGURE_VARIANTS.md` and the `local_qc/` documents have NOT been updated** —
+  their numbers are still the 8-observer set and they contradict `RESULTS.md` until someone goes
+  through them. `RESULTS.md` and this file are current.
+
+  Two properties of the re-run worth carrying: dropping sub-0395 changes each *per-observer* value by
+  a single **uniform factor of 1.0215** (the group gain is a property of the set, so that part is unit
+  restoration and moves no *t*, *p* or CI); and **τ̂² pins to exactly 0 for both polar-frame
+  asymmetries at n = 7**, with the precision weight ratio reaching 15:1. The τ̂² = 0 rows are a
+  small-sample artifact, not a finding, and are why precision weighting gives *p* = .024 rather
+  than .001 for the V1 radial−tangential context effect. Equal weighting is primary and is unaffected.
 
 ### Figure decisions on this side
 

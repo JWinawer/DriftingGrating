@@ -175,9 +175,12 @@ function show(R)
     end
     d = R.asym.ci_methods_disagree | false;
     if any(d) || any(R.context.ci_methods_disagree)
+        % n comes from the table rather than a literal: the observer count is no longer
+        % fixed at 8, and a note that states the wrong n is worse than no note.
+        nObs = max([R.asym.n(:); R.context.n(:)]);
         fprintf(['\nThe percentile bootstrap and the t interval disagree where marked. t is ' ...
-                 'primary\nhere; at n = 8 the percentile method has poor coverage. See ' ...
-                 '../METHOD_DECISIONS.md section 5.\n']);
+                 'primary\nhere; at n = %d the percentile method has poor coverage. See ' ...
+                 '../METHOD_DECISIONS.md section 5.\n'], nObs);
     end
 end
 
