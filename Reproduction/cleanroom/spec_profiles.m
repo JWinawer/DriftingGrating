@@ -71,48 +71,44 @@ function S = spec_profiles(varargin)
     % the cost -- and it stays at 500 for anything reported.
     p.addParameter('dropCells', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
     p.addParameter('nBoot', 500, @isscalar);
+    % Which dg observer set: 'matched' (the 7 shared with da, the only set that may be
+    % differenced against da) or 'all' (13, within-experiment only). da is always its
+    % own 7. Defaults to whatever CONFIG_REPRO says.
+    p.addParameter('dgSubjectMode', '', @(x) isempty(x) || any(strcmpi(x,{'matched','all'})));
     p.parse(varargin{:});
     opt = p.Results;
 
     cfg = config_repro();
+    if ~isempty(opt.dgSubjectMode), cfg.dgSubjectMode = lower(opt.dgSubjectMode); end
     if ~isempty(opt.eccRange), cfg.eccRange = opt.eccRange; end
     wBins = 8;                                   % 45 deg -- the specification
     expn  = {'dg','da'};
 
-    % ONE observer list is used for BOTH experiments below: si indexes cfg.subjects
-    % and the experiment is the inner loop, so every dg cell and da cell at the same
-    % si must be the same person. That holds only for the matched set. Since the dg
-    % and da lists were split, ask for the matched set explicitly rather than
-    % inheriting whatever cfg.subjects happens to be -- and check it, because a
-    % mismatch here would not error, it would quietly compare different people across
-    % the two experiments. See SUBJECTS_FOR and ASSERT_SAME_OBSERVERS.
-    cfg.subjects = subjects_for(cfg, 'matched');
-    assert_same_observers(subjects_for(cfg,'da'), cfg.subjects, 'da', 'the profile subject list');
-
-    nS    = numel(cfg.subjects);
+    % EACH EXPERIMENT GETS ITS OWN OBSERVER LIST. dg can carry 13 observers while da
+    % carries 7, so nS, the gain vector and every allocation below are resolved INSIDE
+    % the experiment loop, not once for both. S.dg.subjects and S.da.subjects record
+    % which people each side is, and consumers that pair the two must check them with
+    % ASSERT_SAME_OBSERVERS rather than assume they line up.
+    %
+    % S.subjects remains the MATCHED set -- the only list valid across experiments --
+    % so anything still reading it gets the conservative answer rather than whichever
+    % experiment happened to be resolved last.
     nP    = numel(cfg.paBins);
     nF    = opt.nFine;
-    drop  = opt.dropCells;
-    if isempty(drop), drop = false(nS, nP); else, drop = logical(drop); end
-    assert(isequal(size(drop), [nS nP]), 'spec_profiles:dropCells', ...
-           'dropCells must be %d x %d.', nS, nP);
 
-    % --- gain, per observer x map, exactly as DIAGNOSE_WITHIN_OBSERVER_ERROR does it
-    if opt.gain
-        band   = sprintf('%g-%g', cfg.eccRange(1), cfg.eccRange(2));
-        gscale = observer_gain_weights(cfg, opt.area, band);
-        if ~all(isfinite(gscale))
-            warning('spec_profiles:gainFallback', ...
-                    'no per-map gain for %s %s; falling back to the V1 scalar.', ...
-                    opt.area, band);
-            gscale = observer_gain_weights(cfg);
-        end
-    else
-        gscale = ones(nS,1);
+    % dropCells is indexed by observer, so it cannot mean the same thing for two
+    % different-length lists. It is used by the missing-data diagnostics, which run on
+    % the matched set; refuse rather than silently apply it to the wrong people.
+    if ~isempty(opt.dropCells) && ~strcmpi(cfg.dgSubjectMode, 'matched')
+        error('spec_profiles:dropCellsSubjects', ...
+              ['dropCells is indexed by observer and dg is running its %s set, so the ' ...
+               'mask cannot apply to both experiments. Use cfg.dgSubjectMode = ''matched'' ' ...
+               'with dropCells.'], cfg.dgSubjectMode);
     end
 
-    S.subjects = cfg.subjects;  S.paBins = cfg.paBins;  S.area = opt.area;
-    S.eccRange = cfg.eccRange;  S.gainScale = gscale;
+    S.subjects = subjects_for(cfg, 'matched');
+    S.paBins = cfg.paBins;  S.area = opt.area;
+    S.eccRange = cfg.eccRange;
     S.names = {'horiz-vert','card-obl','rad-tang','polc-polo'};
     S.route = lower(opt.route);
     S.hasModel = strcmp(S.route, 'harmonic');   % the ROI route fits no per-vertex model
@@ -121,6 +117,32 @@ function S = spec_profiles(varargin)
 
     for ei = 1:2
         en = expn{ei};  expCfg = cfg.(en);
+
+        % This experiment's observers, and a cfg bound to them. The rebinding matters:
+        % OBSERVER_GAIN_WEIGHTS builds a positional vector from cfg.subjects, so a gain
+        % vector ordered by a different list than the data would be silently wrong.
+        subs   = subjects_for(cfg, en);
+        cfgE   = cfg;  cfgE.subjects = subs;
+        nS     = numel(subs);
+
+        drop = opt.dropCells;
+        if isempty(drop), drop = false(nS, nP); else, drop = logical(drop); end
+        assert(isequal(size(drop), [nS nP]), 'spec_profiles:dropCells', ...
+               'dropCells must be %d x %d for %s.', nS, nP, en);
+
+        if opt.gain
+            band   = sprintf('%g-%g', cfg.eccRange(1), cfg.eccRange(2));
+            gscale = observer_gain_weights(cfgE, opt.area, band);
+            if ~all(isfinite(gscale))
+                warning('spec_profiles:gainFallback', ...
+                        'no per-map gain for %s %s; falling back to the V1 scalar.', ...
+                        opt.area, band);
+                gscale = observer_gain_weights(cfgE);
+            end
+        else
+            gscale = ones(nS,1);
+        end
+
         E = struct('b', nan(nS,4), 'asym', nan(nS,4), 'oAsym', nan(nS,4), ...
                    'asymHarmonic', nan(nS,4), 'asymROI', nan(nS,4), 'sigma', nan(nS,4), ...
                    'mPro', nan(nS,nP,4), 'mCon', nan(nS,nP,4), 'mDiff', nan(nS,nP,4), ...
@@ -138,7 +160,7 @@ function S = spec_profiles(varargin)
         dCon = nan(nS, numel(denseCtr), 4);
 
         for si = 1:nS
-            [A, ok] = load_one(cfg, opt.root, cfg.subjects{si}, en, opt.area, drop(si,:));
+            [A, ok] = load_one(cfgE, opt.root, subs{si}, en, opt.area, drop(si,:));
             if ~ok, continue; end
 
             % --- run-averaged demeaned per-vertex responses -----------------
@@ -201,7 +223,7 @@ function S = spec_profiles(varargin)
                 assert(dChk < 1e-12, 'spec_profiles:denseMismatch', ...
                     ['%s %s: the dense model curve misses the plotted wedge ' ...
                      'centres by %.3g. The curve and the markers would disagree.'], ...
-                    cfg.subjects{si}, en, dChk);
+                    subs{si}, en, dChk);
             end
 
             % --- the three contrasts measurable at a single polar angle ----
@@ -238,6 +260,8 @@ function S = spec_profiles(varargin)
                         'denseCentres', denseCtr, 'mdlDense', mdlD, ...
                         'wedgeCentres', cfg.paBins, 'wedge', wedF);
         E.dense = struct('centres', denseCtr, 'mPro', dPro, 'mCon', dCon);
+        E.subjects  = subs;        % who this experiment's rows are
+        E.gainScale = gscale;
         S.(en) = E;
     end
 
@@ -246,14 +270,24 @@ function S = spec_profiles(varargin)
     % condition-wise design has no replication, so a model fitted to it cannot separate
     % a reliable observer from a noisy one. Precision weighting needs these; equal
     % weighting does not, but they are cheap here and reporting both is the point.
-    W = diagnose_within_observer_error('root', opt.root, 'area', opt.area, ...
-            'eccRange', opt.eccRange, 'route', S.route, 'thetaV', tvSrc(S.route), ...
-            'gain', opt.gain, 'weighting', 'equalcoverage', 'quiet', true, ...
-            'dropCells', drop, 'nBoot', opt.nBoot);
+    % ONE CALL PER EXPERIMENT. This used to be a single call returning a subject x
+    % asymmetry x experiment array, which is only possible while both experiments have
+    % the same observers. They need not now, so each experiment is measured on its own
+    % list and the (:,:,1) slice is that experiment's.
     for ei = 1:2
-        en = expn{ei};
-        S.(en).sigma = W.seBoot(:,:,ei);
-        if opt.verify, checkRoute(S.(en).asym, W.full(:,:,ei), opt.area, en, S.route); end
+        en   = expn{ei};
+        subs = S.(en).subjects;
+        dropE = opt.dropCells;
+        if isempty(dropE), dropE = false(numel(subs), nP); else, dropE = logical(dropE); end
+        W = diagnose_within_observer_error('root', opt.root, 'area', opt.area, ...
+                'eccRange', opt.eccRange, 'route', S.route, 'thetaV', tvSrc(S.route), ...
+                'gain', opt.gain, 'weighting', 'equalcoverage', 'quiet', true, ...
+                'dropCells', dropE, 'nBoot', opt.nBoot, ...
+                'subjects', subs, 'experiments', {en});
+        assert_same_observers(W.subjects, subs, ...
+            sprintf('sigma for %s', en), sprintf('profiles for %s', en));
+        S.(en).sigma = W.seBoot(:,:,1);
+        if opt.verify, checkRoute(S.(en).asym, W.full(:,:,1), opt.area, en, S.route); end
     end
 end
 

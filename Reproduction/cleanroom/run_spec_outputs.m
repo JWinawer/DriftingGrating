@@ -34,24 +34,60 @@ if ~isfolder(cfg.suppFigDir), mkdir(cfg.suppFigDir); end
 V = spec_variants();
 
 % --- V1 profiles for every variant first, so the axis limits span all of them -------
+%
+% TWO OBSERVER SETS, and which figure gets which is deliberate:
+%
+%   Figure 5 (dg)        ALL 13 observers. Within-experiment, so it needs no da.
+%   Figure 6 (da)        the 7 valid observers (sub-0395 saw a pilot stimulus).
+%   profile figure       the matched 7 -- it puts dg and da side by side.
+%   every table          the matched 7 -- the context effect is a paired difference.
+%
+% dg is therefore computed TWICE, and the second computation is not redundant. The
+% gain rescaling multiplies by a group gain formed over whichever observers are in the
+% set, so the same observer's dg values are a uniform 6.7% larger inside the 13-set
+% than inside the 7-set. Differencing a 13-based dg against a 7-based da would push
+% that factor into the contrast on one side only. SPEC_TABLES refuses a mismatched
+% pair outright; this is how the right pair is supplied.
 fprintf('\n================ V1 4-8 deg, THREE VARIANTS ================\n');
-S = cell(1, numel(V));
+S     = cell(1, numel(V));      % matched 7/7: Figure 6, the profile figure, all tables
+Sdg13 = cell(1, numel(V));      % dg on 13:    Figure 5 only
 for k = 1:numel(V)
     fprintf('\n--- %s: %s ---\n', V(k).tag, V(k).label);
-    S{k} = spec_profiles('area','V1', 'route', V(k).route);
+    S{k}     = spec_profiles('area','V1', 'route', V(k).route);
+    Sdg13{k} = spec_profiles('area','V1', 'route', V(k).route, 'dgSubjectMode','all');
 end
-L = spec_axis_limits(S);
-fprintf(['\nshared scales across all three variants: polar +/-%.2f, ' ...
+
+% Limits span BOTH subject sets, or Figure 5 (13 observers) and Figure 6 (7) would sit
+% on different scales -- and dg-versus-da is the comparison the reader most needs to
+% make by eye.
+L = spec_axis_limits([S, Sdg13]);
+fprintf(['\nshared scales across all three variants and both observer sets: polar +/-%.2f, ' ...
          'difference panels [%.2f %.2f], profile [%.2f %.2f]\n'], L.rmax, L.dot, L.prof);
 
 for k = 1:numel(V)
-    plot_fig5_6_spec(S{k}, 'dg', 5, cfg.suppFigDir, L, V(k));
-    plot_fig5_6_spec(S{k}, 'da', 6, cfg.suppFigDir, L, V(k));
-    plot_spec_profile(S{k},        cfg.suppFigDir, L, V(k));
+    plot_fig5_6_spec(Sdg13{k}, 'dg', 5, cfg.suppFigDir, L, V(k));   % 13 observers
+    plot_fig5_6_spec(S{k},     'da', 6, cfg.suppFigDir, L, V(k));   %  7 observers
+    plot_spec_profile(S{k},           cfg.suppFigDir, L, V(k));     %  7, both experiments
 end
 
 fprintf('\n================ V1 TABLES ================\n');
-for k = 1:numel(V), spec_tables('area','V1', 'variant', V(k).tag); end
+% Hand the MATCHED profiles in explicitly rather than letting SPEC_TABLES recompute
+% them from the config default. Two reasons: it saves recomputing what was just built,
+% and it makes the pairing a property of this call instead of a property of whatever
+% cfg.dgSubjectMode happens to be. SPEC_TABLES refuses a mismatched pair either way.
+for k = 1:numel(V)
+    spec_tables('area','V1', 'variant', V(k).tag, 'profiles', S{k});
+end
+
+% The 13-observer dg asymmetries -- the numbers BEHIND FIGURE 5, which the paired
+% tables above do not contain because they are the matched 7. 'context' false because
+% dg-13 and da-7 are different people: the per-experiment asymmetries are well defined,
+% a paired contrast is not, and SPEC_TABLES still refuses one if asked.
+fprintf('\n================ V1 dg, ALL 13 OBSERVERS (Figure 5) ================\n');
+for k = 1:numel(V)
+    spec_tables('area','V1', 'variant', V(k).tag, 'profiles', Sdg13{k}, ...
+                'context', false, 'fileSuffix', 'dg13');
+end
 
 fprintf('\n================ VISUAL-HIERARCHY SWEEP ================\n');
 for k = 1:numel(V)

@@ -5,6 +5,30 @@ compared directly. The numbers behind each figure are in the tables here; the ar
 choices is [`../SPECIFICATION.md`](../SPECIFICATION.md), and the settled numbers are
 [`../RESULTS.md`](../RESULTS.md).
 
+## The observer count is not the same in every figure
+
+Changed 2026-08-27. `dg` was run on **13** observers and `da` on **8**, and one of those 8 is not
+usable — sub-0395's `da` session used a pilot stimulus whose annuli did not scale spatial period with
+eccentricity (`../../AGENTS.md` standing fact 7). So:
+
+| figure | observers | why |
+|---|--:|---|
+| **Figure 5** (`dg`) | **13** | within-experiment, so it needs no `da` and uses everyone |
+| **Figure 6** (`da`) | **7** | the valid `da` sessions |
+| **profile figure** | **7** | it puts `dg` and `da` side by side |
+| **Figure S5** (hierarchy) | **7** | it plots the *context* effect, `dg − da`, which is paired |
+| **every table here** | **7** | context effects are paired within observer |
+
+**`dg` is computed twice, and the second run is not redundant.** The gain rescaling multiplies by a
+group gain formed over whichever observers are in the set, so the same observer's `dg` values are a
+uniform **6.7% larger** inside the 13-set than inside the matched 7-set. Differencing a 13-based `dg`
+against a 7-based `da` would push that factor into the contrast on one side only. Figure 5 uses the
+13-observer fit; everything paired uses a separate 7-observer fit. `spec_tables` refuses a mismatched
+pair outright rather than trusting the caller.
+
+**Figures 5 and 6 still share one scale.** The axis limits span both observer sets, so the two can
+still be compared by eye — which is the whole point of putting them next to each other.
+
 ## The three variants, and what each pair isolates
 
 Route and weighting are orthogonal knobs, and the variants deliberately change **one at a time**:
@@ -29,13 +53,15 @@ that the conclusions do not rest on either knob — not because any of them is a
 
 **Two structural facts worth holding while you look.** For the Cartesian experiment the
 horizontal−vertical and cardinal−oblique regressors do not depend on θ_V at all, so **the route
-cannot touch them** — `dg` horiz−vert is −0.548 in all three panels by construction, not by luck.
+cannot touch them** — `dg` horiz−vert is −0.467 under `spec` and −0.465 under `roi` by construction,
+not by luck. (The two are not bit-identical only because the *weighting* differs at the group stage;
+the per-observer values are the same.)
 And the second-harmonic panels (B and D) are genuinely about a quarter the size of the
 first-harmonic ones; the shared axis makes them look small because they *are* small.
 
 ---
 
-## Figure 5 — Cartesian gratings (`dg`), V1 4–8°
+## Figure 5 — Cartesian gratings (`dg`), V1 4–8°, **n = 13**
 
 Panels A–D are always the same four asymmetries: **A** horizontal−vertical, **B** cardinal−oblique,
 **C** radial−tangential, **D** polar-cardinal−polar-oblique. Row 1 is polar plots — lines are the
@@ -49,18 +75,27 @@ wedge centres, that octagon understated them. The curve passes exactly through t
 `spec_profiles` asserts per observer. `roi` and `roipw` fit no model, so their lines still join the
 wedge means and are still eight-sided. Display sampling only: no number in the tables below moved.
 
+All 13 `dg` observers, from `spec_asymmetries_<tag>_v1_4-8_dg13.csv`. These are **not** the numbers
+in the paired tables elsewhere in this document, which are the matched 7 — see the note at the top.
+
 | asymmetry | `spec` | `roi` | `roipw` |
 |---|--:|--:|--:|
-| horiz−vert | −0.548 *p*<.001 | −0.548 *p*<.001 | −0.548 *p*<.001 |
-| card−obl | −0.221 *p*=.006 | −0.221 *p*=.005 | −0.213 *p*=.006 |
-| rad−tang | +0.119 *p*=.006 | +0.104 *p*=.008 | +0.112 *p*=.005 |
-| polc−polo | +0.072 *p*=.005 | +0.039 *p*=.039 | +0.040 *p*=.034 |
+| horiz−vert | −0.467 *p*<.001 | −0.465 *p*<.001 | −0.451 *p*<.001 |
+| card−obl | −0.189 *p*=.003 | −0.186 *p*=.003 | −0.176 *p*=.004 |
+| rad−tang | +0.106 *p*<.001 | +0.095 *p*<.001 | +0.102 *p*<.001 |
+| polc−polo | +0.066 *p*=.001 | +0.035 *p*=.007 | +0.035 *p*=.006 |
 
-**What to look for.** Panels A and B are identical across all three except for the weighting nudge in
-B — that is the θ_V-free construction, not a null result. The route does its work in **C and D**,
-where `spec` reads higher because the wedge route averages the within-wedge local-orientation
-variation away. Panel D is where the route matters most in relative terms: +0.072 against +0.039,
-nearly a factor of two, though both are small and both are significant.
+**What to look for.** Panels A and B move very little across the three variants — that is the θ_V-free
+construction, not a null result. The route does its work in **C and D**, where `spec` reads higher
+because the wedge route averages the within-wedge local-orientation variation away. Panel D is where
+the route matters most in relative terms: +0.066 against +0.035, nearly a factor of two, though both
+are small and both are significant.
+
+**All four asymmetries hold on 13 observers, with smaller *p* than on 7** (updated 2026-08-27). On
+the matched 7 the same four read −0.514 *p*<.001, −0.193 *p*=.016, +0.091 *p*=.003, +0.056 *p*=.003.
+Six added observers shrink horiz−vert somewhat (−0.514 → −0.467) and leave the rest close, while
+every interval tightens. That is the clearest replication evidence in the project: the Cartesian
+asymmetries were established on 7 observers and hold on a set nearly twice as large.
 
 **`spec` — the settled specification**
 ![Figure 5, spec](figures/Figure_5_spec_dg.png)
@@ -73,7 +108,7 @@ nearly a factor of two, though both are small and both are significant.
 
 ---
 
-## Figure 6 — Polar gratings (`da`), V1 4–8°
+## Figure 6 — Polar gratings (`da`), V1 4–8°, **n = 7**
 
 Same panels, same order, same axis limits as Figure 5 — **deliberately**, because `dg`-versus-`da` is
 the paper's claim and drawing the two on different scales would undercut the one comparison a reader
@@ -105,7 +140,11 @@ it should not be reported as though the weighting settled it
 
 ---
 
-## The polar-angle profile
+## The polar-angle profile, **n = 7**
+
+Drawn on the matched 7, because it puts `dg` and `da` side by side: its two rows are the two
+experiments, and a comparison is only meaningful on observers who did both. Its `dg` row therefore
+does **not** match Figure 5, which is the 13-observer fit.
 
 The finely-binned version of exactly the panels that permit it, which is why it has **three** columns
 rather than four: four orientations at 45° spacing give each vertex's demeaned response exactly three
@@ -113,7 +152,9 @@ degrees of freedom, so a profile against continuous θ_V can show three curves a
 coefficient is identified *across* vertices, from the θ_V modulation of the first and third — which
 is what the tilt of these curves is.
 
-Same underlying estimates as Figures 5 and 6, so the tables above apply.
+Same underlying estimates as Figure 6 and as the matched-7 tables. Its `dg` row is the matched-7
+`dg`, not the 13-observer `dg` drawn in Figure 5 — the two differ by the group-gain constant as well
+as by the six extra observers, so do not read a value off this figure and compare it with Figure 5.
 
 **What to look for — this is the clearest picture of what the route does.** In `spec` the model is a
 smooth curve in θ_V. In `roi` **the same curve becomes a step function**, because wedge-centre θ_V
@@ -133,7 +174,7 @@ from `roi` only in the height of the curves, never their shape.
 
 ---
 
-## Figure S5 — across the visual hierarchy
+## Figure S5 — across the visual hierarchy, **n = 7**
 
 Top row is each asymmetry in each experiment; bottom row is the context effect (`dg − da`) over the
 same maps. Filled markers are V1, V2 and V3 at 4–8°; the open marker is V3a, which qualifies only at
@@ -187,8 +228,10 @@ the `roi` and `roipw` trend tables are byte-identical — asserted in code, not 
 matlab -batch "cd('Reproduction/cleanroom'); run_spec_outputs"
 ```
 
-Two to three minutes; needs `~/dg_collect/`. Writes PNG and PDF of each into `figures/` here, plus
-every CSV quoted above. Individual pieces are callable without the full sweep —
+Five to ten minutes; needs `~/dg_collect/`. Longer than it used to be because `dg` is fitted twice
+per variant — once on 13 observers for Figure 5, once on the matched 7 for everything paired. Writes
+PNG and PDF of each into `figures/` here, plus every CSV quoted above, including the
+`*_dg13.csv` asymmetry tables behind Figure 5. Individual pieces are callable without the full sweep —
 `spec_profiles('area','V2')`, `spec_tables('area','V2','variant','roi')`,
 `spec_areas_summary('variant','roi')`. → [`../SPECIFICATION.md`](../SPECIFICATION.md) §8.
 

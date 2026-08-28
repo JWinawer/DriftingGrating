@@ -74,11 +74,19 @@ function W = diagnose_within_observer_error(varargin)
     % Simulated cell loss, for DIAGNOSE_CELL_LOSS only: nSubj x nPA logical marking
     % (observer x ROI) cells to empty out. Empty by default and empty means unchanged.
     p.addParameter('dropCells', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
+    % dg and da no longer share an observer list, so the caller must be able to say
+    % which observers and which experiment this call is for. Defaults reproduce the
+    % previous behaviour: cfg.subjects, both experiments.
+    p.addParameter('subjects', {}, @iscell);
+    p.addParameter('experiments', {'dg','da'}, @(x) iscell(x) && all(ismember(x,{'dg','da'})));
     p.parse(varargin{:});
     opt = p.Results;
 
     cfg = config_repro();
     if ~isempty(opt.eccRange), cfg.eccRange = opt.eccRange; end
+    % Rebind before anything positional is built from it -- OBSERVER_GAIN_WEIGHTS reads
+    % cfg.subjects and returns a vector in that order.
+    if ~isempty(opt.subjects), cfg.subjects = opt.subjects; end
 
     % GAIN IS ON BY DEFAULT, AND IS PER OBSERVER x MAP. The pRF-gain rescaling is a
     % per-observer scalar applied before observers are combined, so it touches no
@@ -115,22 +123,23 @@ function W = diagnose_within_observer_error(varargin)
     nm  = {'horiz-vert','card-obl','rad-tang','polc-polo'};
     nS  = numel(cfg.subjects);
     W   = struct('names', {nm});
-    W.seSplit = nan(nS, 4, 2);   % subject x asymmetry x experiment
-    W.seBoot  = nan(nS, 4, 2);
-    W.full    = nan(nS, 4, 2);
-    W.nRun    = nan(nS, 2);
+    expn = opt.experiments;
+    nE   = numel(expn);
+    W.seSplit = nan(nS, 4, nE);   % subject x asymmetry x experiment
+    W.seBoot  = nan(nS, 4, nE);
+    W.full    = nan(nS, 4, nE);
+    W.nRun    = nan(nS, nE);
     nP        = numel(cfg.paBins);
-    W.cell    = nan(nS, nP, 4, 2);
-    W.cellCov = nan(nP, nP, 4, 2, nS);
-    W.nVert   = zeros(nS, nP, 2);
-    expn = {'dg','da'};
+    W.cell    = nan(nS, nP, 4, nE);
+    W.cellCov = nan(nP, nP, 4, nE, nS);
+    W.nVert   = zeros(nS, nP, nE);
     drop = opt.dropCells;
     if isempty(drop), drop = false(nS, nP); else, drop = logical(drop); end
     assert(isequal(size(drop), [nS nP]), 'diagnose_within_observer_error:dropCells', ...
            'dropCells must be %d x %d.', nS, nP);
 
     for si = 1:nS
-        for ei = 1:2
+        for ei = 1:nE
             fA = fullfile(opt.root, sprintf('runbetas_areas_%s_%s.mat', cfg.subjects{si}, expn{ei}));
             f1 = fullfile(opt.root, sprintf('runbetas_%s_%s.mat',       cfg.subjects{si}, expn{ei}));
             if isfile(fA),     f = fA;
@@ -206,7 +215,8 @@ function W = diagnose_within_observer_error(varargin)
             end
         end
     end
-    W.subjects  = cfg.subjects;
+    W.subjects    = cfg.subjects;
+    W.experiments = expn;
     W.gainScale = gscale;                       % the factors actually used
     W.gainApplied = logical(opt.gain);
     if ~opt.quiet, report(W, nm); end

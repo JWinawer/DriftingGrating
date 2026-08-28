@@ -36,6 +36,15 @@ function R = spec_tables(varargin)
     % would otherwise pay for it twice. Numbers are identical either way -- the guard
     % below refuses an S that does not match what was asked for.
     p.addParameter('profiles', [], @(x) isempty(x) || isstruct(x));
+    % Context effects are PAIRED, so they need one observer list. Set false to get the
+    % per-experiment asymmetries from a profile whose two experiments have different
+    % observers -- e.g. dg on 13 with da on 7, which is what Figure 5 is drawn from.
+    p.addParameter('context', true, @(x) islogical(x) || isnumeric(x));
+    % Appended to the output filenames. Lets a second set of tables for the same
+    % variant sit beside the first without overwriting it -- used for the 13-observer
+    % dg tables. NOT done by passing a made-up 'variant', which SPEC_VARIANTS rejects
+    % and which would also mislabel the route and weighting inside the file.
+    p.addParameter('fileSuffix', '', @ischar);
     p.parse(varargin{:});
     opt = p.Results;
 
@@ -60,16 +69,21 @@ function R = spec_tables(varargin)
 
     nm   = S.names;
     expn = {'dg','da'};
-    nS   = numel(S.subjects);
 
     % --- per-observer long table ------------------------------------------
+    % Each experiment names its own observers and carries its own gain vector: dg may
+    % have 13 rows where da has 7, so neither the count nor the identities can be taken
+    % from a shared list.
     rows = {};
     for ei = 1:2
-        A = S.(expn{ei}).asym;
-        for si = 1:nS
+        E    = S.(expn{ei});
+        A    = E.asym;
+        subs = E.subjects;
+        gsc  = E.gainScale;
+        for si = 1:numel(subs)
             for j = 1:4
-                rows(end+1,:) = {opt.area, expn{ei}, nm{j}, S.subjects{si}, ...
-                                 A(si,j), S.gainScale(si), sum(S.(expn{ei}).nVert(si,:))}; %#ok<AGROW>
+                rows(end+1,:) = {opt.area, expn{ei}, nm{j}, subs{si}, ...
+                                 A(si,j), gsc(si), sum(E.nVert(si,:))}; %#ok<AGROW>
             end
         end
     end
@@ -88,13 +102,35 @@ function R = spec_tables(varargin)
     R.asym = mkTable(rows);
 
     % --- context effects, paired within observer ---------------------------
-    rows = {};
-    D = S.dg.asym - S.da.asym;                 % the per-observer difference FIRST
-    for j = 1:4
-        sg = sqrt(S.dg.sigma(:,j).^2 + S.da.sigma(:,j).^2);   % independent sessions
-        rows(end+1,:) = summarise(D(:,j), sg, opt.area, 'dg-da', nm{j}, V, opt.nBoot); %#ok<AGROW>
+    % ROW i OF dg AND ROW i OF da MUST BE THE SAME PERSON. This subtraction is
+    % positional, so a dg profile built on 13 observers and a da profile built on 7
+    % would either error on size or, worse, difference the wrong people. Refuse.
+    %
+    % Restricting a 13-observer dg to the 7 shared rows would NOT fix it either: the
+    % gain rescaling multiplies by a group gain computed over whichever observers are
+    % in the set, so the same observer's dg values are a uniform 6.7% larger inside the
+    % 13-set than inside the 7-set. Differencing those against da would put that factor
+    % into the contrast on one side only. Compute dg a second time on the matched set
+    % and pass THAT profile here -- see RUN_SPEC_OUTPUTS.
+    %
+    % opt.context = false says the caller KNOWS the two sides are different observers
+    % and wants only the per-experiment asymmetries. That is a deliberate request, not
+    % a way around the check: the check still fires whenever a context effect is asked
+    % for.
+    if opt.context
+        if isfield(S.dg,'subjects') && isfield(S.da,'subjects')
+            assert_same_observers(S.dg.subjects, S.da.subjects, 'dg profile', 'da profile');
+        end
+        rows = {};
+        D = S.dg.asym - S.da.asym;             % the per-observer difference FIRST
+        for j = 1:4
+            sg = sqrt(S.dg.sigma(:,j).^2 + S.da.sigma(:,j).^2);   % independent sessions
+            rows(end+1,:) = summarise(D(:,j), sg, opt.area, 'dg-da', nm{j}, V, opt.nBoot); %#ok<AGROW>
+        end
+        R.context = mkTable(rows);
+    else
+        R.context = mkTable({});               % empty, same columns
     end
-    R.context = mkTable(rows);
 
     R.area = opt.area;  R.eccRange = cfg.eccRange;  R.subjects = S.subjects;
 
@@ -140,6 +176,17 @@ function row = summarise(d, sigma, area, en, name, V, nBoot)
 end
 
 function T = mkTable(rows)
+    vn = {'area','experiment','asymmetry', ...
+          'variant','route','weighting','n', ...
+          'mean','t_lo','t_hi','t_p','boot_lo','boot_hi', ...
+          'eq_mean','eq_lo','eq_hi','eq_p','pw_mean','pw_lo','pw_hi','pw_p', ...
+          'tau','mean_sigma','weight_ratio','obs_agree','ci_methods_disagree'};
+    if isempty(rows)
+        % Same columns, no rows -- so callers can index the fields unconditionally and
+        % writetable still emits a header.
+        T = cell2table(cell(0, numel(vn)), 'VariableNames', vn);
+        return
+    end
     T = cell2table(rows, 'VariableNames', {'area','experiment','asymmetry', ...
         'variant','route','weighting','n', ...
         'mean','t_lo','t_hi','t_p','boot_lo','boot_hi', ...
@@ -151,6 +198,9 @@ end
 function show(R)
     for which = {'asym','context'}
         T = R.(which{1});
+        if isempty(T)
+            continue     % context suppressed: the two experiments are different people
+        end
         if strcmp(which{1},'asym')
             hdr = sprintf('ASYMMETRIES, per experiment  --  %s, %g-%g deg  [%s: %s, %s wt]', ...
                           R.area, R.eccRange(1), R.eccRange(2), R.variant, R.route, R.weighting);
@@ -201,9 +251,20 @@ end
 function writeOut(R, opt)
     if ~isfolder(opt.outDir), mkdir(opt.outDir); end
     tag = sprintf('%s_%s_%g-%g', R.variant, lower(R.area), R.eccRange(1), R.eccRange(2));
+    if ~isempty(opt.fileSuffix), tag = sprintf('%s_%s', tag, opt.fileSuffix); end
     f1 = fullfile(opt.outDir, sprintf('spec_asymmetries_%s.csv', tag));
     f2 = fullfile(opt.outDir, sprintf('spec_context_%s.csv', tag));
     f3 = fullfile(opt.outDir, sprintf('spec_perobserver_%s.csv', tag));
-    writetable(R.asym, f1);  writetable(R.context, f2);  writetable(R.perObs, f3);
-    fprintf('\nspec_tables: wrote\n  %s\n  %s\n  %s\n', f1, f2, f3);
+    writetable(R.asym, f1);  writetable(R.perObs, f3);
+    written = {f1, f3};
+    if ~isempty(R.context)
+        writetable(R.context, f2);  written = {f1, f2, f3};
+    else
+        % No context table to write. Emitting a header-only CSV would leave a file that
+        % looks like a result and holds none; delete a stale one from a previous run so
+        % the folder cannot mix an old paired result with new unpaired asymmetries.
+        if isfile(f2), delete(f2); end
+    end
+    fprintf('\nspec_tables: wrote\n');
+    fprintf('  %s\n', written{:});
 end

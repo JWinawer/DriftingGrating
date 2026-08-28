@@ -242,8 +242,12 @@ cardinal−oblique changed: it was not significant before and is not now.
 **Do not read the *p* = .053 as "nearly significant" and report it as a decline.** The honest summary
 is that a real V1→V3 attenuation is likely — the individual cells do fall in order in each map, and
 the V2 → V3 step is resolved — but the V1-to-V3 *difference* is not resolved by these data at n = 7.
-Recovering it is one of the concrete gains that the 13-observer `dg` set could deliver, since the
-hierarchy comparison is within-experiment and does not need `da`.
+**The 13-observer `dg` set does not recover it** (corrected 2026-08-27; an earlier version of this
+section said it would). What this table tests is the trend of the *context effect*, `dg − da`, which
+is a paired within-observer difference: it needs the same observers in both experiments and in both
+maps, so it is limited by the 7 who have a valid `da`, however many `dg` observers exist. More power
+here requires more observers who did **both** experiments. A `dg`-only attenuation across maps could
+be asked on 13, but that is a different question from the one tested here.
 
 The trend is **always equal-weighted**, whatever variant is requested, so the `roi` and `roipw` trend
 tables are byte-identical (asserted, not assumed). Precision weighting it would need the

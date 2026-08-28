@@ -53,7 +53,7 @@ function out = plot_fig5_6_spec(S, en, figNum, figDir, L, V)
         if ~S.hasModel, V = spec_variants('roi'); end
     end
     E   = S.(en);
-    nS  = numel(S.subjects);
+    nS  = numel(E.subjects);      % this experiment's observers, not a shared list
     nP  = numel(S.paBins);
     titles = {'horizontal vs vertical','cardinal vs oblique', ...
               'radial vs tangential','polar-card vs polar-obl'};
@@ -94,9 +94,15 @@ function out = plot_fig5_6_spec(S, en, figNum, figDir, L, V)
         dCon = squeeze(mean(E.dense.mCon,1,'omitnan'));
     end
 
+    % The zero reference is a CIRCLE, so draw it on a dense grid. Drawn at the eight
+    % wedge angles it renders as a grey OCTAGON sitting among the model curves, which
+    % in a figure whose whole point is a smooth fit against 45-deg samples reads as if
+    % the model itself had been sampled every 45 deg and joined by straight lines.
+    thZero = deg2rad(0:0.5:360);
+
     for i = 1:4
         nexttile(i);
-        polarplot(th, zeros(nP+1,1), '-', 'Color', [0.75 0.75 0.75], 'LineWidth', 0.75); hold on;
+        polarplot(thZero, zeros(size(thZero)), '-', 'Color', [0.75 0.75 0.75], 'LineWidth', 0.75); hold on;
         if hasDense
             % Lines are the fitted model at 0.5 deg, markers the observed wedge means
             % at 45. Where they separate, the gap is the within-wedge

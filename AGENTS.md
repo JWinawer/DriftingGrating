@@ -250,8 +250,12 @@ in this list, not a second list somewhere else.
   degree of freedom. It also straddles the routes — *p* = .053 under `spec`, .044 under `roi` — which
   is a sign of an underpowered comparison rather than a route effect, and neither side of .05 should
   be quoted. The **V2 → V3 step** is solid for both (*p* = .016 and .009); it is the V1-to-V3
-  difference that is unresolved. This is the clearest thing the 13-observer `dg` set could fix, since
-  the hierarchy comparison is within-experiment and needs no `da`.
+  difference that is unresolved. **The 13-observer `dg` set does not fix this** (corrected
+  2026-08-27; an earlier version of this item said it would). The quantity the trend test tracks is
+  the *context effect*, `dg − da`, so it is a paired difference and needs the matched 7 in both maps
+  no matter how many observers `dg` has. Getting more power here needs more observers who did **both**
+  experiments. A 13-observer `dg`-only attenuation across maps is answerable, but it is a different
+  question from the one this table tests.
   → [`RESULTS.md`](Reproduction/RESULTS.md) §5
 - **The observer scheme is implemented and the specification outputs have been regenerated on the
   corrected 7; `dg`-on-13 is still blocked.** 2026-08-27. All twelve figures and every CSV under
@@ -312,10 +316,27 @@ in this list, not a second list somewhere else.
   (wedge route, equal weighting; against −0.520/−0.193/0.080/0.025 on the matched 7). Six added
   observers, every asymmetry confirmed, every *p* smaller.
 
-  **Not yet done on 13:** `spec_profiles` forces the matched set, because it uses one observer
-  list with the experiment on the inner loop, so the 13-observer result is not yet available
-  through `run_spec_outputs` or the hierarchy sweep — which is where it would settle the
-  underpowered V1 − V3 comparison. That is the next piece of work.
+  **Done on 13 (2026-08-27).** `spec_profiles` now resolves the observer list **per experiment**
+  and carries `S.dg.subjects` / `S.da.subjects` with the data;
+  `diagnose_within_observer_error` takes `subjects` and `experiments` so σᵢ is measured on each
+  experiment's own list. `run_spec_outputs` fits `dg` **twice** per variant — 13 observers for
+  Figure 5, the matched 7 for everything paired — and the axis limits span both sets so Figures 5
+  and 6 stay on one scale. `spec_tables` gained `context` (emit per-experiment asymmetries from a
+  13/7 profile) and `fileSuffix` (the `*_dg13.csv` tables behind Figure 5); it still **refuses** a
+  paired contrast whenever the two observer lists differ.
+
+  | figure | observers |
+  |---|--:|
+  | Figure 5 (`dg`) | **13** |
+  | Figure 6 (`da`) | 7 |
+  | profile figure | 7 |
+  | Figure S5 (hierarchy) | 7 |
+  | every paired table | 7 |
+
+  **All four `dg` asymmetries hold on 13 with smaller *p* than on 7**: horiz−vert −0.467, card−obl
+  −0.189, rad−tang +0.106, polc−polo +0.066, all *p* ≤ .003, against −0.514/−0.193/+0.091/+0.056 on
+  the matched 7. Six added observers, every asymmetry confirmed — the clearest replication evidence
+  in the project. → [`FIGURE_VARIANTS.md`](Reproduction/supplement/FIGURE_VARIANTS.md)
 
   **`SPECIFICATION.md`, `FIGURE_VARIANTS.md` and the `local_qc/` documents have NOT been updated** —
   their numbers are still the 8-observer set and they contradict `RESULTS.md` until someone goes
