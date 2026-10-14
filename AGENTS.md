@@ -172,7 +172,8 @@ Analysis is MATLAB (R2022b). Paths in the original scripts point at a mounted da
    callers use the **mean** (standing fact 4).
 4. **`04_plot_betaAsymmetries/`** — consumes those arrays to make the figures:
    `plot_NeuralAsymmetries.m` (Figs 5 and 6), `lme1_fit.m` (Fig 7, being removed),
-   `lme2_ploteachDirLoc.m` (Fig 8).
+   `lme2_ploteachDirLoc.m` (Fig 8). Upstream's [`FIGURES.md`](FIGURES.md) traces every
+   figure-generating script to the data it reads — read it before touching one.
 
 **New upstream material, merged 2026-08-27.** Rania's side has added a large body of code that the
 analyses above do not depend on, but that anyone reading `AnalysisCode/` will now meet:
@@ -438,6 +439,12 @@ them stacks superseded versions.
 - [`AnalysisCode/04_plot_betaAsymmetries/REGRESSION.md`](AnalysisCode/04_plot_betaAsymmetries/REGRESSION.md)
   — upstream's weighted-least-squares successor to the Fig-7 LME: the model, the weighting, and its
   subject selection. Nothing in `Reproduction/` depends on it. Read the terminology note first (§4).
+- [`FIGURES.md`](FIGURES.md) — upstream's script-by-script data lineage for every figure-generating
+  script in `AnalysisCode/`, and which cached fit each one reads.
+- [`REF_ORIENTATION.md`](REF_ORIENTATION.md) — upstream's account of how condition labels map to
+  orientation and direction at each location in `04_plot_betaAsymmetries/`. It overlaps
+  [`STIMULUS_CONVENTIONS.md`](Reproduction/STIMULUS_CONVENTIONS.md), which owns the angle conventions
+  for `Reproduction/`.
 - [`AnalysisCode/01_calculate_observer_gain/README.md`](AnalysisCode/01_calculate_observer_gain/README.md)
   — what pRF gain means here and how it is computed.
 - [`Simulations/README.md`](Simulations/README.md) — two optic-flow illustration scripts. Nothing in
