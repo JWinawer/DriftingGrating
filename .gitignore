@@ -35,3 +35,4 @@ dg_collect/
 **/*.html
 __pycache__/
 *.pyc
+Models/BUG_FIXES.md
