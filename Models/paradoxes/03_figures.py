@@ -72,7 +72,18 @@ def repo_sigma(key):
 cols = list(DATA_T)
 M = np.array([[tests(R[f"{k} || {REPO_GAIN}"][S.index(repo_sigma(k))])[c] for c in cols]
               for _, k in ROWS])
-fig, ax = plt.subplots(figsize=(10.5, 6.8))
+fig, (axd, ax) = plt.subplots(2, 1, figsize=(10.5, 7.4), sharex=True,
+                              gridspec_kw={"height_ratios": [1, len(ROWS)], "hspace": 0.08})
+# data row: its own colour scale, because % signal change and % of model mean are not comparable
+D = np.array([[DATA_T[c] for c in cols]])
+dlim = np.abs(D).max()
+axd.imshow(D, cmap="RdBu_r", norm=TwoSlopeNorm(0, -dlim, dlim), aspect="auto")
+for c in range(D.shape[1]):
+    axd.text(c, 0, f"{D[0, c]:+.3f}", ha="center", va="center", fontsize=9, fontweight="bold",
+             color="white" if abs(D[0, c]) > 0.6 * dlim else "black")
+axd.set_yticks([0])
+axd.set_yticklabels(["Data: V1, 4-8 deg\n(% signal change)"], fontsize=9)
+axd.tick_params(axis="x", bottom=False)
 lim = np.nanmax(np.abs(M))
 ax.imshow(M, cmap="RdBu_r", norm=TwoSlopeNorm(0, -lim, lim), aspect="auto")
 for r in range(M.shape[0]):
@@ -81,14 +92,13 @@ for r in range(M.shape[0]):
         ax.text(c, r, f"{M[r, c]:+.0f}" + (" ✓" if ok else ""), ha="center", va="center",
                 fontsize=9, fontweight="bold" if ok else "normal")
 ax.set_xticks(range(len(cols)))
-ax.set_xticklabels([f"{c}\ndata {DATA_T[c]:+.3f}" for c in cols], fontsize=8)
+ax.set_xticklabels(cols, fontsize=8)
 ax.set_yticks(range(len(ROWS)))
 ax.set_yticklabels([r for r, _ in ROWS], fontsize=9)
-ax.set_title("Model asymmetries (% of mean response) at the repo's parameters\n"
-             "cardinal gain 2, radial gain 1.5, 100% contrast.  ✓ = same sign as the data",
-             fontsize=10)
-fig.tight_layout()
-fig.savefig(L.os.path.join(OUT, "fig1_sign_table.png"), dpi=150)
+axd.set_title("Data (top, % signal change) and model asymmetries (% of mean response) at the repo's\n"
+              "parameters: cardinal gain 2, radial gain 1.5, 100% contrast.  ✓ = same sign as the data",
+              fontsize=10)
+fig.savefig(L.os.path.join(OUT, "fig1_sign_table.png"), dpi=150, bbox_inches="tight")
 
 # ---- fig 2: sigma ---------------------------------------------------------------------
 PANEL = [("M1 untuned", "M1 untuned, p=q=1"), ("M2 untuned q=2 [input]", "M2 untuned, q=2"),
